@@ -17,4 +17,4 @@ obj/
 !*/assets/shaders*
 
 # Ignore cached shader binaries
-*/cached/*
+*/assets/shaders/cached/*
