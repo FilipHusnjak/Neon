@@ -1,4 +1,5 @@
 # Neon
+Continuing from https://github.com/fhusnjak/Neon
 ## C++ Vulkan engine
 
 Personal project for practicing Vulkan and graphics programming principles.
