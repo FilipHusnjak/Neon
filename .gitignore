@@ -14,4 +14,4 @@ obj/
 
 # Ignore assets folder
 */assets/*
-!*/assets/shaders/*
+!*/assets/shaders*
