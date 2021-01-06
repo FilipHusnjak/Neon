@@ -6,7 +6,7 @@
 
 namespace Neon
 {
-	SharedRef<Shader> Shader::Create(const std::vector<UniformBinding>& bindings)
+	SharedRef<Shader> Shader::Create(const std::unordered_map<ShaderType, std::string>& shaderPaths)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -17,7 +17,7 @@ namespace Neon
 			}
 			case RendererAPI::API::Vulkan:
 			{
-				return SharedRef<VulkanShader>::Create(bindings);
+				return SharedRef<VulkanShader>::Create(shaderPaths);
 			}
 		}
 		NEO_CORE_ASSERT(false, "Renderer API not selected!");

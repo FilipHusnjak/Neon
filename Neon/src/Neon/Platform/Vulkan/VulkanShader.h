@@ -9,10 +9,21 @@ namespace Neon
 	class VulkanShader : public Shader
 	{
 	public:
-		VulkanShader(const std::vector<UniformBinding>& bindings);
+		struct UniformBuffer
+		{
+			std::string Name;
+			uint32 BindingPoint = 0;
+			uint32 Count = 0;
+			uint32 Size = 0;
+			std::vector<VulkanBuffer> Buffers;
+			vk::DescriptorBufferInfo Descriptor;
+			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
+		};
+
+		VulkanShader(const std::unordered_map<ShaderType, std::string>& shaderPaths);
 		~VulkanShader() = default;
 
-		void LoadShader(const std::string& path, ShaderType type) override;
+		void Reload() override;
 
 		void SetUniformBuffer(uint32 binding, uint32 index, const void* data) override;
 
@@ -30,8 +41,17 @@ namespace Neon
 		}
 
 	private:
+		void GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile);
+		void CreateShader(ShaderType shaderType, const std::vector<uint32>& shaderBinary);
+		void Reflect(ShaderType shaderType, const std::vector<uint32>& shaderBinary);
+
+		void CreateDescriptors();
+
+	private:
 		std::vector<vk::UniqueShaderModule> m_ShaderModules;
 		std::vector<vk::PipelineShaderStageCreateInfo> m_ShaderStages;
+		std::unordered_map<ShaderType, std::string> m_ShaderSources;
+		std::unordered_map<ShaderType, std::string> m_ShaderPaths;
 
 		VulkanAllocator m_Allocator;
 
@@ -39,6 +59,7 @@ namespace Neon
 		vk::UniqueDescriptorSetLayout m_DescriptorSetLayout;
 		vk::UniqueDescriptorSet m_DescriptorSet;
 
-		std::unordered_map<uint32, std::vector<VulkanBuffer>> m_UniformBuffers;
+		std::unordered_map<uint32, UniformBuffer> m_UniformBuffers;
+		std::unordered_map<std::string, VkWriteDescriptorSet> m_WriteDescriptorSets;
 	};
 } // namespace Neon

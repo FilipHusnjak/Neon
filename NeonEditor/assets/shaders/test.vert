@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec3 pos;
 
-layout(set = 0, binding = 0) uniform CameraUBO
+layout(std140, binding = 0) uniform Camera
 {
     mat4 model;
     mat4 view;

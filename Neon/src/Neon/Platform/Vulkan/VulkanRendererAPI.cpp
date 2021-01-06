@@ -64,12 +64,14 @@ namespace Neon
 		caps.Renderer = "Vulkan";
 		caps.Version = "1.0";
 
-		std::vector<UniformBinding> bindings = {
-			{0, UniformType::UniformBuffer, 1, sizeof(CameraMatrices), ShaderStageFlag::Vertex}};
+		std::unordered_map<ShaderType, std::string> shaderPaths;
+		shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test.vert";
+		shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test.frag";
+		s_TestShader = Shader::Create(shaderPaths).As<VulkanShader>();
 
-		s_TestShader = Shader::Create(bindings).As<VulkanShader>();
-		s_TestShader->LoadShader("assets/shaders/build/test_vert.spv", ShaderType::Vertex);
-		s_TestShader->LoadShader("assets/shaders/build/test_frag.spv", ShaderType::Fragment);
+		float colors[2] = {1.f, 1.f};
+		s_TestShader->SetUniformBuffer(1, 0, &colors[0]);
+		s_TestShader->SetUniformBuffer(1, 1, &colors[1]);
 
 		VertexBufferLayout layout({ShaderDataType::Float3});
 		s_TestVertexBuffer = VertexBuffer::Create(positions, sizeof(positions), layout).As<VulkanVertexBuffer>();
