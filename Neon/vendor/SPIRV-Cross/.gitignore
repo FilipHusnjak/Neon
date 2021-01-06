@@ -1,0 +1,24 @@
+*.o
+*.d
+*.txt
+/test
+/spirv-cross
+/obj
+/msvc/x64
+/msvc/Debug
+/msvc/Release
+*.suo
+*.sdf
+*.opensdf
+*.shader
+*.a
+*.bc
+/external
+.vs/
+*.vcxproj.user
+
+# Directories
+bin/
+bin-int/
+
+!CMakeLists.txt

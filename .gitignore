@@ -1,0 +1,16 @@
+# Binaries
+**/bin/
+**/bin-int/
+!premake.exe
+obj/
+
+# Visual Studio files and folder
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+**.csproj
+
+# Ignore assets folder
+*assets*
