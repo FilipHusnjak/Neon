@@ -37,7 +37,7 @@ namespace Neon
 		for (const auto& [shaderType, shaderPath] : m_ShaderPaths)
 		{
 			std::vector<char> shaderSource;
-			bool fileRead = File::ReadFile(shaderPath, shaderSource, true);
+			bool fileRead = File::ReadFromFile(shaderPath, shaderSource, true);
 			std::string strShader(shaderSource.begin(), shaderSource.end());
 			NEO_CORE_ASSERT(fileRead, "Shader path does not exist!");
 			m_ShaderSources[shaderType] = std::string(shaderSource.begin(), shaderSource.end());
@@ -64,12 +64,19 @@ namespace Neon
 	{
 		std::string shaderPath = m_ShaderPaths.at(shaderType);
 		std::filesystem::path p = shaderPath;
-		auto cachePath = p.parent_path() / "cached" / (p.filename().string() + ".cached_vulkan" + p.extension().string());
+
+		std::string folderPath = (p.parent_path() / "cached\\").string();
+		wchar_t wtext[40];
+		mbstowcs(wtext, folderPath.c_str(), folderPath.length());
+		wtext[folderPath.length()] = '\0';
+		CreateDirectory(wtext, nullptr);
+
+		auto cachePath = p.parent_path() / "cached" / (p.filename().string() + ".cached_vulkan");
 		std::string cachedFilePath = cachePath.string();
 
-		File::ReadFile(cachedFilePath, outShaderBinary, true);
+		File::ReadFromFile(cachedFilePath, outShaderBinary, true);
 
-		if (outShaderBinary.empty())
+		if (forceCompile || outShaderBinary.empty())
 		{
 			shaderc::Compiler compiler;
 			shaderc::CompileOptions options;
