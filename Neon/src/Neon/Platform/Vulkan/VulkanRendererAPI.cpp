@@ -68,8 +68,8 @@ namespace Neon
 			{0, UniformType::UniformBuffer, 1, sizeof(CameraMatrices), ShaderStageFlag::Vertex}};
 
 		s_TestShader = Shader::Create(bindings).As<VulkanShader>();
-		s_TestShader->LoadShader("../Neon/shaders/build/test_vert.spv", ShaderType::Vertex);
-		s_TestShader->LoadShader("../Neon/shaders/build/test_frag.spv", ShaderType::Fragment);
+		s_TestShader->LoadShader("assets/shaders/build/test_vert.spv", ShaderType::Vertex);
+		s_TestShader->LoadShader("assets/shaders/build/test_frag.spv", ShaderType::Fragment);
 
 		VertexBufferLayout layout({ShaderDataType::Float3});
 		s_TestVertexBuffer = VertexBuffer::Create(positions, sizeof(positions), layout).As<VulkanVertexBuffer>();
