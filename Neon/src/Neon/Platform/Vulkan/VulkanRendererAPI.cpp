@@ -1,5 +1,6 @@
 #include "neopch.h"
 
+#include "Renderer/Mesh.h"
 #include "Renderer/PerspectiveCameraController.h"
 #include "VulkanContext.h"
 #include "VulkanFramebuffer.h"
@@ -16,12 +17,11 @@
 namespace Neon
 {
 	static std::vector<vk::CommandBuffer> s_ImGuiCommandBuffers;
-	static SharedRef<VulkanShader> s_TestShader;
-	static SharedRef<VulkanVertexBuffer> s_TestVertexBuffer;
-	static SharedRef<VulkanIndexBuffer> s_TestIndexBuffer;
 	static SharedRef<VulkanPipeline> s_TestPipeline;
 	static SharedRef<VulkanRenderPass> s_TestRenderPass;
 	static std::vector<SharedRef<VulkanFramebuffer>> s_TestFramebuffers;
+	static SharedRef<Mesh> s_TestMesh;
+	static SharedRef<VulkanShader> s_MeshShader;
 
 	struct CameraMatrices
 	{
@@ -29,10 +29,6 @@ namespace Neon
 		glm::mat4 View = glm::mat4(1.f);
 		glm::mat4 Projection = glm::mat4(1.f);
 	};
-
-	glm::vec3 positions[3] = {glm::vec3(0.f, -0.5f, 0.f), glm::vec3(0.5f, 0.5f, 0.f), glm::vec3(-0.5f, 0.5f, 0.f)};
-
-	uint32 indices[3] = {0, 1, 2};
 
 	VulkanRendererAPI::~VulkanRendererAPI()
 	{
@@ -62,25 +58,16 @@ namespace Neon
 		RendererAPI::RenderAPICapabilities& caps = RendererAPI::GetCapabilities();
 		caps.Vendor = props.deviceName.operator std::string();
 		caps.Renderer = "Vulkan";
-		caps.Version = "1.0";
+		caps.Version = "1.2";
 
-		std::unordered_map<ShaderType, std::string> shaderPaths;
-		shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test.vert";
-		shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test.frag";
-		s_TestShader = Shader::Create(shaderPaths).As<VulkanShader>();
+		//s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\m1911\\m1911.fbx");
+		s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\boblamp\\boblampclean.md5mesh");
 
-		float colors[2] = {1.f, 1.f};
-		s_TestShader->SetUniformBuffer(1, 0, &colors[0]);
-		s_TestShader->SetUniformBuffer(1, 1, &colors[1]);
-
-		VertexBufferLayout layout({ShaderDataType::Float3});
-		s_TestVertexBuffer = VertexBuffer::Create(positions, sizeof(positions), layout).As<VulkanVertexBuffer>();
-
-		s_TestIndexBuffer = IndexBuffer::Create(indices, sizeof(indices)).As<VulkanIndexBuffer>();
+		s_MeshShader = s_TestMesh->m_MeshShader.As<VulkanShader>();
 
 		PipelineSpecification pipelineSpecification;
-		pipelineSpecification.Shader = s_TestShader;
-		pipelineSpecification.Layout = layout;
+		pipelineSpecification.Shader = s_MeshShader;
+		pipelineSpecification.Layout = s_TestMesh->m_VertexBufferLayout;
 		pipelineSpecification.Pass = s_TestRenderPass;
 		s_TestPipeline = Pipeline::Create(pipelineSpecification).As<VulkanPipeline>();
 	}
@@ -94,7 +81,7 @@ namespace Neon
 		CameraMatrices cameraMatrices = {};
 		cameraMatrices.View = camera->GetCamera().GetViewMatrix();
 		cameraMatrices.Projection = camera->GetCamera().GetProjectionMatrix();
-		s_TestShader->SetUniformBuffer(0, 0, &cameraMatrices);
+		s_MeshShader->SetUniformBuffer(0, 0, &cameraMatrices);
 
 		vk::CommandBuffer renderCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
 
@@ -139,11 +126,18 @@ namespace Neon
 		renderCommandBuffer.setScissor(0, 1, &sceneCcissor);
 
 		renderCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, s_TestPipeline->GetHandle());
-		renderCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, s_TestPipeline->GetLayout(), 0, 1,
-											   &s_TestShader->GetDescriptorSet(), 0, nullptr);
-		renderCommandBuffer.bindVertexBuffers(0, {s_TestVertexBuffer->GetHandle()}, {0});
-		renderCommandBuffer.bindIndexBuffer(s_TestIndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
-		renderCommandBuffer.drawIndexed(s_TestIndexBuffer->GetCount(), 1, 0, 0, 0);
+
+		renderCommandBuffer.bindVertexBuffers(0, {s_TestMesh->m_VertexBuffer.As<VulkanVertexBuffer>()->GetHandle()}, {0});
+		renderCommandBuffer.bindIndexBuffer(s_TestMesh->m_IndexBuffer.As<VulkanIndexBuffer>()->GetHandle(), 0,
+											vk::IndexType::eUint32);
+
+		const auto& submeshes = s_TestMesh->GetSubmeshes();
+		for (const auto& submesh : submeshes)
+		{
+			renderCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, s_TestPipeline->GetLayout(), 0, 1,
+												   &s_MeshShader->GetDescriptorSet(), 0, nullptr);
+			renderCommandBuffer.drawIndexed(submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
+		}
 
 		renderCommandBuffer.endRenderPass();
 
@@ -221,9 +215,8 @@ namespace Neon
 		VulkanContext::GetDevice()->GetHandle().waitIdle();
 		s_ImGuiCommandBuffers.clear();
 		s_TestPipeline.Reset();
-		s_TestVertexBuffer.Reset();
-		s_TestIndexBuffer.Reset();
-		s_TestShader.Reset();
+		s_MeshShader.Reset();
+		s_TestMesh.Reset();
 		s_TestFramebuffers.clear();
 		s_TestRenderPass.Reset();
 	}

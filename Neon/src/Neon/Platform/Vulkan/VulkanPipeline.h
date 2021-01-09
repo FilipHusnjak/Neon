@@ -9,6 +9,10 @@ namespace Neon
 	{
 		switch (type)
 		{
+			case ShaderDataType::Int:
+				return vk::Format::eR32Sint;
+			case ShaderDataType::UInt:
+				return vk::Format::eR32Uint;
 			case ShaderDataType::Float:
 				return vk::Format::eR32Sfloat;
 			case ShaderDataType::Float2:

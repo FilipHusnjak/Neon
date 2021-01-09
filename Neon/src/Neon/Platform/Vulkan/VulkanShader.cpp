@@ -1,8 +1,9 @@
 #include "neopch.h"
 
-#include "Tools/FileTools.h"
-#include "VulkanContext.h"
-#include "VulkanShader.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
+#include "Neon/Platform/Vulkan/VulkanShader.h"
+#include "Neon/Platform/Vulkan/VulkanTexture.h"
+#include "Neon/Tools/FileTools.h"
 
 #include <spirv_glsl.hpp>
 
@@ -24,8 +25,10 @@ namespace Neon
 		}
 	}
 
-	VulkanShader::VulkanShader(const std::unordered_map<ShaderType, std::string>& shaderPaths)
-		: m_ShaderPaths(shaderPaths)
+	VulkanShader::VulkanShader(const ShaderSpecification& shaderSpecification,
+							   const std::unordered_map<ShaderType, std::string>& shaderPaths)
+		: m_Specification(shaderSpecification)
+		, m_ShaderPaths(shaderPaths)
 	{
 		const auto& device = VulkanContext::GetDevice();
 		m_Allocator = VulkanAllocator(device, "Shader");
@@ -58,6 +61,17 @@ namespace Neon
 		NEO_CORE_ASSERT(m_UniformBuffers.find(binding) != m_UniformBuffers.end(), "Uniform binding is invalid!");
 		NEO_CORE_ASSERT(index < m_UniformBuffers[binding].Count, "Descriptor index out of range!");
 		m_Allocator.UpdateBuffer(m_UniformBuffers[binding].Buffers[index], data);
+	}
+
+	void VulkanShader::SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture)
+	{
+		const auto vulkanTexture = texture.As<VulkanTexture2D>();
+		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
+		vk::WriteDescriptorSet descWrite{
+			m_DescriptorSet.get(), binding, index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
+
+		vk::Device device = VulkanContext::GetDevice()->GetHandle();
+		device.updateDescriptorSets({descWrite}, nullptr);
 	}
 
 	void VulkanShader::GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile)
@@ -133,6 +147,11 @@ namespace Neon
 			auto& bufferType = compiler.get_type(resource.type_id);
 			uint32 bindingPoint = compiler.get_decoration(resource.id, spv::DecorationBinding);
 			uint32 count = std::max(1u, bufferType.array[0]);
+			if (m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end())
+			{
+				count = m_Specification.ShaderVariableCounts[name];
+			}
+
 			auto size = static_cast<uint32>(compiler.get_declared_struct_size(bufferType));
 			auto memberCount = static_cast<uint32>(bufferType.member_types.size());
 
@@ -152,6 +171,31 @@ namespace Neon
 			NEO_CORE_TRACE("-------------------");
 		}
 
+		NEO_CORE_TRACE("Image Samplers:");
+		for (const auto& resource : resources.sampled_images)
+		{
+			const auto& name = resource.name;
+			auto& imageSamplerType = compiler.get_type(resource.base_type_id);
+			uint32 bindingPoint = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32 count = std::max(1u, imageSamplerType.array[0]);
+			if (m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end())
+			{
+				count = m_Specification.ShaderVariableCounts[name];
+			}
+			uint32_t dimension = imageSamplerType.image.dim;
+
+			auto& imageSampler = m_ImageSamplers[bindingPoint];
+			imageSampler.BindingPoint = bindingPoint;
+			imageSampler.Name = name;
+			imageSampler.Count = count;
+			imageSampler.ShaderStage = ShaderTypeToVulkanShaderType(shaderType);
+
+			NEO_CORE_TRACE("  Name: {0}", name);
+			NEO_CORE_TRACE("  Count: {0}", count);
+			NEO_CORE_TRACE("  Binding Point: {0}", bindingPoint);
+			NEO_CORE_TRACE("-------------------");
+		}
+
 		NEO_CORE_TRACE("===========================");
 	}
 
@@ -168,6 +212,15 @@ namespace Neon
 			for (const auto& [binding, uniformBuffer] : m_UniformBuffers)
 			{
 				typeCount.descriptorCount += uniformBuffer.Count;
+			}
+		}
+		if (!m_ImageSamplers.empty())
+		{
+			vk::DescriptorPoolSize& typeCount = poolSizes.emplace_back();
+			typeCount.type = vk::DescriptorType::eCombinedImageSampler;
+			for (const auto& [binding, imageSampler] : m_ImageSamplers)
+			{
+				typeCount.descriptorCount += imageSampler.Count;
 			}
 		}
 
@@ -197,6 +250,14 @@ namespace Neon
 				m_Allocator.AllocateBuffer(uniformBuffer.Buffers[i], uniformBuffer.Size, vk::BufferUsageFlagBits::eUniformBuffer,
 										   vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			}
+		}
+		for (auto& [binding, imageSampler] : m_ImageSamplers)
+		{
+			auto& layoutBinding = layoutBindings.emplace_back();
+			layoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+			layoutBinding.descriptorCount = imageSampler.Count;
+			layoutBinding.stageFlags = imageSampler.ShaderStage;
+			layoutBinding.binding = binding;
 		}
 
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout = {};
@@ -232,7 +293,6 @@ namespace Neon
 				break;
 				default:
 				{
-					NEO_CORE_ASSERT(false, "Uknown binding type!");
 				}
 				break;
 			}

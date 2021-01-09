@@ -1,7 +1,8 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include "Neon/Renderer/Texture.h"
 
+#include <glm/glm.hpp>
 #include <shaderc/shaderc.hpp>
 
 namespace Neon
@@ -39,6 +40,11 @@ namespace Neon
 		Mat4
 	};
 
+	struct ShaderSpecification
+	{
+		std::unordered_map<std::string, uint32> ShaderVariableCounts;
+	};
+
 	class Shader : public RefCounted
 	{
 	public:
@@ -47,7 +53,9 @@ namespace Neon
 		virtual void Reload() = 0;
 
 		virtual void SetUniformBuffer(uint32 binding, uint32 index, const void* data) = 0;
+		virtual void SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) = 0;
 
-		static SharedRef<Shader> Create(const std::unordered_map<ShaderType, std::string>& shaderPaths);
+		static SharedRef<Shader> Create(const ShaderSpecification& shaderSpecification,
+										const std::unordered_map<ShaderType, std::string>& shaderPaths);
 	};
 } // namespace Neon

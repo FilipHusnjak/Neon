@@ -149,7 +149,7 @@ namespace Neon
 		}
 
 		template<typename T2>
-		SharedRef<T2> As()
+		SharedRef<T2> As() const
 		{
 			return SharedRef<T2>(*this);
 		}

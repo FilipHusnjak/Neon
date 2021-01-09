@@ -51,7 +51,7 @@ namespace Neon
 		vk::PipelineRasterizationStateCreateInfo rasterizationState = {};
 		rasterizationState.polygonMode = vk::PolygonMode::eFill;
 		rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
-		rasterizationState.frontFace = vk::FrontFace::eClockwise;
+		rasterizationState.frontFace = vk::FrontFace::eCounterClockwise;
 		rasterizationState.depthClampEnable = VK_FALSE;
 		rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationState.depthBiasEnable = VK_FALSE;

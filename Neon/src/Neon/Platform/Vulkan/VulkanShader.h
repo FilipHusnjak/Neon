@@ -20,12 +20,22 @@ namespace Neon
 			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
 		};
 
-		VulkanShader(const std::unordered_map<ShaderType, std::string>& shaderPaths);
+		struct ImageSampler
+		{
+			std::string Name;
+			uint32 BindingPoint = 0;
+			uint32 Count = 0;
+			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
+		};
+
+		VulkanShader(const ShaderSpecification& shaderSpecification,
+					 const std::unordered_map<ShaderType, std::string>& shaderPaths);
 		~VulkanShader() = default;
 
 		void Reload() override;
 
 		void SetUniformBuffer(uint32 binding, uint32 index, const void* data) override;
+		void SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) override;
 
 		vk::DescriptorSet GetDescriptorSet() const
 		{
@@ -48,6 +58,8 @@ namespace Neon
 		void CreateDescriptors();
 
 	private:
+		ShaderSpecification m_Specification;
+
 		std::vector<vk::UniqueShaderModule> m_ShaderModules;
 		std::vector<vk::PipelineShaderStageCreateInfo> m_ShaderStages;
 		std::unordered_map<ShaderType, std::string> m_ShaderSources;
@@ -60,6 +72,6 @@ namespace Neon
 		vk::UniqueDescriptorSet m_DescriptorSet;
 
 		std::unordered_map<uint32, UniformBuffer> m_UniformBuffers;
-		std::unordered_map<std::string, VkWriteDescriptorSet> m_WriteDescriptorSets;
+		std::unordered_map<uint32, ImageSampler> m_ImageSamplers;
 	};
 } // namespace Neon

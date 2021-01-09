@@ -14,6 +14,8 @@ using int32 = int32_t;
 using uint64 = uint64_t;
 using int64 = int64_t;
 
+using byte = uint8;
+
 // __VA_ARGS__ expansion to get past MSVC "bug"
 #define NEO_EXPAND_VARGS(x) x
 
@@ -39,4 +41,11 @@ namespace Neon
 	{
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
+
+	struct Buffer
+	{
+		uint32 Size;
+		byte* Data;
+	};
+
 } // namespace Neon

@@ -1,20 +1,20 @@
 #pragma once
 
-#include "IndexBuffer.h"
-#include "Pipeline.h"
-#include "VertexBuffer.h"
+#include "Neon/Renderer/IndexBuffer.h"
+#include "Neon/Renderer/Pipeline.h"
+#include "Neon/Renderer/VertexBuffer.h"
+#include "Neon/Renderer/Texture.h"
+
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 
 #include <glm/glm.hpp>
+
+#include <assimp/Importer.hpp>
 
 struct aiNode;
 struct aiAnimation;
 struct aiNodeAnim;
 struct aiScene;
-
-namespace Assimp
-{
-	class Importer;
-}
 
 namespace Neon
 {
@@ -24,6 +24,7 @@ namespace Neon
 		glm::vec3 Normal;
 		glm::vec3 Tangent;
 		glm::vec3 Binormal;
+		int32 MaterialIndex;
 		glm::vec2 Texcoord;
 	};
 
@@ -62,7 +63,20 @@ namespace Neon
 	{
 	public:
 		Mesh(const std::string& filename);
-		~Mesh();
+		~Mesh() = default;
+
+		const std::vector<Submesh>& GetSubmeshes() const
+		{
+			return m_Submeshes;
+		}
+
+		const std::vector<SharedRef<Texture2D>>& GetTextures() const
+		{
+			return m_Textures;
+		}
+
+	private:
+		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
 
 	private:
 		std::vector<Submesh> m_Submeshes;
@@ -80,7 +94,10 @@ namespace Neon
 		const aiScene* m_Scene;
 
 		SharedRef<Shader> m_MeshShader;
+		std::vector<SharedRef<Texture2D>> m_Textures;
 
 		std::string m_FilePath;
+
+		friend class VulkanRendererAPI;
 	};
 } // namespace Neon

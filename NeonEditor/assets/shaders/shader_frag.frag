@@ -20,7 +20,7 @@ layout(set = 0, binding = 0, scalar) readonly buffer MaterialBufferObject
 {
     Material materials[];
 };
-layout(set = 0, binding = 1) uniform sampler2D textureSamplers[];
+layout(binding = 1) uniform sampler2D textureSamplers[];
 
 layout(push_constant, scalar) uniform PushConstant
 {

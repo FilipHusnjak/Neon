@@ -14,6 +14,15 @@ namespace Neon
 		vk::UniqueBuffer Handle;
 	};
 
+	struct VulkanImage
+	{
+		uint32 Width;
+		uint32 Height;
+		vk::Format Format;
+		vk::UniqueImage Image;
+		vk::UniqueDeviceMemory DeviceMemory;
+	};
+
 	class VulkanAllocator
 	{
 	public:
