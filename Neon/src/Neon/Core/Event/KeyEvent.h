@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Event.h"
+#include "Neon/Core/Event/Event.h"
 
 namespace Neon
 {
 class KeyEvent : public Event
 {
 public:
-	[[nodiscard]] inline int GetKeyCode() const
+	inline int GetKeyCode() const
 	{
 		return m_KeyCode;
 	}

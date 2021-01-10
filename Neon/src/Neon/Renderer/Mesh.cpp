@@ -378,18 +378,18 @@ namespace Neon
 		}
 	}
 
-	void Mesh::OnUpdate(float seconds)
+	void Mesh::OnUpdate(float deltaSeconds)
 	{
 		if (m_IsAnimated)
 		{
 			if (m_AnimationPlaying)
 			{
-				m_WorldTime += seconds;
+				m_WorldTime += deltaSeconds;
 
 				float ticksPerSecond =
 					(float)(m_Scene->mAnimations[0]->mTicksPerSecond != 0 ? m_Scene->mAnimations[0]->mTicksPerSecond : 25.0f) *
 					m_TimeMultiplier;
-				m_AnimationTime += seconds * ticksPerSecond;
+				m_AnimationTime += deltaSeconds * ticksPerSecond;
 				m_AnimationTime = fmod(m_AnimationTime, (float)m_Scene->mAnimations[0]->mDuration);
 			}
 

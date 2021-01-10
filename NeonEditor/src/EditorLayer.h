@@ -17,7 +17,7 @@ namespace Neon
 		void OnAttach() override;
 		void OnDetach() override;
 
-		void OnUpdate(float ts) override;
+		void OnUpdate(float deltaSeconds) override;
 		void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 

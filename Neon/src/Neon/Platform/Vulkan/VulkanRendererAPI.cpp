@@ -61,8 +61,8 @@ namespace Neon
 		caps.Version = "1.2";
 
 		//s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\wuson\\wuson.obj");
-		//s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\m1911\\m1911.fbx");
-		s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\boblamp\\boblampclean.md5mesh");
+		s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\m1911\\m1911.fbx");
+		//s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\boblamp\\boblampclean.md5mesh");
 
 		s_MeshShader = s_TestMesh->m_MeshShader.As<VulkanShader>();
 
@@ -73,12 +73,7 @@ namespace Neon
 		s_TestPipeline = Pipeline::Create(pipelineSpecification).As<VulkanPipeline>();
 	}
 
-	void VulkanRendererAPI::Update(float seconds)
-	{
-		s_TestMesh->OnUpdate(seconds);
-	}
-
-	void VulkanRendererAPI::Render(SharedRef<PerspectiveCameraController>& camera)
+	void VulkanRendererAPI::Render()
 	{
 		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
 		uint32 width = swapChain.GetWidth();

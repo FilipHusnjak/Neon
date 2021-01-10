@@ -207,7 +207,7 @@ namespace Neon
 
 		vk::CommandPoolCreateInfo cmdPoolInfo = {};
 		cmdPoolInfo.queueFamilyIndex = m_PhysicalDevice->m_QueueFamilyIndices.Graphics;
-		cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+		cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 		m_CommandPool = m_Handle.get().createCommandPoolUnique(cmdPoolInfo);
 
 		m_GraphicsQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Graphics, 0);

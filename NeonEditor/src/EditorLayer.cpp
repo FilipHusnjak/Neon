@@ -22,10 +22,10 @@ namespace Neon
 	{
 	}
 
-	void EditorLayer::OnUpdate(float ts)
+	void EditorLayer::OnUpdate(float deltaSeconds)
 	{
-		m_Times.push(ts);
-		m_TimePassed += ts;
+		m_Times.push(deltaSeconds * 1000.f);
+		m_TimePassed += deltaSeconds * 1000.f;
 		m_FrameCount++;
 		if (m_FrameCount > AVG_FRAME_COUNT)
 		{

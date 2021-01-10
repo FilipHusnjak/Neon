@@ -122,7 +122,6 @@ namespace Neon
 		} m_DepthStencil;
 
 		std::vector<vk::UniqueFramebuffer> m_Framebuffers;
-		vk::UniqueCommandPool m_CommandPool;
 		std::vector<vk::UniqueCommandBuffer> m_RenderCommandBuffers;
 
 		struct Semaphores

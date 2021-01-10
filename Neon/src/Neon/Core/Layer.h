@@ -21,7 +21,7 @@ namespace Neon
 		{
 		}
 
-		virtual void OnUpdate(float ts)
+		virtual void OnUpdate(float deltaSeconds)
 		{
 		}
 

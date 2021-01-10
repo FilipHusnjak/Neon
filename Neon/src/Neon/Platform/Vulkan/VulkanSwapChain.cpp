@@ -39,15 +39,9 @@ namespace Neon
 
 		m_QueueNodeIndex = m_Device->GetPhysicalDevice()->GetGraphicsQueueIndex();
 
-		// Create command pool
-		vk::CommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.queueFamilyIndex = m_QueueNodeIndex;
-		cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-		m_CommandPool = m_Device->GetHandle().createCommandPoolUnique(cmdPoolInfo);
-
 		// Create command buffers
 		vk::CommandBufferAllocateInfo commandBufferAllocateInfo{};
-		commandBufferAllocateInfo.commandPool = m_CommandPool.get();
+		commandBufferAllocateInfo.commandPool = device->GetCommandPool();
 		commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
 		commandBufferAllocateInfo.commandBufferCount = m_TargetMaxFramesInFlight;
 		m_RenderCommandBuffers = m_Device->GetHandle().allocateCommandBuffersUnique(commandBufferAllocateInfo);

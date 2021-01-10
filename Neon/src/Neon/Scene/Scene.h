@@ -1,126 +1,96 @@
-//
-// Created by Filip on 3.8.2020..
-//
+#pragma once
 
-#ifndef NEON_SCENE_H
-#define NEON_SCENE_H
+#include "Neon/Core/UUID.h"
+#include "Neon/Editor/EditorCamera.h"
 
-#include "Core/Allocator.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-
-#include "PerspectiveCameraController.h"
-#include "entt.h"
-
-#define MAX_BONES_PER_VERTEX 10
+#include <entt/entt.hpp>
+#include <glm/glm.hpp>
 
 namespace Neon
 {
-class Entity;
-
-struct Vertex
-{
-	glm::vec3 pos;
-	glm::vec3 norm;
-	glm::vec3 color;
-	glm::vec2 texCoord;
-	uint32_t matID;
-	uint32_t boneIDs[MAX_BONES_PER_VERTEX];
-	float boneWeights[MAX_BONES_PER_VERTEX];
-
-	static vk::VertexInputBindingDescription getBindingDescription()
+	struct Light
 	{
-		return {0, sizeof(Vertex)};
-	}
+		glm::vec3 Direction = {0.0f, 0.0f, 0.0f};
+		glm::vec3 Radiance = {0.0f, 0.0f, 0.0f};
 
-	static std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptions()
+		float Multiplier = 1.0f;
+	};
+
+	class Entity;
+	using EntityMap = std::unordered_map<UUID, Entity>;
+
+	class Scene : public RefCounted
 	{
-		std::vector<vk::VertexInputAttributeDescription> result = {
-			{0, 0, vk::Format::eR32G32B32Sfloat, static_cast<uint32_t>(offsetof(Vertex, pos))},
-			{1, 0, vk::Format::eR32G32B32Sfloat, static_cast<uint32_t>(offsetof(Vertex, norm))},
-			{2, 0, vk::Format::eR32G32B32Sfloat, static_cast<uint32_t>(offsetof(Vertex, color))},
-			{3, 0, vk::Format::eR32G32Sfloat, static_cast<uint32_t>(offsetof(Vertex, texCoord))},
-			{4, 0, vk::Format::eR32Sint, static_cast<uint32_t>(offsetof(Vertex, matID))}};
-		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++)
+	public:
+		Scene(const std::string debugName = "Scene");
+		~Scene();
+
+		void Init();
+
+		void OnUpdate(float deltaSeconds);
+		void OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera);
+		void OnEvent(Event& e);
+
+		void SetViewportSize(uint32 width, uint32 height);
+
+		Light& GetLight()
 		{
-			result.emplace_back(
-				i + 5, 0, vk::Format::eR32Uint,
-				static_cast<uint32_t>(offsetof(Vertex, boneIDs) + i * sizeof(uint32_t)));
+			return m_Light;
 		}
-		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++)
+		const Light& GetLight() const
 		{
-			result.emplace_back(
-				i + 5 + MAX_BONES_PER_VERTEX, 0, vk::Format::eR32Sfloat,
-				static_cast<uint32_t>(offsetof(Vertex, boneWeights) + i * sizeof(float)));
+			return m_Light;
 		}
-		return result;
-	}
 
-	bool operator==(const Vertex& other) const
-	{
-		return pos == other.pos;
-	}
-};
+		Entity CreateEntity(const std::string& name = "");
+		Entity CreateEntityWithID(UUID uuid, const std::string& name = "", bool runtimeMap = false);
+		void DestroyEntity(Entity entity);
 
-struct Material
-{
-	glm::vec3 ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-	glm::vec3 diffuse = glm::vec3(0.7f, 0.7f, 0.7f);
-	glm::vec3 specular = glm::vec3(0.2f, 0.2f, 0.2f);
-	glm::vec3 transmittance = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 emission = glm::vec3(0.0f, 0.0f, 0.1f);
-	float shininess = 1.f;
-	float ior = 1.0f; // index of refraction
-	float dissolve = 1.f; // 1 == opaque; 0 == fully transparent
-	int illum = 1;
-	int textureID = 0;
-};
+		template<typename T>
+		auto GetAllEntitiesWithComponent()
+		{
+			return m_Registry.view<T>();
+		}
 
-class Scene
-{
-public:
-	Scene() = default;
-	~Scene() = default;
+		Entity FindEntityByTag(const std::string& tag);
 
-	Entity CreateEntity(const std::string& name = std::string());
+		const EntityMap& GetEntityMap() const
+		{
+			return m_EntityIDMap;
+		}
 
-	Entity LoadSkyDome();
+		UUID GetUUID() const
+		{
+			return m_SceneID;
+		}
 
-	Entity LoadModel(const std::string& filename);
+		static SharedRef<Scene> GetScene(UUID uuid);
 
-	Entity LoadAnimatedModel(const std::string& filename);
+		void SetSelectedEntity(entt::entity entity)
+		{
+			m_SelectedEntity = entity;
+		}
 
-	Entity LoadTerrain(float width, float height, float maxHeight);
+	private:
+		UUID m_SceneID;
+		entt::entity m_SceneEntity;
+		entt::registry m_Registry;
 
-	Entity LoadWater();
+		std::string m_DebugName;
+		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
-	void OnUpdate(float ts, Neon::PerspectiveCameraController controller, glm::vec4 clearColor,
-				  bool pointLight, float lightIntensity, glm::vec3 lightDirection,
-				  glm::vec3 lightPosition);
+		EntityMap m_EntityIDMap;
 
-private:
-	void ProcessNode(const aiScene* scene, aiNode* node, Entity parent);
-	void ProcessNode(const aiScene* scene, aiNode* node, std::vector<Vertex>& vertices,
-					 std::vector<uint32_t>& indices);
-	void ProcessNode(const aiScene* scene, aiNode* node, std::vector<Vertex>& vertices,
-					 std::vector<uint32_t>& indices, std::vector<Material>& materials,
-					 std::vector<TextureImage>& textureImages,
-					 std::unordered_map<std::string, uint32_t>& boneMap,
-					 std::vector<glm::mat4>& boneOffsets);
-	static void ProcessMesh(aiMesh* mesh, std::vector<Vertex>& vertices,
-							std::vector<uint32_t>& indices);
-	void ProcessMesh(const aiScene* scene, aiMesh* mesh, Entity parent);
-	static void ProcessMesh(const aiScene* scene, aiMesh* mesh, std::vector<Vertex>& vertices,
-							std::vector<uint32_t>& indices, std::vector<Material>& materials,
-							std::vector<TextureImage>& textureImages,
-							std::unordered_map<std::string, uint32_t>& boneMap,
-							std::vector<glm::mat4>& boneOffsets);
-	void Render(Neon::PerspectiveCamera camera, vk::Extent2D extent);
+		Light m_Light;
+		float m_LightMultiplier = 0.3f;
 
-private:
-	entt::registry m_Registry;
-	friend class Entity;
-};
+		entt::entity m_SelectedEntity;
+
+		Entity* m_PhysicsBodyEntityBuffer = nullptr;
+
+		float m_SkyboxLod = 1.0f;
+		bool m_IsPlaying = false;
+
+		friend class Entity;
+	};
 } // namespace Neon
-
-#endif //NEON_SCENE_H

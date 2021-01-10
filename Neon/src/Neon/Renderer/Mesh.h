@@ -5,8 +5,6 @@
 #include "Neon/Renderer/Texture.h"
 #include "Neon/Renderer/VertexBuffer.h"
 
-#include "Platform/Vulkan/VulkanRendererAPI.h"
-
 #include <glm/glm.hpp>
 
 #include <assimp/Importer.hpp>
@@ -131,7 +129,7 @@ namespace Neon
 		Mesh(const std::string& filename);
 		~Mesh() = default;
 
-		void OnUpdate(float miliseconds);
+		void OnUpdate(float deltaSeconds);
 
 		const std::vector<Submesh>& GetSubmeshes() const
 		{
@@ -189,7 +187,5 @@ namespace Neon
 		bool m_AnimationPlaying = true;
 
 		std::string m_FilePath;
-
-		friend class VulkanRendererAPI;
 	};
 } // namespace Neon
