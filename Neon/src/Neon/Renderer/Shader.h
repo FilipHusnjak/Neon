@@ -53,6 +53,7 @@ namespace Neon
 		virtual void Reload() = 0;
 
 		virtual void SetUniformBuffer(uint32 binding, uint32 index, const void* data) = 0;
+		virtual void SetStorageBuffer(uint32 binding, const void* data) = 0;
 		virtual void SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) = 0;
 
 		static SharedRef<Shader> Create(const ShaderSpecification& shaderSpecification,

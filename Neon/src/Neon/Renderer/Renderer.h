@@ -12,6 +12,8 @@ namespace Neon
 	public:
 		static void Init();
 
+		static void Update(float seconds);
+		
 		static void Render(SharedRef<PerspectiveCameraController>& camera);
 
 		static void Shutdown();

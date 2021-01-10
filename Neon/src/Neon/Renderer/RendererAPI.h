@@ -29,6 +29,7 @@ namespace Neon
 		virtual ~RendererAPI() = default;
 
 		virtual void Init() = 0;
+		virtual void Update(float seconds) = 0;
 		virtual void Render(SharedRef<PerspectiveCameraController>& camera) = 0;
 		virtual void Shutdown() = 0;
 		virtual void* GetColorImageId() = 0;

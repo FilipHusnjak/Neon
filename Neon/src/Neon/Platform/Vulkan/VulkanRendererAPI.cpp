@@ -60,6 +60,7 @@ namespace Neon
 		caps.Renderer = "Vulkan";
 		caps.Version = "1.2";
 
+		//s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\wuson\\wuson.obj");
 		//s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\m1911\\m1911.fbx");
 		s_TestMesh = SharedRef<Mesh>::Create("assets\\models\\boblamp\\boblampclean.md5mesh");
 
@@ -70,6 +71,11 @@ namespace Neon
 		pipelineSpecification.Layout = s_TestMesh->m_VertexBufferLayout;
 		pipelineSpecification.Pass = s_TestRenderPass;
 		s_TestPipeline = Pipeline::Create(pipelineSpecification).As<VulkanPipeline>();
+	}
+
+	void VulkanRendererAPI::Update(float seconds)
+	{
+		s_TestMesh->OnUpdate(seconds);
 	}
 
 	void VulkanRendererAPI::Render(SharedRef<PerspectiveCameraController>& camera)

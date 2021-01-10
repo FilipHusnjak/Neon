@@ -63,6 +63,12 @@ namespace Neon
 		m_Allocator.UpdateBuffer(m_UniformBuffers[binding].Buffers[index], data);
 	}
 
+	void VulkanShader::SetStorageBuffer(uint32 binding, const void* data)
+	{
+		NEO_CORE_ASSERT(m_StorageBuffers.find(binding) != m_StorageBuffers.end(), "Uniform binding is invalid!");
+		m_Allocator.UpdateBuffer(m_StorageBuffers[binding].BufferData, data);
+	}
+
 	void VulkanShader::SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture)
 	{
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
@@ -171,6 +177,38 @@ namespace Neon
 			NEO_CORE_TRACE("-------------------");
 		}
 
+		NEO_CORE_TRACE("Storage Buffers:");
+		for (const auto& resource : resources.storage_buffers)
+		{
+			const auto& name = resource.name;
+			auto& bufferType = compiler.get_type(resource.type_id);
+			uint32 bindingPoint = compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+			auto size = static_cast<uint32>(compiler.get_declared_struct_size(bufferType));
+			auto memberCount = static_cast<uint32>(bufferType.member_types.size());
+			if (size == 0)
+			{
+				for (uint32 i = 0; i < memberCount; i++)
+				{
+					size += compiler.type_struct_member_array_stride(bufferType, i);
+				}
+			}
+
+			NEO_CORE_ASSERT(m_StorageBuffers.find(bindingPoint) == m_StorageBuffers.end());
+			//NEO_CORE_ASSERT(m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end());
+			StorageBuffer& buffer = m_StorageBuffers[bindingPoint];
+			buffer.Name = name;
+			buffer.BindingPoint = bindingPoint;
+			buffer.Size = size * m_Specification.ShaderVariableCounts[name];
+			buffer.ShaderStage = ShaderTypeToVulkanShaderType(shaderType);
+
+			NEO_CORE_TRACE("  Name: {0}", name);
+			NEO_CORE_TRACE("  Member Count: {0}", memberCount);
+			NEO_CORE_TRACE("  Binding Point: {0}", bindingPoint);
+			NEO_CORE_TRACE("  Size: {0}", size);
+			NEO_CORE_TRACE("-------------------");
+		}
+
 		NEO_CORE_TRACE("Image Samplers:");
 		for (const auto& resource : resources.sampled_images)
 		{
@@ -214,6 +252,12 @@ namespace Neon
 				typeCount.descriptorCount += uniformBuffer.Count;
 			}
 		}
+		if (!m_StorageBuffers.empty())
+		{
+			vk::DescriptorPoolSize& typeCount = poolSizes.emplace_back();
+			typeCount.type = vk::DescriptorType::eStorageBuffer;
+			typeCount.descriptorCount = static_cast<uint32>(m_StorageBuffers.size());
+		}
 		if (!m_ImageSamplers.empty())
 		{
 			vk::DescriptorPoolSize& typeCount = poolSizes.emplace_back();
@@ -251,6 +295,17 @@ namespace Neon
 										   vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			}
 		}
+		for (auto& [binding, storageBuffer] : m_StorageBuffers)
+		{
+			auto& layoutBinding = layoutBindings.emplace_back();
+			layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
+			layoutBinding.descriptorCount = 1;
+			layoutBinding.stageFlags = storageBuffer.ShaderStage;
+			layoutBinding.binding = binding;
+
+			m_Allocator.AllocateBuffer(storageBuffer.BufferData, storageBuffer.Size, vk::BufferUsageFlagBits::eStorageBuffer,
+									   vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+		}
 		for (auto& [binding, imageSampler] : m_ImageSamplers)
 		{
 			auto& layoutBinding = layoutBindings.emplace_back();
@@ -285,9 +340,26 @@ namespace Neon
 														layoutBinding.binding,
 														0,
 														layoutBinding.descriptorCount,
-														layoutBinding.descriptorType,
+														vk::DescriptorType::eUniformBuffer,
 														nullptr,
 														bufferInfos.data()};
+					device.updateDescriptorSets({descWrite}, nullptr);
+				}
+				break;
+				case vk::DescriptorType::eStorageBuffer:
+				{
+					vk::DescriptorBufferInfo bufferInfo;
+
+					bufferInfo.buffer = m_StorageBuffers[layoutBinding.binding].BufferData.Handle.get();
+					bufferInfo.offset = 0;
+					bufferInfo.range = m_StorageBuffers[layoutBinding.binding].BufferData.Size;
+					vk::WriteDescriptorSet descWrite = {m_DescriptorSet.get(),
+														layoutBinding.binding,
+														0,
+														1,
+														vk::DescriptorType::eStorageBuffer,
+														nullptr,
+														&bufferInfo};
 					device.updateDescriptorSets({descWrite}, nullptr);
 				}
 				break;

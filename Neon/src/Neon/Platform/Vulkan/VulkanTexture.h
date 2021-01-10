@@ -8,12 +8,10 @@ namespace Neon
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
+		VulkanTexture2D(bool srgb = false);
 		VulkanTexture2D(const std::string& path, bool srgb = false);
-		VulkanTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap = TextureWrap::Clamp);
 
 		virtual ~VulkanTexture2D() = default;
-
-		void Resize(uint32_t width, uint32_t height) override;
 
 		bool Loaded() const override
 		{
@@ -48,6 +46,10 @@ namespace Neon
 		{
 			throw std::logic_error("The method or operation is not implemented.");
 		}
+
+	private:
+		void Invalidate();
+		void CreateDefaultTexture();
 
 	private:
 		Buffer m_Data{};

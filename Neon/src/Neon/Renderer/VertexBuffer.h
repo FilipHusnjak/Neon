@@ -83,7 +83,7 @@ namespace Neon
 	public:
 		VertexBufferLayout() = default;
 
-		VertexBufferLayout(const std::initializer_list<VertexBufferElement>& elements)
+		VertexBufferLayout(const std::vector<VertexBufferElement>& elements)
 			: m_Elements(elements)
 		{
 			uint32 offset = 0;

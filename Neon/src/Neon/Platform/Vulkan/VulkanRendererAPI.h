@@ -13,6 +13,7 @@ namespace Neon
 		~VulkanRendererAPI() override;
 
 		void Init() override;
+		void Update(float seconds) override;
 		void Render(SharedRef<PerspectiveCameraController>& camera) override;
 		void* GetColorImageId() override;
 

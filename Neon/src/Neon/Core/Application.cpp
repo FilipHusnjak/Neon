@@ -88,6 +88,8 @@ namespace Neon
 
 				s_Camera->OnUpdate(timeStepMilis);
 
+				Renderer::Update(timeStepMilis / 1000.f);
+
 				m_Window->GetRenderContext()->BeginFrame();
 
 				m_ImGuiLayer->Begin();

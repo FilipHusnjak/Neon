@@ -8,6 +8,11 @@
 
 namespace Neon
 {
+	VulkanTexture2D::VulkanTexture2D(bool srgb /*= false*/)
+	{
+		CreateDefaultTexture();
+	}
+
 	VulkanTexture2D::VulkanTexture2D(const std::string& path, bool srgb /*= false*/)
 		: Texture2D(path)
 	{
@@ -17,11 +22,22 @@ namespace Neon
 		stbi_set_flip_vertically_on_load(1);
 		m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, 4);
 		m_Data.Size = width * height * 4;
-		NEO_CORE_ASSERT(m_Data.Data, "Failed to load image!");
+		if (!m_Data.Data)
+		{
+			NEO_CORE_WARN("Failed to load texture: {0}", path);
+			CreateDefaultTexture();
+		}
+		else
+		{
+			m_Image.Width = width;
+			m_Image.Height = height;
 
-		m_Image.Width = width;
-		m_Image.Height = height;
+			Invalidate();
+		}		
+	}
 
+	void VulkanTexture2D::Invalidate()
+	{
 		auto device = VulkanContext::GetDevice();
 		auto deviceHandle = device->GetHandle();
 
@@ -192,7 +208,8 @@ namespace Neon
 		vk::ImageViewCreateInfo imageViewCreateInfo{};
 		imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
 		imageViewCreateInfo.format = format;
-		imageViewCreateInfo.components = {vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eA};
+		imageViewCreateInfo.components = {vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB,
+										  vk::ComponentSwizzle::eA};
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
 		// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
 		imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -208,15 +225,21 @@ namespace Neon
 		m_View = deviceHandle.createImageViewUnique(imageViewCreateInfo);
 	}
 
-	VulkanTexture2D::VulkanTexture2D(TextureFormat format, uint32_t width, uint32_t height,
-									 TextureWrap wrap /*= TextureWrap::Clamp*/)
-		: Texture2D(format)
+	void VulkanTexture2D::CreateDefaultTexture()
 	{
-		NEO_CORE_ASSERT(false);
-	}
+		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
-	void VulkanTexture2D::Resize(uint32_t width, uint32_t height)
-	{
+		int width, height, channels;
+		width = height = 1;
+		channels = 4;
+		auto* color = new glm::u8vec4(255, 0, 255, 255);
+		m_Data.Data = reinterpret_cast<stbi_uc*>(color);
+		m_Data.Size = width * height * 4;
+		
+		m_Image.Width = width;
+		m_Image.Height = height;
+
+		Invalidate();
 	}
 
 } // namespace Neon

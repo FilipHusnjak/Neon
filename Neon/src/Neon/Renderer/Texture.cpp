@@ -29,11 +29,6 @@ namespace Neon
 		return levels;
 	}
 
-	Texture::Texture(TextureFormat format)
-		: m_Format(format)
-	{
-	}
-
 	Texture::Texture(const std::string& path)
 		: m_Path(path)
 	{
@@ -52,15 +47,14 @@ namespace Neon
 		return nullptr;
 	}
 
-	SharedRef<Texture2D> Texture2D::Create(TextureFormat format, uint32 width, uint32 height,
-										   TextureWrap wrap /*= TextureWrap::Clamp*/)
+	SharedRef<Texture2D> Texture2D::Create(bool srgb /*= false*/)
 	{
 		switch (RendererAPI::Current())
 		{
 			case RendererAPI::API::None:
 				return nullptr;
 			case RendererAPI::API::Vulkan:
-				return SharedRef<VulkanTexture2D>::Create(format, width, height, wrap);
+				return SharedRef<VulkanTexture2D>::Create(srgb);
 		}
 		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
@@ -68,11 +62,6 @@ namespace Neon
 
 	Texture2D::Texture2D(const std::string& path)
 		: Texture(path)
-	{
-	}
-
-	Texture2D::Texture2D(TextureFormat format)
-		: Texture(format)
 	{
 	}
 

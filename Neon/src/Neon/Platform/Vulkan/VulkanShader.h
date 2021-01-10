@@ -16,7 +16,15 @@ namespace Neon
 			uint32 Count = 0;
 			uint32 Size = 0;
 			std::vector<VulkanBuffer> Buffers;
-			vk::DescriptorBufferInfo Descriptor;
+			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
+		};
+
+		struct StorageBuffer
+		{
+			std::string Name;
+			uint32 BindingPoint = 0;
+			uint32 Size = 0;
+			VulkanBuffer BufferData;
 			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
 		};
 
@@ -35,6 +43,7 @@ namespace Neon
 		void Reload() override;
 
 		void SetUniformBuffer(uint32 binding, uint32 index, const void* data) override;
+		void SetStorageBuffer(uint32 binding, const void* data) override;
 		void SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) override;
 
 		vk::DescriptorSet GetDescriptorSet() const
@@ -72,6 +81,7 @@ namespace Neon
 		vk::UniqueDescriptorSet m_DescriptorSet;
 
 		std::unordered_map<uint32, UniformBuffer> m_UniformBuffers;
+		std::unordered_map<uint32, StorageBuffer> m_StorageBuffers;
 		std::unordered_map<uint32, ImageSampler> m_ImageSamplers;
 	};
 } // namespace Neon
