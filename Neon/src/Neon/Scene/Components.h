@@ -67,14 +67,4 @@ namespace Neon
 			return Mesh;
 		}
 	};
-
-	struct SpriteRendererComponent
-	{
-		glm::vec4 Color = {1.0f, 1.0f, 1.0f, 1.0f};
-		SharedRef<Texture2D> Texture;
-		float TilingFactor = 1.0f;
-
-		SpriteRendererComponent() = default;
-		SpriteRendererComponent(const SpriteRendererComponent& other) = default;
-	};
 } // namespace Neon

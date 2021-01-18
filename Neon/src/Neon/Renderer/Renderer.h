@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Neon/Core/Application.h"
-#include "RendererAPI.h"
-#include "RendererContext.h"
-#include "PerspectiveCameraController.h"
+#include "Neon/Renderer/Mesh.h"
+#include "Neon/Renderer/RenderPass.h"
+#include "Neon/Renderer/RendererAPI.h"
+#include "Neon/Renderer/RendererContext.h"
 
 namespace Neon
 {
@@ -11,8 +12,18 @@ namespace Neon
 	{
 	public:
 		static void Init();
-		
-		static void Render();
+
+		static void Begin();
+
+		static void BeginRenderPass(const SharedRef<RenderPass>& renderPass);
+
+		static void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform);
+
+		static void EndRenderPass();
+
+		static void End();
+
+		static void* GetFinalColorBufferRendererId();
 
 		static void Shutdown();
 
@@ -24,11 +35,6 @@ namespace Neon
 		static SharedRef<RendererContext> GetContext()
 		{
 			return Application::Get().GetWindow().GetRenderContext();
-		}
-
-		static void* GetColorImageId()
-		{
-			return s_RendererAPI->GetColorImageId();
 		}
 
 	private:

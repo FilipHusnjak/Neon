@@ -12,7 +12,7 @@ namespace Neon
 		~VulkanFramebuffer() = default;
 		void Resize(uint32 width, uint32 height, bool forceRecreate = false) override;
 
-		vk::Framebuffer GetHandle() const
+		void* GetHandle() const override
 		{
 			return m_Handle.get();
 		}

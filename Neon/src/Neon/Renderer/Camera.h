@@ -18,6 +18,8 @@ namespace Neon
 		void SetProjectionMatrix(const glm::mat4& projectionMatrix)
 		{
 			m_ProjectionMatrix = projectionMatrix;
+			// TODO: Only for Vulkan
+			m_ProjectionMatrix[1][1] *= -1;
 		}
 
 		float GetExposure() const

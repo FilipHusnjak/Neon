@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Renderer/VertexBuffer.h"
-#include "Vulkan.h"
-#include "VulkanAllocator.h"
+#include "Neon/Platform/Vulkan/Vulkan.h"
+#include "Neon/Platform/Vulkan/VulkanAllocator.h"
+#include "Neon/Renderer/VertexBuffer.h"
 
 namespace Neon
 {
@@ -12,7 +12,7 @@ namespace Neon
 		VulkanVertexBuffer(void* data, uint32 size, const VertexBufferLayout& layout);
 		~VulkanVertexBuffer() = default;
 
-		vk::Buffer GetHandle() const
+		void* GetHandle() const override
 		{
 			return m_Buffer.Handle.get();
 		}

@@ -15,7 +15,19 @@ namespace Neon
 	EditorCamera::EditorCamera(const glm::mat4& projectionMatrix)
 		: Camera(projectionMatrix)
 	{
-		m_Rotation = glm::vec3(90.0f, 0.0f, 0.0f);
+		m_FocalPoint = glm::vec3(0.0f);
+
+		glm::vec3 position = {-5, 5, 5};
+		m_Distance = glm::distance(position, m_FocalPoint);
+
+		m_Yaw = 3.0f * M_PI / 4.0f;
+		m_Pitch = M_PI / 4.0f;
+
+		UpdateCameraView();
+	}
+
+	EditorCamera::EditorCamera()
+	{
 		m_FocalPoint = glm::vec3(0.0f);
 
 		glm::vec3 position = {-5, 5, 5};
@@ -59,7 +71,7 @@ namespace Neon
 	void EditorCamera::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& e) { OnMouseScroll(e); });
+		dispatcher.Dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& e) { return OnMouseScroll(e); });
 	}
 
 	glm::vec3 EditorCamera::GetUpDirection()
@@ -87,7 +99,6 @@ namespace Neon
 		m_Position = CalculatePosition();
 
 		glm::quat orientation = GetOrientation();
-		m_Rotation = glm::eulerAngles(orientation) * (180.0f / (float)M_PI);
 		m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}

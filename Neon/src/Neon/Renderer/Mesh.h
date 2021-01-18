@@ -7,12 +7,15 @@
 
 #include <glm/glm.hpp>
 
-#include <assimp/Importer.hpp>
-
 struct aiNode;
 struct aiAnimation;
 struct aiNodeAnim;
 struct aiScene;
+
+namespace Assimp
+{
+	class Importer;
+}
 
 namespace Neon
 {
@@ -127,9 +130,30 @@ namespace Neon
 	{
 	public:
 		Mesh(const std::string& filename);
-		~Mesh() = default;
+		~Mesh();
 
 		void OnUpdate(float deltaSeconds);
+
+		void CreatePipeline(const SharedRef<RenderPass>& renderPass);
+
+		const SharedRef<Pipeline>& GetPipeline() const
+		{
+			return m_MeshPipeline;
+		}
+
+		const SharedRef<Shader>& GetShader() const
+		{
+			return m_MeshShader;
+		}
+
+		const SharedRef<VertexBuffer>& GetVertexBuffer() const
+		{
+			return m_VertexBuffer;
+		}
+		const SharedRef<IndexBuffer>& GetIndexBuffer() const
+		{
+			return m_IndexBuffer;
+		}
 
 		const std::vector<Submesh>& GetSubmeshes() const
 		{
@@ -163,7 +187,6 @@ namespace Neon
 
 		std::vector<BoneInfo> m_BoneInfo;
 
-		SharedRef<Pipeline> m_Pipeline;
 		SharedRef<VertexBuffer> m_VertexBuffer;
 		SharedRef<IndexBuffer> m_IndexBuffer;
 		VertexBufferLayout m_VertexBufferLayout;
@@ -177,6 +200,7 @@ namespace Neon
 		const aiScene* m_Scene;
 
 		SharedRef<Shader> m_MeshShader;
+		SharedRef<Pipeline> m_MeshPipeline;
 		std::vector<SharedRef<Texture2D>> m_Textures;
 
 		// Animation

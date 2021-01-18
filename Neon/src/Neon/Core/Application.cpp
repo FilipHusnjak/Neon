@@ -3,8 +3,8 @@
 #include "Application.h"
 #include "Neon/ImGui/ImGuiLayer.h"
 #include "Neon/Renderer/Framebuffer.h"
-#include "Neon/Renderer/PerspectiveCameraController.h"
 #include "Neon/Renderer/Renderer.h"
+#include "Neon/Renderer/SceneRenderer.h"
 
 #include <imgui/imgui.h>
 
@@ -75,12 +75,14 @@ namespace Neon
 
 			if (!m_Minimized)
 			{
+				m_Window->GetRenderContext()->BeginFrame();
+
+				Renderer::Begin();
+
 				for (Layer* layer : m_LayerStack)
 				{
 					layer->OnUpdate(deltaSeconds);
 				}
-
-				m_Window->GetRenderContext()->BeginFrame();
 
 				m_ImGuiLayer->Begin();
 
@@ -89,17 +91,19 @@ namespace Neon
 				ImGui::Text("Vendor: %s", caps.Vendor.c_str());
 				ImGui::Text("Renderer: %s", caps.Renderer.c_str());
 				ImGui::Text("Version: %s", caps.Version.c_str());
-				ImGui::Text("Frame Time: %.2fms\n", deltaSeconds * 1000.f);
+				ImGui::Text("Frame Time: %.2fms", deltaSeconds * 1000.0);
 				ImGui::End();
+
+				SceneRenderer::OnImGuiRender();
 
 				for (Layer* layer : m_LayerStack)
 				{
 					layer->OnImGuiRender();
 				}
 
-				Renderer::Render();
-
 				m_ImGuiLayer->End();
+
+				Renderer::End();
 
 				m_Window->SwapBuffers();
 			}

@@ -12,7 +12,7 @@ namespace Neon
 		VulkanIndexBuffer(void* data, uint32 size);
 		~VulkanIndexBuffer() = default;
 
-		vk::Buffer GetHandle() const
+		void* GetHandle() const override
 		{
 			return m_Buffer.Handle.get();
 		}

@@ -1,5 +1,6 @@
-#include "Camera.h"
 #include "neopch.h"
+
+#include "Camera.h"
 
 namespace Neon
 {

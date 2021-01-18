@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vulkan.h"
-#include "VulkanAllocator.h"
-#include "VulkanDevice.h"
+#include "Neon/Platform/Vulkan/Vulkan.h"
+#include "Neon/Platform/Vulkan/VulkanAllocator.h"
+#include "Neon/Platform/Vulkan/VulkanDevice.h"
 
 struct GLFWwindow;
 
@@ -56,7 +56,7 @@ namespace Neon
 		{
 			return GetFramebuffer(m_CurrentSwapChainImageIndex);
 		}
-		vk::CommandBuffer GetCurrentDrawCommandBuffer() const
+		vk::CommandBuffer GetCurrentRenderCommandBuffer() const
 		{
 			return GetRenderCommandBuffer(m_CurrentFrameIndex);
 		}

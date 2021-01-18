@@ -19,8 +19,7 @@ layout (location = 1) out vec2 fragTexCoord;
 layout (std140, binding = 0) uniform Camera
 {
     mat4 model;
-    mat4 view;
-    mat4 projection;
+    mat4 viewProjection;
 };
 
 layout(std140, binding = 2) readonly buffer Bones
@@ -37,5 +36,5 @@ void main()
     }
     fragMaterialIndex = a_MaterialIndex;
     fragTexCoord = a_TexCoord;
-    gl_Position = projection * view * model * boneTransform * vec4(a_Position, 1.0);
+    gl_Position = viewProjection * model * boneTransform * vec4(a_Position, 1.0);
 }

@@ -18,6 +18,8 @@ namespace Neon
 			return m_Size;
 		}
 
+		virtual void* GetHandle() const = 0;
+
 		static SharedRef<IndexBuffer> Create(void* data, uint32 size);
 
 	protected:

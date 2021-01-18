@@ -26,7 +26,7 @@ namespace Neon
 		VulkanRenderPass(RenderPassSpecification specification);
 		~VulkanRenderPass() = default;
 
-		vk::RenderPass GetHandle() const
+		void* GetHandle() const override
 		{
 			return m_Handle.get();
 		}

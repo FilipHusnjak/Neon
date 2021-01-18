@@ -2,8 +2,15 @@
 
 #include "EditorLayer.h"
 #include "Neon/Renderer/Renderer.h"
+#include "Neon/Scene/Components.h"
+#include "Neon/Scene/Entity.h"
 
 #include <imgui/imgui.h>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #define AVG_FRAME_COUNT 1000
 
@@ -12,6 +19,12 @@ namespace Neon
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
+		m_EditorScene = SharedRef<Scene>::Create();
+
+		auto entity = m_EditorScene->CreateMesh(R"(assets\\models\\wuson\\wuson.obj)", "M1911");
+		auto& transform = entity.GetComponent<TransformComponent>();
+		transform = glm::translate(glm::mat4(1.f), {10, 0, 10});
+		m_EditorScene->CreateMesh(R"(assets\models\m1911\m1911.fbx)", "M1911");
 	}
 
 	void EditorLayer::OnAttach()
@@ -33,6 +46,11 @@ namespace Neon
 			m_TimePassed -= m_Times.front();
 			m_Times.pop();
 		}
+
+		m_EditorCamera.OnUpdate(deltaSeconds);
+
+		m_EditorScene->OnUpdate(deltaSeconds);
+		m_EditorScene->OnRenderEditor(deltaSeconds, m_EditorCamera);
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -71,13 +89,17 @@ namespace Neon
 		}
 
 		ImGui::Begin("Frame time");
-		ImGui::Text("Frame Time: %.2fms\n", m_TimePassed / AVG_FRAME_COUNT);
+		ImGui::Text("FPS: %.2f\n", 1000.0 / (m_TimePassed / AVG_FRAME_COUNT));
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");
 		auto viewportSize = ImGui::GetContentRegionAvail();
-		ImGui::Image(Renderer::GetColorImageId(), viewportSize);
+
+		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 1000.0f));
+		m_EditorCamera.SetViewportSize((uint32)viewportSize.x, (uint32)viewportSize.y);
+
+		ImGui::Image(Renderer::GetFinalColorBufferRendererId(), viewportSize);
 		ImGui::End();
 		ImGui::PopStyleVar();
 
@@ -86,5 +108,6 @@ namespace Neon
 
 	void EditorLayer::OnEvent(Event& e)
 	{
+		m_EditorCamera.OnEvent(e);
 	}
 } // namespace Neon

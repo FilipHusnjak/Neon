@@ -13,8 +13,16 @@ namespace Neon
 		~VulkanRendererAPI() override;
 
 		void Init() override;
-		void Render() override;
-		void* GetColorImageId() override;
+
+		void Begin() override;
+
+		void BeginRenderPass(const SharedRef<RenderPass>& renderPass) override;
+
+		void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform) override;
+
+		void EndRenderPass() override;
+		
+		void End() override;
 
 		void Shutdown() override;
 	};

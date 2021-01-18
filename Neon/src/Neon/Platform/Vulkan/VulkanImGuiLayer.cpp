@@ -32,6 +32,54 @@ namespace Neon
 
 	void VulkanImGuiLayer::End()
 	{
+		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
+		uint32 width = swapChain.GetWidth();
+		uint32 height = swapChain.GetHeight();
+
+		vk::CommandBuffer renderCommandBuffer = swapChain.GetCurrentRenderCommandBuffer();
+
+		// Update viewport state
+		vk::Viewport viewport = {};
+		viewport.x = 0.f;
+		viewport.y = 0.f;
+		viewport.width = (float)width;
+		viewport.height = (float)height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+
+		// Update scissor state
+		vk::Rect2D scissor = {};
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		scissor.extent.width = width;
+		scissor.extent.height = height;
+
+		vk::ClearValue clearValues[2];
+		std::array<float, 4> clearColor = {0.2f, 0.2f, 0.2f, 1.0f};
+		clearValues[0].color = vk::ClearColorValue(clearColor);
+		clearValues[1].depthStencil = {1.0f, 0};
+
+		vk::RenderPassBeginInfo renderPassBeginInfo = {};
+		renderPassBeginInfo.renderPass = swapChain.GetRenderPass();
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = width;
+		renderPassBeginInfo.renderArea.extent.height = height;
+		renderPassBeginInfo.clearValueCount = 2;
+		renderPassBeginInfo.pClearValues = clearValues;
+		renderPassBeginInfo.framebuffer = swapChain.GetCurrentFramebuffer();
+
+		renderCommandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+		renderCommandBuffer.setViewport(0, 1, &viewport);
+
+		renderCommandBuffer.setScissor(0, 1, &scissor);
+
+		ImGui::Render();
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), renderCommandBuffer);
+
+		renderCommandBuffer.endRenderPass();
+
 		ImGuiIO& io = ImGui::GetIO();
 		// Update and Render additional Platform Windows
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

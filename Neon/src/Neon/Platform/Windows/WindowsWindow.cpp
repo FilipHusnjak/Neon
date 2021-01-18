@@ -1,7 +1,8 @@
 #include "neopch.h"
 
-#include "Core/Event/KeyEvent.h"
-#include "Renderer/RendererAPI.h"
+#include "Neon/Core/Event/KeyEvent.h"
+#include "Neon/Core/Event/MouseEvent.h"
+#include "Neon/Renderer/RendererAPI.h"
 #include "WindowsWindow.h"
 
 #include <imgui/imgui.h>
@@ -87,8 +88,7 @@ namespace Neon
 			data.EventCallback(event);
 		});
 
-		// TODO: Handle mouse movement
-		/*glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
+		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			switch (action)
@@ -120,7 +120,7 @@ namespace Neon
 
 			MouseMovedEvent event((float)x, (float)y);
 			data.EventCallback(event);
-		});*/
+		});
 
 		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);

@@ -1,5 +1,6 @@
 #include "neopch.h"
 
+#include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
 #include "Neon/Scene/Entity.h"
 #include "Scene.h"
@@ -40,6 +41,7 @@ namespace Neon
 
 	void Scene::OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera)
 	{
+		SceneRenderer::BeginScene(this, {editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f});
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
 		for (auto entity : group)
 		{
@@ -47,8 +49,10 @@ namespace Neon
 			if (meshComponent.Mesh)
 			{
 				meshComponent.Mesh->OnUpdate(deltaSeconds);
+				SceneRenderer::SubmitMesh(meshComponent, transformComponent);
 			}
 		}
+		SceneRenderer::EndScene();
 	}
 
 	void Scene::OnEvent(Event& e)
@@ -74,6 +78,7 @@ namespace Neon
 		}
 
 		m_EntityIDMap[idComponent.ID] = entity;
+
 		return entity;
 	}
 
@@ -91,6 +96,17 @@ namespace Neon
 
 		NEO_CORE_ASSERT(m_EntityIDMap.find(uuid) == m_EntityIDMap.end());
 		m_EntityIDMap[uuid] = entity;
+		return entity;
+	}
+
+	Entity Scene::CreateMesh(const std::string& path, const std::string& name /*= ""*/)
+	{
+		auto entity = CreateEntity(name);
+
+		SharedRef<Mesh> mesh = SharedRef<Mesh>::Create(path);
+		mesh->CreatePipeline(SceneRenderer::GetGeoPass());
+		entity.AddComponent<MeshComponent>(mesh);
+
 		return entity;
 	}
 

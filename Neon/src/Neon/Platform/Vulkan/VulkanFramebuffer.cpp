@@ -12,7 +12,9 @@ namespace Neon
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec)
 		: Framebuffer(spec)
 	{
-		m_RenderPass = m_Specification.Pass.As<VulkanRenderPass>()->GetHandle();
+		NEO_CORE_ASSERT(m_Specification.Pass);
+
+		m_RenderPass = (VkRenderPass)m_Specification.Pass->GetHandle();
 
 		const auto device = VulkanContext::GetDevice()->GetHandle();
 

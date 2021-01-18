@@ -46,7 +46,7 @@ namespace Neon
 			return m_Specification;
 		}
 
-		vk::Pipeline GetHandle() const
+		void* GetHandle() const override
 		{
 			return m_Handle.get();
 		}

@@ -3,11 +3,14 @@
 #include "Neon/Core/Event/MouseEvent.h"
 #include "Neon/Renderer/Camera.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace Neon
 {
 	class EditorCamera : public Camera
 	{
-		EditorCamera() = default;
+	public:
+		EditorCamera();
 		EditorCamera(const glm::mat4& projectionMatrix);
 
 		void Focus();
@@ -29,7 +32,7 @@ namespace Neon
 			m_ViewportHeight = height;
 		}
 
-		const glm::mat4& GetViewMatrix() const
+		const glm::mat4 GetViewMatrix() const
 		{
 			return m_ViewMatrix;
 		}
@@ -74,7 +77,6 @@ namespace Neon
 	private:
 		glm::mat4 m_ViewMatrix;
 		glm::vec3 m_Position;
-		glm::vec3 m_Rotation;
 		glm::vec3 m_FocalPoint;
 
 		glm::vec2 m_InitialMousePosition;

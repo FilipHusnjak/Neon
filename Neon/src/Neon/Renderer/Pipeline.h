@@ -21,6 +21,8 @@ namespace Neon
 		virtual PipelineSpecification& GetSpecification() = 0;
 		virtual const PipelineSpecification& GetSpecification() const = 0;
 
+		virtual void* GetHandle() const = 0;
+
 		static SharedRef<Pipeline> Create(const PipelineSpecification& spec);
 	};
 } // namespace Neon

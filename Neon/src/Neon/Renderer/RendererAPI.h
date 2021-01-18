@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Neon/Core/Core.h"
-#include "PerspectiveCameraController.h"
+#include "Neon/Renderer/Mesh.h"
 
 namespace Neon
 {
@@ -29,9 +29,12 @@ namespace Neon
 		virtual ~RendererAPI() = default;
 
 		virtual void Init() = 0;
-		virtual void Render() = 0;
+		virtual void Begin() = 0;
+		virtual void BeginRenderPass(const SharedRef<RenderPass>& renderPass) = 0;
+		virtual void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform) = 0;
+		virtual void EndRenderPass() = 0;
+		virtual void End() = 0;
 		virtual void Shutdown() = 0;
-		virtual void* GetColorImageId() = 0;
 
 		static RenderAPICapabilities& GetCapabilities()
 		{

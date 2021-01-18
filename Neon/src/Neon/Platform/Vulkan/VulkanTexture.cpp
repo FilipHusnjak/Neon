@@ -1,6 +1,6 @@
 #include "neopch.h"
 
-#include "VulkanContext.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
 #include "VulkanTexture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -33,7 +33,7 @@ namespace Neon
 			m_Image.Height = height;
 
 			Invalidate();
-		}		
+		}
 	}
 
 	void VulkanTexture2D::Invalidate()
@@ -235,7 +235,7 @@ namespace Neon
 		auto* color = new glm::u8vec4(255, 0, 255, 255);
 		m_Data.Data = reinterpret_cast<stbi_uc*>(color);
 		m_Data.Size = width * height * 4;
-		
+
 		m_Image.Width = width;
 		m_Image.Height = height;
 

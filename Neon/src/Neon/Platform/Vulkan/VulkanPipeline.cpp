@@ -38,7 +38,7 @@ namespace Neon
 		// The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
 		pipelineCreateInfo.layout = m_PipelineLayout.get();
 		// Renderpass this pipeline is attached to
-		pipelineCreateInfo.renderPass = vulkanRenderPass->GetHandle();
+		pipelineCreateInfo.renderPass = (VkRenderPass)vulkanRenderPass->GetHandle();
 
 		// Construct the different states making up the pipeline
 

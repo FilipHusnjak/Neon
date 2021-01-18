@@ -94,13 +94,13 @@ namespace Neon
 		std::unordered_map<ShaderType, std::string> shaderPaths;
 		if (m_IsAnimated)
 		{
-			shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test_anim.vert";
-			shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test.frag";
+			shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test_anim_vert.glsl";
+			shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test_frag.glsl";
 		}
 		else
 		{
-			shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test.vert";
-			shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test.frag";
+			shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test_vert.glsl";
+			shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test_frag.glsl";
 		}
 		ShaderSpecification shaderSpecification;
 		shaderSpecification.ShaderVariableCounts["u_AlbedoTexture"] = m_Scene->mNumMaterials;
@@ -378,6 +378,10 @@ namespace Neon
 		}
 	}
 
+	Mesh::~Mesh()
+	{
+	}
+
 	void Mesh::OnUpdate(float deltaSeconds)
 	{
 		if (m_IsAnimated)
@@ -396,6 +400,15 @@ namespace Neon
 			// TODO: We only need to recalculate bones if rendering has been requested at the current animation frame
 			UpdateBoneTransforms(m_AnimationTime);
 		}
+	}
+
+	void Mesh::CreatePipeline(const SharedRef<RenderPass>& renderPass)
+	{
+		PipelineSpecification pipelineSpecification;
+		pipelineSpecification.Shader = m_MeshShader;
+		pipelineSpecification.Layout = m_VertexBufferLayout;
+		pipelineSpecification.Pass = renderPass;
+		m_MeshPipeline = Pipeline::Create(pipelineSpecification);
 	}
 
 	void Mesh::TraverseNodes(aiNode* node, const glm::mat4& parentTransform /*= glm::mat4(1.0f)*/, uint32 level /*= 0*/)

@@ -142,7 +142,6 @@ namespace Neon
 		NEO_CORE_TRACE(" {0}", m_ShaderPaths.at(shaderType));
 		NEO_CORE_TRACE("===========================");
 
-		// Vertex Shader
 		spirv_cross::Compiler compiler(shaderBinary);
 		auto resources = compiler.get_shader_resources();
 
@@ -195,7 +194,7 @@ namespace Neon
 			}
 
 			NEO_CORE_ASSERT(m_StorageBuffers.find(bindingPoint) == m_StorageBuffers.end());
-			//NEO_CORE_ASSERT(m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end());
+			NEO_CORE_ASSERT(m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end());
 			StorageBuffer& buffer = m_StorageBuffers[bindingPoint];
 			buffer.Name = name;
 			buffer.BindingPoint = bindingPoint;

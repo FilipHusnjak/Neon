@@ -147,6 +147,8 @@ namespace Neon
 			return m_Layout;
 		}
 
+		virtual void* GetHandle() const = 0;
+
 		static SharedRef<VertexBuffer> Create(void* data, uint32 size, const VertexBufferLayout& layout);
 
 	protected:

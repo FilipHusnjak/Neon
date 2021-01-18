@@ -1,7 +1,7 @@
 #include "neopch.h"
 
-#include "Core/Application.h"
-#include "Core/Input.h"
+#include "Neon/Core/Application.h"
+#include "Neon/Core/Input.h"
 
 #include <GLFW/glfw3.h>
 

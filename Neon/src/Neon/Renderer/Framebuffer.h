@@ -1,16 +1,16 @@
 #pragma once
 
-#include "RenderPass.h"
-
 #include <glm/glm.hpp>
 
 namespace Neon
 {
+	class RenderPass;
+
 	struct FramebufferSpecification
 	{
 		uint32 Width = 1920;
 		uint32 Height = 1080;
-		SharedRef<RenderPass> Pass;
+		RenderPass* Pass;
 		glm::vec4 ClearColor = {1.f, 1.f, 1.f, 1.f};
 	};
 
@@ -26,6 +26,8 @@ namespace Neon
 		{
 			return m_Specification;
 		}
+
+		virtual void* GetHandle() const = 0;
 
 		virtual void* GetColorImageID() const = 0;
 

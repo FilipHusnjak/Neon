@@ -1,6 +1,6 @@
 #include "neopch.h"
 
-#include "VulkanContext.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
 #include "VulkanSwapChain.h"
 
 #include <glfw/glfw3.h>
@@ -368,7 +368,7 @@ namespace Neon
 				VK_CHECK_RESULT(result);
 			}
 		}
-		//VK_CHECK_RESULT(m_Device->GetHandle().waitForFences(m_WaitFences[m_CurrentFrameIndex].get(), VK_TRUE, UINT64_MAX));
+		VK_CHECK_RESULT(m_Device->GetHandle().waitForFences(m_WaitFences[m_CurrentFrameIndex].get(), VK_TRUE, UINT64_MAX));
 	}
 
 	vk::Result VulkanSwapChain::AcquireNextImage(vk::Semaphore imageAcquiredSemaphore, uint32* imageIndex)

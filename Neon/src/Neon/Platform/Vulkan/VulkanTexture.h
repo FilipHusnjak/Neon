@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Renderer/Texture.h"
-#include "VulkanAllocator.h"
+#include "Neon/Platform/Vulkan/VulkanAllocator.h"
+#include "Neon/Renderer/Texture.h"
 
 namespace Neon
 {
