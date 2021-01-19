@@ -9,7 +9,7 @@ namespace Neon
 	class VulkanIndexBuffer : public IndexBuffer
 	{
 	public:
-		VulkanIndexBuffer(void* data, uint32 size);
+		VulkanIndexBuffer(const void* data, uint32 size);
 		~VulkanIndexBuffer() = default;
 
 		void* GetHandle() const override

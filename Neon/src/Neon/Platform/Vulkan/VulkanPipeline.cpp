@@ -20,9 +20,6 @@ namespace Neon
 		SharedRef<VulkanRenderPass> vulkanRenderPass = SharedRef<VulkanRenderPass>(m_Specification.Pass);
 
 		vk::DescriptorSetLayout descriptorSetLayout = vulkanShader->GetDescriptorSetLayout();
-
-		// TODO: Push constant ranges
-
 		// Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
 		// In a more complex scenario you would have different pipeline layouts for different descriptor set layouts that could be reused
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
@@ -31,6 +28,13 @@ namespace Neon
 			pPipelineLayoutCreateInfo.setLayoutCount = 1;
 			pPipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
 		}
+		std::vector<vk::PushConstantRange> pushConstantRanges;
+		for (const auto& pushConstant : vulkanShader->GetPushConstants())
+		{
+			pushConstantRanges.emplace_back(pushConstant.ShaderStage, 0, pushConstant.Size);
+		}
+		pPipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32>(pushConstantRanges.size());
+		pPipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
 
 		m_PipelineLayout = device.createPipelineLayoutUnique(pPipelineLayoutCreateInfo);
 

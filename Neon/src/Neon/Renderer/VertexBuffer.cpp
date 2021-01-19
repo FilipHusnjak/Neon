@@ -12,7 +12,7 @@ namespace Neon
 	{
 	}
 
-	SharedRef<VertexBuffer> VertexBuffer::Create(void* data, uint32 size, const VertexBufferLayout& layout)
+	SharedRef<VertexBuffer> VertexBuffer::Create(const void* data, uint32 size, const VertexBufferLayout& layout)
 	{
 		switch (Renderer::GetAPI())
 		{

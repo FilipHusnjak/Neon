@@ -16,7 +16,7 @@ namespace Neon
 			uint32 Count = 0;
 			uint32 Size = 0;
 			std::vector<VulkanBuffer> Buffers;
-			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
+			vk::ShaderStageFlags ShaderStage;
 		};
 
 		struct StorageBuffer
@@ -25,7 +25,7 @@ namespace Neon
 			uint32 BindingPoint = 0;
 			uint32 Size = 0;
 			VulkanBuffer BufferData;
-			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
+			vk::ShaderStageFlags ShaderStage;
 		};
 
 		struct ImageSampler
@@ -33,7 +33,14 @@ namespace Neon
 			std::string Name;
 			uint32 BindingPoint = 0;
 			uint32 Count = 0;
-			vk::ShaderStageFlagBits ShaderStage = vk::ShaderStageFlagBits::eAll;
+			vk::ShaderStageFlags ShaderStage;
+		};
+
+		struct PushConstant
+		{
+			std::string Name;
+			uint32 Size;
+			vk::ShaderStageFlags ShaderStage;
 		};
 
 		VulkanShader(const ShaderSpecification& shaderSpecification,
@@ -57,6 +64,11 @@ namespace Neon
 		const std::vector<vk::PipelineShaderStageCreateInfo>& GetShaderStages() const
 		{
 			return m_ShaderStages;
+		}
+
+		const std::vector<PushConstant>& GetPushConstants() const
+		{
+			return m_PushConstants;
 		}
 
 	private:
@@ -83,5 +95,7 @@ namespace Neon
 		std::unordered_map<uint32, UniformBuffer> m_UniformBuffers;
 		std::unordered_map<uint32, StorageBuffer> m_StorageBuffers;
 		std::unordered_map<uint32, ImageSampler> m_ImageSamplers;
+
+		std::vector<PushConstant> m_PushConstants;
 	};
 } // namespace Neon

@@ -5,7 +5,7 @@
 
 namespace Neon
 {
-	VulkanVertexBuffer::VulkanVertexBuffer(void* data, uint32 size, const VertexBufferLayout& layout)
+	VulkanVertexBuffer::VulkanVertexBuffer(const void* data, uint32 size, const VertexBufferLayout& layout)
 		: VertexBuffer(size, layout)
 	{
 		// TODO: Create device local buffer

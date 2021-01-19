@@ -11,7 +11,7 @@ namespace Neon
 	{
 	}
 
-	SharedRef<IndexBuffer> IndexBuffer::Create(void* data, uint32 size)
+	SharedRef<IndexBuffer> IndexBuffer::Create(const void* data, uint32 size)
 	{
 		switch (Renderer::GetAPI())
 		{

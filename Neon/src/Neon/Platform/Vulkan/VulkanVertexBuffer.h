@@ -9,7 +9,7 @@ namespace Neon
 	class VulkanVertexBuffer : public VertexBuffer
 	{
 	public:
-		VulkanVertexBuffer(void* data, uint32 size, const VertexBufferLayout& layout);
+		VulkanVertexBuffer(const void* data, uint32 size, const VertexBufferLayout& layout);
 		~VulkanVertexBuffer() = default;
 
 		void* GetHandle() const override

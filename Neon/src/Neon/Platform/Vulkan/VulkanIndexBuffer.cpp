@@ -5,7 +5,7 @@
 
 namespace Neon
 {
-	VulkanIndexBuffer::VulkanIndexBuffer(void* data, uint32 size)
+	VulkanIndexBuffer::VulkanIndexBuffer(const void* data, uint32 size)
 		: IndexBuffer(size)
 	{
 		// TODO: Create device local buffer

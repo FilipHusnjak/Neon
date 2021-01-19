@@ -94,13 +94,13 @@ namespace Neon
 		std::unordered_map<ShaderType, std::string> shaderPaths;
 		if (m_IsAnimated)
 		{
-			shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test_anim_vert.glsl";
-			shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test_frag.glsl";
+			shaderPaths[ShaderType::Vertex] = "assets/shaders/test_anim_vert.glsl";
+			shaderPaths[ShaderType::Fragment] = "assets/shaders/test_frag.glsl";
 		}
 		else
 		{
-			shaderPaths[ShaderType::Vertex] = "assets\\shaders\\test_vert.glsl";
-			shaderPaths[ShaderType::Fragment] = "assets\\shaders\\test_frag.glsl";
+			shaderPaths[ShaderType::Vertex] = "assets/shaders/test_vert.glsl";
+			shaderPaths[ShaderType::Fragment] = "assets/shaders/test_frag.glsl";
 		}
 		ShaderSpecification shaderSpecification;
 		shaderSpecification.ShaderVariableCounts["u_AlbedoTexture"] = m_Scene->mNumMaterials;

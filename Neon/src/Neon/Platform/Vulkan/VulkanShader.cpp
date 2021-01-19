@@ -166,7 +166,7 @@ namespace Neon
 			buffer.BindingPoint = bindingPoint;
 			buffer.Count = count;
 			buffer.Size = size;
-			buffer.ShaderStage = ShaderTypeToVulkanShaderType(shaderType);
+			buffer.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Count: {0}", count);
@@ -193,13 +193,12 @@ namespace Neon
 				}
 			}
 
-			NEO_CORE_ASSERT(m_StorageBuffers.find(bindingPoint) == m_StorageBuffers.end());
 			NEO_CORE_ASSERT(m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end());
 			StorageBuffer& buffer = m_StorageBuffers[bindingPoint];
 			buffer.Name = name;
 			buffer.BindingPoint = bindingPoint;
 			buffer.Size = size * m_Specification.ShaderVariableCounts[name];
-			buffer.ShaderStage = ShaderTypeToVulkanShaderType(shaderType);
+			buffer.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Member Count: {0}", memberCount);
@@ -225,11 +224,25 @@ namespace Neon
 			imageSampler.BindingPoint = bindingPoint;
 			imageSampler.Name = name;
 			imageSampler.Count = count;
-			imageSampler.ShaderStage = ShaderTypeToVulkanShaderType(shaderType);
+			imageSampler.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Count: {0}", count);
 			NEO_CORE_TRACE("  Binding Point: {0}", bindingPoint);
+			NEO_CORE_TRACE("-------------------");
+		}
+
+		NEO_CORE_TRACE("Push Constants:");
+		for (const auto& resource : resources.push_constant_buffers)
+		{
+			const auto& name = resource.name;
+			auto& pushConstantType = compiler.get_type(resource.base_type_id);
+
+			auto size = static_cast<uint32>(compiler.get_declared_struct_size(pushConstantType));
+			m_PushConstants.push_back({name, size, ShaderTypeToVulkanShaderType(shaderType)});
+
+			NEO_CORE_TRACE("  Name: {0}", name);
+			NEO_CORE_TRACE("  Size: {0}", size);
 			NEO_CORE_TRACE("-------------------");
 		}
 

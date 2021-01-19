@@ -13,6 +13,10 @@ namespace Neon
 		glm::mat4 ViewProjection = glm::mat4(1.f);
 	};
 
+	const std::vector<glm::vec3> WaterVertices = {{1, 0, 1},  {0, 1, 0}, {1, 0, -1},  {0, 1, 0},
+												  {-1, 0, 1}, {0, 1, 0}, {-1, 0, -1}, {0, 1, 0}};
+	const std::vector<uint32> WaterIndices = {0, 1, 2, 2, 1, 3};
+
 	struct SceneRendererData
 	{
 		const Scene* ActiveScene = nullptr;
@@ -25,6 +29,17 @@ namespace Neon
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
+
+		// Water data
+		SharedRef<Texture2D> DudvMap;
+		SharedRef<Texture2D> NormalMap;
+		SharedRef<Texture2D> Reflection;
+		SharedRef<Texture2D> Refraction;
+		SharedRef<RenderPass> WaterPass;
+		SharedRef<Shader> WaterShader;
+		SharedRef<Pipeline> WaterPipeline;
+		SharedRef<VertexBuffer> WaterVertexBuffer;
+		SharedRef<IndexBuffer> WaterIndexBuffer;
 
 		float LightDistance = 0.1f;
 		glm::mat4 LightMatrices[4];
@@ -48,11 +63,46 @@ namespace Neon
 		RenderPassSpecification geoRenderPassSpec;
 		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
 
+		RenderPassSpecification waterRenderPassSpec;
+		s_Data.WaterPass = RenderPass::Create(waterRenderPassSpec);
+
 		FramebufferSpecification geoFramebufferSpec;
 		geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
 		geoFramebufferSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
 
+		FramebufferSpecification waterFramebufferSpec;
+		waterFramebufferSpec.Pass = s_Data.WaterPass.Ptr();
+		waterFramebufferSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
+
 		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
+		s_Data.WaterPass->SetTargetFramebuffer(Framebuffer::Create(waterFramebufferSpec));
+
+		std::unordered_map<ShaderType, std::string> waterShaderPaths;
+		waterShaderPaths[ShaderType::Vertex] = "assets/shaders/water_vert.glsl";
+		waterShaderPaths[ShaderType::Fragment] = "assets/shaders/water_frag.glsl";
+
+		ShaderSpecification waterShaderSpec;
+		s_Data.WaterShader = Shader::Create(waterShaderSpec, waterShaderPaths);
+
+		s_Data.DudvMap = Texture2D::Create("assets/textures/water/dudvMap.png");
+		s_Data.NormalMap = Texture2D::Create("assets/textures/water/normalMap.png");
+
+		s_Data.WaterShader->SetTexture(3, 0, s_Data.DudvMap);
+		s_Data.WaterShader->SetTexture(4, 0, s_Data.NormalMap);
+
+		VertexBufferLayout waterVertexBufferLayout =
+			std::vector<VertexBufferElement>{{ShaderDataType::Float3}, {ShaderDataType::Float3}};
+
+		s_Data.WaterVertexBuffer = VertexBuffer::Create(
+			WaterVertices.data(), static_cast<uint32>(WaterVertices.size()) * sizeof(WaterVertices[0]), waterVertexBufferLayout);
+		s_Data.WaterIndexBuffer =
+			IndexBuffer::Create(WaterIndices.data(), static_cast<uint32>(WaterIndices.size()) * sizeof(WaterIndices[0]));
+
+		PipelineSpecification waterPipelineSpec;
+		waterPipelineSpec.Layout = waterVertexBufferLayout;
+		waterPipelineSpec.Pass = s_Data.WaterPass;
+		waterPipelineSpec.Shader = s_Data.WaterShader;
+		s_Data.WaterPipeline = Pipeline::Create(waterPipelineSpec);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
