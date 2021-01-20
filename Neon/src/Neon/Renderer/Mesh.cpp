@@ -298,16 +298,16 @@ namespace Neon
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
 					m_Textures[i] = Texture2D::Create(texturePath, true);
 					NEO_CORE_ASSERT(m_Textures[i]->Loaded(), "Could not load texture");
-					m_MeshShader->SetTexture(1, i, m_Textures[i]);
+					m_MeshShader->SetTexture2D(1, i, m_Textures[i]);
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
 				else
 				{
 					//mi->Set("u_MaterialUniforms.AlbedoColor", glm::vec3 { aiColor.r, aiColor.g, aiColor.b });
 					NEO_MESH_LOG("    No albedo map, loading default texture...");
-					m_Textures[i] = Texture2D::Create(true);
+					m_Textures[i] = Texture2D::Create();
 					NEO_CORE_ASSERT(m_Textures[i]->Loaded(), "Could not load default texture");
-					m_MeshShader->SetTexture(1, i, m_Textures[i]);
+					m_MeshShader->SetTexture2D(1, i, m_Textures[i]);
 					NEO_MESH_LOG("    Default texture loaded");
 				}
 

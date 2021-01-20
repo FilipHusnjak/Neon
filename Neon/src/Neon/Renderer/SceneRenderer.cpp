@@ -41,19 +41,24 @@ namespace Neon
 		SharedRef<VertexBuffer> WaterVertexBuffer;
 		SharedRef<IndexBuffer> WaterIndexBuffer;
 
+		// Skybox
+		SharedRef<TextureCube> SkyboxCubemap;
+		SharedRef<Shader> SkyboxShader;
+		SharedRef<Pipeline> SkyboxPipeline;
+
 		float LightDistance = 0.1f;
 		glm::mat4 LightMatrices[4];
 		glm::mat4 LightViewMatrix;
 
 		glm::vec2 FocusPoint = {0.5f, 0.5f};
 
-		struct DrawCommand
+		struct MeshDrawCommand
 		{
 			SharedRef<Mesh> Mesh;
 			glm::mat4 Transform;
 		};
 
-		std::vector<DrawCommand> DrawList;
+		std::vector<MeshDrawCommand> MeshDrawList;
 	};
 
 	static SceneRendererData s_Data;
@@ -80,15 +85,20 @@ namespace Neon
 		std::unordered_map<ShaderType, std::string> waterShaderPaths;
 		waterShaderPaths[ShaderType::Vertex] = "assets/shaders/water_vert.glsl";
 		waterShaderPaths[ShaderType::Fragment] = "assets/shaders/water_frag.glsl";
-
 		ShaderSpecification waterShaderSpec;
 		s_Data.WaterShader = Shader::Create(waterShaderSpec, waterShaderPaths);
+
+		std::unordered_map<ShaderType, std::string> skyboxShaderPaths;
+		skyboxShaderPaths[ShaderType::Vertex] = "assets/shaders/skybox_vert.glsl";
+		skyboxShaderPaths[ShaderType::Fragment] = "assets/shaders/skybox_frag.glsl";
+		ShaderSpecification skyboxShaderSpec;
+		s_Data.SkyboxShader = Shader::Create(skyboxShaderSpec, skyboxShaderPaths);
 
 		s_Data.DudvMap = Texture2D::Create("assets/textures/water/dudvMap.png");
 		s_Data.NormalMap = Texture2D::Create("assets/textures/water/normalMap.png");
 
-		s_Data.WaterShader->SetTexture(3, 0, s_Data.DudvMap);
-		s_Data.WaterShader->SetTexture(4, 0, s_Data.NormalMap);
+		s_Data.WaterShader->SetTexture2D(3, 0, s_Data.DudvMap);
+		s_Data.WaterShader->SetTexture2D(4, 0, s_Data.NormalMap);
 
 		VertexBufferLayout waterVertexBufferLayout =
 			std::vector<VertexBufferElement>{{ShaderDataType::Float3}, {ShaderDataType::Float3}};
@@ -103,6 +113,19 @@ namespace Neon
 		waterPipelineSpec.Pass = s_Data.WaterPass;
 		waterPipelineSpec.Shader = s_Data.WaterShader;
 		s_Data.WaterPipeline = Pipeline::Create(waterPipelineSpec);
+
+		VertexBufferLayout skyboxVertexBufferLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+
+		PipelineSpecification skyboxPipelineSpec;
+		skyboxPipelineSpec.Layout = skyboxVertexBufferLayout;
+		skyboxPipelineSpec.Pass = s_Data.GeoPass;
+		skyboxPipelineSpec.Shader = s_Data.SkyboxShader;
+		s_Data.SkyboxPipeline = Pipeline::Create(skyboxPipelineSpec);
+
+		s_Data.SkyboxCubemap = TextureCube::Create({"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
+													"assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
+													"assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});
+		s_Data.SkyboxShader->SetTextureCube(1, 0, s_Data.SkyboxCubemap);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
@@ -131,7 +154,7 @@ namespace Neon
 
 	void SceneRenderer::SubmitMesh(SharedRef<Mesh> mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/)
 	{
-		s_Data.DrawList.push_back({mesh, transform});
+		s_Data.MeshDrawList.push_back({mesh, transform});
 	}
 
 	const SharedRef<RenderPass>& SceneRenderer::GetGeoPass()
@@ -162,7 +185,7 @@ namespace Neon
 	{
 		GeometryPass();
 
-		s_Data.DrawList.clear();
+		s_Data.MeshDrawList.clear();
 		s_Data.SceneData = {};
 	}
 
@@ -175,7 +198,7 @@ namespace Neon
 		auto viewProjection = sceneCamera.Camera.GetProjectionMatrix() * sceneCamera.ViewMatrix;
 
 		// Render meshes
-		for (auto& dc : s_Data.DrawList)
+		for (auto& dc : s_Data.MeshDrawList)
 		{
 			SharedRef<Shader> meshShader = dc.Mesh->GetShader();
 			CameraMatrices cameraMatrices = {};
@@ -184,6 +207,13 @@ namespace Neon
 			meshShader->SetUniformBuffer(0, 0, &cameraMatrices);
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform);
 		}
+		glm::mat4 viewRotation = sceneCamera.ViewMatrix;
+		viewRotation[3][0] = 0;
+		viewRotation[3][1] = 0;
+		viewRotation[3][2] = 0;
+		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
+		s_Data.SkyboxShader->SetUniformBuffer(0, 0, &inverseVP);
+		Renderer::SubmitFullscreenQuad(s_Data.SkyboxPipeline);
 
 		Renderer::EndRenderPass();
 	}

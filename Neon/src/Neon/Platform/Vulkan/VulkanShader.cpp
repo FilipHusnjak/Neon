@@ -69,9 +69,20 @@ namespace Neon
 		m_Allocator.UpdateBuffer(m_StorageBuffers[binding].BufferData, data);
 	}
 
-	void VulkanShader::SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture)
+	void VulkanShader::SetTexture2D(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture)
 	{
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
+		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
+		vk::WriteDescriptorSet descWrite{
+			m_DescriptorSet.get(), binding, index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
+
+		vk::Device device = VulkanContext::GetDevice()->GetHandle();
+		device.updateDescriptorSets({descWrite}, nullptr);
+	}
+
+	void VulkanShader::SetTextureCube(uint32 binding, uint32 index, const SharedRef<TextureCube>& texture)
+	{
+		const auto vulkanTexture = texture.As<VulkanTextureCube>();
 		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), binding, index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};

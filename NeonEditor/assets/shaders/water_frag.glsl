@@ -15,14 +15,15 @@ layout(binding = 5) uniform sampler2D u_DepthMap;
 
 layout(push_constant) uniform PushConstant
 {
-    vec3 u_CameraPosition;
+    vec4 u_CameraPosition;
+
+    vec4 u_LightDirection;
+    vec4 u_LightPosition;
+
+    vec4 u_ClippingPlane;
 
     int u_IsPointLight;
     float u_LightIntensity;
-    vec3 u_LightDirection;
-    vec3 u_LightPosition;
-
-    vec4 u_ClippingPlane;
 
     float u_MoveFactor;
 
@@ -43,16 +44,16 @@ vec3 computeSpecular(vec3 viewDir, vec3 lightDir, vec3 normal)
 
 void main()
 {
-    vec3 lightDir = normalize(-u_LightDirection);
+    vec3 lightDir = normalize(-u_LightDirection.xyz);
     float lightIntensity = u_LightIntensity;
     if (u_IsPointLight > 0)
     {
-        lightDir = u_LightPosition - v_WorldPos;
+        lightDir = u_LightPosition.xyz - v_WorldPos;
         lightIntensity /= length(lightDir);
         lightDir = normalize(lightDir);
     }
 
-    vec3 viewDir = normalize(u_CameraPosition - v_WorldPos);
+    vec3 viewDir = normalize(u_CameraPosition.xyz - v_WorldPos);
 
     vec2 textureCoords = v_ClipSpace.xy / v_ClipSpace.w;
     textureCoords = textureCoords / 2 + 0.5;

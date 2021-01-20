@@ -7,9 +7,9 @@ layout (location = 1) in vec2 v_TexCoord;
 
 layout (location = 0) out vec4 o_Color;
 
-layout (binding = 1) uniform sampler2D u_AlbedoTexture[];
+layout (binding = 1) uniform sampler2D u_AlbedoTextures[];
 
 void main()
 {
-    o_Color = texture(u_AlbedoTexture[v_MaterialIndex], v_TexCoord);
+    o_Color = texture(u_AlbedoTextures[v_MaterialIndex], v_TexCoord);
 }

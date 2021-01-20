@@ -16,14 +16,15 @@ layout (std140, binding = 0) uniform Camera
 
 layout(push_constant) uniform PushConstant
 {
-    vec3 u_CameraPosition;
+    vec4 u_CameraPosition;
+
+    vec4 u_LightDirection;
+    vec4 u_LightPosition;
+
+    vec4 u_ClippingPlane;
 
     int u_IsPointLight;
     float u_LightIntensity;
-    vec3 u_LightDirection;
-    vec3 u_LightPosition;
-
-    vec4 u_ClippingPlane;
 
     float u_MoveFactor;
 

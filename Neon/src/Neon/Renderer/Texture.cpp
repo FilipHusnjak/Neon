@@ -47,20 +47,65 @@ namespace Neon
 		return nullptr;
 	}
 
-	SharedRef<Texture2D> Texture2D::Create(bool srgb /*= false*/)
+	SharedRef<Texture2D> Texture2D::Create()
 	{
 		switch (RendererAPI::Current())
 		{
 			case RendererAPI::API::None:
 				return nullptr;
 			case RendererAPI::API::Vulkan:
-				return SharedRef<VulkanTexture2D>::Create(srgb);
+				return SharedRef<VulkanTexture2D>::Create();
 		}
 		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
 	Texture2D::Texture2D(const std::string& path)
+		: Texture(path)
+	{
+	}
+
+	SharedRef<TextureCube> TextureCube::Create()
+	{
+		switch (RendererAPI::Current())
+		{
+			case RendererAPI::API::None:
+				return nullptr;
+			case RendererAPI::API::Vulkan:
+				return SharedRef<VulkanTextureCube>::Create();
+		}
+		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
+
+	SharedRef<TextureCube> TextureCube::Create(const std::string& path, bool srgb /*= false*/)
+	{
+		switch (RendererAPI::Current())
+		{
+			case RendererAPI::API::None:
+				return nullptr;
+			case RendererAPI::API::Vulkan:
+				return SharedRef<VulkanTextureCube>::Create(path, srgb);
+		}
+		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
+
+	SharedRef<TextureCube> TextureCube::Create(const std::array<std::string, 6>& paths,
+																		bool srgb /*= false*/)
+	{
+		switch (RendererAPI::Current())
+		{
+			case RendererAPI::API::None:
+				return nullptr;
+			case RendererAPI::API::Vulkan:
+				return SharedRef<VulkanTextureCube>::Create(paths, srgb);
+		}
+		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
+
+	TextureCube::TextureCube(const std::string& path)
 		: Texture(path)
 	{
 	}

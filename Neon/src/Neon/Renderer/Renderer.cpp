@@ -1,7 +1,7 @@
 #include "neopch.h"
 
-#include "Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
+#include "Renderer.h"
 
 namespace Neon
 {
@@ -30,6 +30,12 @@ namespace Neon
 		s_RendererAPI->SubmitMesh(mesh, transform);
 	}
 
+	void Renderer::SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline)
+	{
+		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
+		s_RendererAPI->SubmitFullscreenQuad(pipeline);
+	}
+
 	void Renderer::EndRenderPass()
 	{
 		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
@@ -51,6 +57,7 @@ namespace Neon
 	void Renderer::Shutdown()
 	{
 		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
+		s_RendererAPI->WaitIdle();
 		SceneRenderer::Shutdown();
 		s_RendererAPI->Shutdown();
 	}

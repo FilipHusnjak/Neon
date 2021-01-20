@@ -51,7 +51,8 @@ namespace Neon
 
 		void SetUniformBuffer(uint32 binding, uint32 index, const void* data) override;
 		void SetStorageBuffer(uint32 binding, const void* data) override;
-		void SetTexture(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) override;
+		void SetTexture2D(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) override;
+		void SetTextureCube(uint32 binding, uint32 index, const SharedRef<TextureCube>& texture) override;
 
 		vk::DescriptorSet GetDescriptorSet() const
 		{

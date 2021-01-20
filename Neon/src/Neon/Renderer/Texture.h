@@ -43,8 +43,8 @@ namespace Neon
 	class Texture2D : public Texture
 	{
 	public:
+		static SharedRef<Texture2D> Create();
 		static SharedRef<Texture2D> Create(const std::string& path, bool srgb = false);
-		static SharedRef<Texture2D> Create(bool srgb = false);
 
 		Texture2D() = default;
 		Texture2D(const std::string& path);
@@ -56,6 +56,24 @@ namespace Neon
 
 		virtual uint32 GetWidth() const = 0;
 		virtual uint32 GetHeight() const = 0;
+	};
+
+	class TextureCube : public Texture
+	{
+	public:
+		static SharedRef<TextureCube> Create();
+		static SharedRef<TextureCube> Create(const std::string& path, bool srgb = false);
+		static SharedRef<TextureCube> Create(const std::array<std::string, 6>& paths, bool srgb = false);
+
+		TextureCube() = default;
+		TextureCube(const std::string& path);
+		virtual ~TextureCube() = default;
+
+		virtual Buffer GetTextureData() = 0;
+
+		virtual bool Loaded() const = 0;
+
+		virtual uint32 GetFaceSize() const = 0;
 	};
 
 } // namespace Neon

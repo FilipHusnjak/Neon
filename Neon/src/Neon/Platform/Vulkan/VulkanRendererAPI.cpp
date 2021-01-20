@@ -17,6 +17,8 @@ namespace Neon
 
 	void VulkanRendererAPI::Init()
 	{
+		RendererAPI::Init();
+
 		vk::PhysicalDeviceProperties props = VulkanContext::GetDevice()->GetPhysicalDevice()->GetProperties();
 
 		RendererAPI::RenderAPICapabilities& caps = RendererAPI::GetCapabilities();
@@ -114,6 +116,23 @@ namespace Neon
 		}
 	}
 
+	void VulkanRendererAPI::SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline)
+	{
+		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
+		vk::CommandBuffer renderCommandBuffer = swapChain.GetCurrentRenderCommandBuffer();
+
+		const SharedRef<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+		const SharedRef<VulkanShader> shader = pipeline->GetSpecification().Shader.As<VulkanShader>();
+		renderCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, vulkanPipeline->GetLayout(), 0, 1,
+											   &shader->GetDescriptorSet(), 0, nullptr);
+		renderCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, (VkPipeline)pipeline->GetHandle());
+
+		renderCommandBuffer.bindVertexBuffers(0, {(VkBuffer)m_QuadVertexBuffer->GetHandle()}, {0});
+		renderCommandBuffer.bindIndexBuffer((VkBuffer)m_QuadIndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);
+
+		renderCommandBuffer.drawIndexed(6, 1, 0, 0, 0);
+	}
+
 	void VulkanRendererAPI::EndRenderPass()
 	{
 		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
@@ -128,8 +147,15 @@ namespace Neon
 		renderCommandBuffer.end();
 	}
 
+	void VulkanRendererAPI::WaitIdle()
+	{
+		VulkanContext::GetDevice()->GetHandle().waitIdle();
+	}
+
 	void VulkanRendererAPI::Shutdown()
 	{
+		RendererAPI::Shutdown();
+
 		VulkanContext::GetDevice()->GetHandle().waitIdle();
 	}
 
