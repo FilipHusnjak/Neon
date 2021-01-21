@@ -171,7 +171,6 @@ namespace Neon
 			auto size = static_cast<uint32>(compiler.get_declared_struct_size(bufferType));
 			auto memberCount = static_cast<uint32>(bufferType.member_types.size());
 
-			NEO_CORE_ASSERT(m_UniformBuffers.find(bindingPoint) == m_UniformBuffers.end());
 			UniformBuffer& buffer = m_UniformBuffers[bindingPoint];
 			buffer.Name = name;
 			buffer.BindingPoint = bindingPoint;
@@ -204,7 +203,6 @@ namespace Neon
 				}
 			}
 
-			NEO_CORE_ASSERT(m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end());
 			StorageBuffer& buffer = m_StorageBuffers[bindingPoint];
 			buffer.Name = name;
 			buffer.BindingPoint = bindingPoint;

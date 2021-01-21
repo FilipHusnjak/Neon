@@ -1,7 +1,5 @@
 #version 450
 
-#extension GL_EXT_nonuniform_qualifier : enable
-
 #define MAX_BONES_PER_VERTEX 10
 
 layout (location = 0) in vec3 a_Position;
@@ -22,7 +20,7 @@ layout (std140, binding = 0) uniform Camera
     mat4 u_ViewProjection;
 };
 
-layout(std140, binding = 2) readonly buffer Bones
+layout(std140, binding = 1) readonly buffer Bones
 {
     mat4 u_BoneTransforms[];
 };

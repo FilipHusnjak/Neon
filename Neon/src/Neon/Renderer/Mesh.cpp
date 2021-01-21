@@ -94,16 +94,20 @@ namespace Neon
 		std::unordered_map<ShaderType, std::string> shaderPaths;
 		if (m_IsAnimated)
 		{
-			shaderPaths[ShaderType::Vertex] = "assets/shaders/test_anim_vert.glsl";
-			shaderPaths[ShaderType::Fragment] = "assets/shaders/test_frag.glsl";
+			shaderPaths[ShaderType::Vertex] = "assets/shaders/pbr_anim_vert.glsl";
+			shaderPaths[ShaderType::Fragment] = "assets/shaders/pbr_frag.glsl";
 		}
 		else
 		{
-			shaderPaths[ShaderType::Vertex] = "assets/shaders/test_vert.glsl";
-			shaderPaths[ShaderType::Fragment] = "assets/shaders/test_frag.glsl";
+			shaderPaths[ShaderType::Vertex] = "assets/shaders/pbr_static_vert.glsl";
+			shaderPaths[ShaderType::Fragment] = "assets/shaders/pbr_frag.glsl";
 		}
 		ShaderSpecification shaderSpecification;
-		shaderSpecification.ShaderVariableCounts["u_AlbedoTexture"] = m_Scene->mNumMaterials;
+		shaderSpecification.ShaderVariableCounts["Material"] = m_Scene->mNumMaterials;
+		shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = m_Scene->mNumMaterials;
+		shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = m_Scene->mNumMaterials;
+		shaderSpecification.ShaderVariableCounts["u_RoughnessTextures"] = m_Scene->mNumMaterials;
+		shaderSpecification.ShaderVariableCounts["u_MetalnessTextures"] = m_Scene->mNumMaterials;
 
 		uint32 vertexCount = 0;
 		uint32 indexCount = 0;
@@ -259,9 +263,20 @@ namespace Neon
 		{
 			NEO_MESH_LOG("---- Materials - {0} ----", filename);
 
-			m_Textures.resize(m_Scene->mNumMaterials);
+			m_Materials.resize(m_Scene->mNumMaterials, SharedRef<Material>::Create(m_MeshShader));
 			for (uint32 i = 0; i < m_Scene->mNumMaterials; i++)
 			{
+				struct  
+				{
+					glm::vec4 AlbedoColor;
+					float HasAlbedoTexture;
+					float HasNormalTex;
+					float Metalness;
+					float HasMetalnessTex;
+					float Roughness;
+					float HasRoughnessTex;
+				} materialProperties;
+
 				auto aiMaterial = m_Scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
 
@@ -285,6 +300,7 @@ namespace Neon
 				}
 
 				float roughness = 1.0f - glm::sqrt(shininess / 100.0f);
+
 				NEO_MESH_LOG("    TextureCount = {0}", textureCount);
 				("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
 				NEO_MESH_LOG("    TextureCount = {0}", textureCount);
@@ -296,19 +312,15 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
-					m_Textures[i] = Texture2D::Create(texturePath, true);
-					NEO_CORE_ASSERT(m_Textures[i]->Loaded(), "Could not load texture");
-					m_MeshShader->SetTexture2D(1, i, m_Textures[i]);
+					m_Materials[i]->LoadTexture2D(3, i, texturePath);
+					materialProperties.HasAlbedoTexture = 1.f;
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
 				else
 				{
-					//mi->Set("u_MaterialUniforms.AlbedoColor", glm::vec3 { aiColor.r, aiColor.g, aiColor.b });
-					NEO_MESH_LOG("    No albedo map, loading default texture...");
-					m_Textures[i] = Texture2D::Create();
-					NEO_CORE_ASSERT(m_Textures[i]->Loaded(), "Could not load default texture");
-					m_MeshShader->SetTexture2D(1, i, m_Textures[i]);
-					NEO_MESH_LOG("    Default texture loaded");
+					NEO_MESH_LOG("    No albedo map!");
+					materialProperties.AlbedoColor = glm::vec4{aiColor.r, aiColor.g, aiColor.b, 0.f};
+					materialProperties.HasAlbedoTexture = 0.f;
 				}
 
 				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
@@ -317,16 +329,16 @@ namespace Neon
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
+					m_Materials[i]->LoadTexture2D(4, i, texturePath);
+					materialProperties.HasNormalTex = 1.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
 				}
 				else
 				{
-					NEO_MESH_LOG("    No normal map");
+					materialProperties.HasNormalTex = 0.f;
+					NEO_MESH_LOG("    No normal map!");
 				}
 
-				// Roughness map
-				// mi->Set("u_Roughness", 1.0f);
-				// mi->Set("u_RoughnessTexToggle", 0.0f);
 				if (aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
 				{
 					std::filesystem::path path = filename;
@@ -334,21 +346,24 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
+					m_Materials[i]->LoadTexture2D(5, i, texturePath);
+					materialProperties.HasRoughnessTex = 1.f;
 				}
 				else
 				{
 					NEO_MESH_LOG("    No roughness map");
-					//mi->Set("u_MaterialUniforms.Roughness", roughness);
+					materialProperties.Roughness = roughness;
+					materialProperties.HasRoughnessTex = 0.f;
 				}
 
 				bool metalnessTextureFound = false;
-				for (uint32_t i = 0; i < aiMaterial->mNumProperties; i++)
+				for (uint32 i = 0; i < aiMaterial->mNumProperties; i++)
 				{
 					auto prop = aiMaterial->mProperties[i];
 
-					if (false && prop->mType == aiPTI_String)
+					if (prop->mType == aiPTI_String)
 					{
-						uint32_t strLength = *(uint32_t*)prop->mData;
+						uint32 strLength = *(uint32*)prop->mData;
 						std::string str(prop->mData + 4, strLength);
 
 						std::string key = prop->mKey.data;
@@ -361,6 +376,8 @@ namespace Neon
 							parentPath /= str;
 							std::string texturePath = parentPath.string();
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
+							m_Materials[i]->LoadTexture2D(6, i, texturePath);
+							materialProperties.HasMetalnessTex = 1.f;
 							break;
 						}
 					}
@@ -370,10 +387,12 @@ namespace Neon
 				{
 					NEO_MESH_LOG("    No metalness map");
 
-					//mi->Set("u_MaterialUniforms.Metalness", metalness);
-					//mi->Set("u_MaterialUniforms.MetalnessTexToggle", 0.0f);
+					materialProperties.Metalness = metalness;
+					materialProperties.HasMetalnessTex = 0.f;
 				}
 				NEO_MESH_LOG("------------------------");
+
+				m_Materials[i]->SetProperties(2, i, &materialProperties);
 			}
 		}
 	}
@@ -438,7 +457,7 @@ namespace Neon
 		{
 			boneTransforms[i] = m_BoneInfo[i].FinalTransformation;
 		}
-		m_MeshShader->SetStorageBuffer(2, boneTransforms.data());
+		m_MeshShader->SetStorageBuffer(1, boneTransforms.data());
 	}
 
 	void Mesh::ReadNodeHierarchy(float animationTime, const aiNode* pNode, const glm::mat4& parentTransform)

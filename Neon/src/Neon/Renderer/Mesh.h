@@ -4,6 +4,7 @@
 #include "Neon/Renderer/Pipeline.h"
 #include "Neon/Renderer/Texture.h"
 #include "Neon/Renderer/VertexBuffer.h"
+#include "Neon/Renderer/Material.h"
 
 #include <glm/glm.hpp>
 
@@ -160,11 +161,6 @@ namespace Neon
 			return m_Submeshes;
 		}
 
-		const std::vector<SharedRef<Texture2D>>& GetTextures() const
-		{
-			return m_Textures;
-		}
-
 	private:
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
 		void UpdateBoneTransforms(float time);
@@ -201,7 +197,8 @@ namespace Neon
 
 		SharedRef<Shader> m_MeshShader;
 		SharedRef<Pipeline> m_MeshPipeline;
-		std::vector<SharedRef<Texture2D>> m_Textures;
+
+		std::vector<SharedRef<Material>> m_Materials;
 
 		// Animation
 		bool m_IsAnimated = false;
