@@ -38,59 +38,7 @@ namespace Neon
 
 	void VulkanRendererAPI::BeginRenderPass(const SharedRef<RenderPass>& renderPass)
 	{
-		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
-
-		uint32 width = renderPass->GetSpecification().TargetFramebuffer->GetSpecification().Width;
-		uint32 height = renderPass->GetSpecification().TargetFramebuffer->GetSpecification().Height;
-
-		vk::CommandBuffer renderCommandBuffer = swapChain.GetCurrentRenderCommandBuffer();
-
-		std::vector<vk::ClearValue> clearValues;
-		if (renderPass->GetSpecification().HasColor)
-		{
-			vk::ClearValue& clearValue = clearValues.emplace_back();
-			glm::vec4 clearColor = renderPass->GetSpecification().TargetFramebuffer->GetSpecification().ClearColor;
-			clearValue.color = *(vk::ClearColorValue*)(&clearColor);
-		}
-		if (renderPass->GetSpecification().HasDepth)
-		{
-			vk::ClearValue& clearValue = clearValues.emplace_back();
-			clearValue.depthStencil = {1.0f, 0};
-		}
-
-		NEO_CORE_ASSERT(!clearValues.empty());
-
-		vk::RenderPassBeginInfo renderPassBeginInfo = {};
-		renderPassBeginInfo.renderPass = (VkRenderPass)renderPass->GetHandle();
-		renderPassBeginInfo.renderArea.offset.x = 0;
-		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = width;
-		renderPassBeginInfo.renderArea.extent.height = height;
-		renderPassBeginInfo.clearValueCount = static_cast<uint32>(clearValues.size());
-		renderPassBeginInfo.pClearValues = clearValues.data();
-		renderPassBeginInfo.framebuffer = (VkFramebuffer)renderPass->GetSpecification().TargetFramebuffer->GetHandle();
-
-		// Update viewport state
-		vk::Viewport sceneViewport = {};
-		sceneViewport.x = 0.f;
-		sceneViewport.y = 0.f;
-		sceneViewport.width = (float)width;
-		sceneViewport.height = (float)height;
-		sceneViewport.minDepth = 0.f;
-		sceneViewport.maxDepth = 1.f;
-
-		renderCommandBuffer.setViewport(0, 1, &sceneViewport);
-
-		// Update scissor state
-		vk::Rect2D sceneCcissor = {};
-		sceneCcissor.offset.x = 0;
-		sceneCcissor.offset.y = 0;
-		sceneCcissor.extent.width = width;
-		sceneCcissor.extent.height = height;
-
-		renderCommandBuffer.setScissor(0, 1, &sceneCcissor);
-
-		renderCommandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+		renderPass->Begin();
 	}
 
 	void VulkanRendererAPI::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform)

@@ -6,17 +6,6 @@
 
 namespace Neon
 {
-	// TODO: temp
-	struct CameraMatrices
-	{
-		glm::mat4 Model = glm::mat4(1.f);
-		glm::mat4 ViewProjection = glm::mat4(1.f);
-	};
-
-	const std::vector<glm::vec3> WaterVertices = {{1, 0, 1},  {0, 1, 0}, {1, 0, -1},  {0, 1, 0},
-												  {-1, 0, 1}, {0, 1, 0}, {-1, 0, -1}, {0, 1, 0}};
-	const std::vector<uint32> WaterIndices = {0, 1, 2, 2, 1, 3};
-
 	struct SceneRendererData
 	{
 		const Scene* ActiveScene = nullptr;
@@ -29,17 +18,6 @@ namespace Neon
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
-
-		// Water data
-		SharedRef<Texture2D> DudvMap;
-		SharedRef<Texture2D> NormalMap;
-		SharedRef<Texture2D> Reflection;
-		SharedRef<Texture2D> Refraction;
-		SharedRef<RenderPass> WaterPass;
-		SharedRef<Shader> WaterShader;
-		SharedRef<Pipeline> WaterPipeline;
-		SharedRef<VertexBuffer> WaterVertexBuffer;
-		SharedRef<IndexBuffer> WaterIndexBuffer;
 
 		// Skybox
 		SharedRef<TextureCube> SkyboxCubemap;
@@ -66,27 +44,18 @@ namespace Neon
 	void SceneRenderer::Init()
 	{
 		RenderPassSpecification geoRenderPassSpec;
+		geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
+		geoRenderPassSpec.Attachments.push_back(
+			{1, AttachmentFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, true});
+		geoRenderPassSpec.Attachments.push_back(
+			{1, AttachmentFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
+		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {}});
 		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
-
-		RenderPassSpecification waterRenderPassSpec;
-		s_Data.WaterPass = RenderPass::Create(waterRenderPassSpec);
 
 		FramebufferSpecification geoFramebufferSpec;
 		geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
-		geoFramebufferSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
-
-		FramebufferSpecification waterFramebufferSpec;
-		waterFramebufferSpec.Pass = s_Data.WaterPass.Ptr();
-		waterFramebufferSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
 
 		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
-		s_Data.WaterPass->SetTargetFramebuffer(Framebuffer::Create(waterFramebufferSpec));
-
-		std::unordered_map<ShaderType, std::string> waterShaderPaths;
-		waterShaderPaths[ShaderType::Vertex] = "assets/shaders/water_vert.glsl";
-		waterShaderPaths[ShaderType::Fragment] = "assets/shaders/water_frag.glsl";
-		ShaderSpecification waterShaderSpec;
-		s_Data.WaterShader = Shader::Create(waterShaderSpec, waterShaderPaths);
 
 		std::unordered_map<ShaderType, std::string> skyboxShaderPaths;
 		skyboxShaderPaths[ShaderType::Vertex] = "assets/shaders/skybox_vert.glsl";
@@ -94,25 +63,8 @@ namespace Neon
 		ShaderSpecification skyboxShaderSpec;
 		s_Data.SkyboxShader = Shader::Create(skyboxShaderSpec, skyboxShaderPaths);
 
-		s_Data.DudvMap = Texture2D::Create("assets/textures/water/dudvMap.png");
-		s_Data.NormalMap = Texture2D::Create("assets/textures/water/normalMap.png");
-
-		s_Data.WaterShader->SetTexture2D(3, 0, s_Data.DudvMap);
-		s_Data.WaterShader->SetTexture2D(4, 0, s_Data.NormalMap);
-
 		VertexBufferLayout waterVertexBufferLayout =
 			std::vector<VertexBufferElement>{{ShaderDataType::Float3}, {ShaderDataType::Float3}};
-
-		s_Data.WaterVertexBuffer = VertexBuffer::Create(
-			WaterVertices.data(), static_cast<uint32>(WaterVertices.size()) * sizeof(WaterVertices[0]), waterVertexBufferLayout);
-		s_Data.WaterIndexBuffer =
-			IndexBuffer::Create(WaterIndices.data(), static_cast<uint32>(WaterIndices.size()) * sizeof(WaterIndices[0]));
-
-		PipelineSpecification waterPipelineSpec;
-		waterPipelineSpec.Layout = waterVertexBufferLayout;
-		waterPipelineSpec.Pass = s_Data.WaterPass;
-		waterPipelineSpec.Shader = s_Data.WaterShader;
-		s_Data.WaterPipeline = Pipeline::Create(waterPipelineSpec);
 
 		VertexBufferLayout skyboxVertexBufferLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
 
@@ -122,15 +74,16 @@ namespace Neon
 		skyboxPipelineSpec.Shader = s_Data.SkyboxShader;
 		s_Data.SkyboxPipeline = Pipeline::Create(skyboxPipelineSpec);
 
-		s_Data.SkyboxCubemap = TextureCube::Create({"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
-													"assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
-													"assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});
+		s_Data.SkyboxCubemap =
+			TextureCube::Create({"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
+								 "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
+								 "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});
 		s_Data.SkyboxShader->SetTextureCube(1, 0, s_Data.SkyboxCubemap);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
 	{
-		s_Data.GeoPass->GetSpecification().TargetFramebuffer->Resize(width, height);
+		// TODO: Implement
 	}
 
 	void SceneRenderer::BeginScene(const Scene* scene, const SceneRendererCamera& camera)
@@ -162,14 +115,14 @@ namespace Neon
 		return s_Data.GeoPass;
 	}
 
-	void* SceneRenderer::GetFinalColorBufferRendererId()
-	{
-		return s_Data.GeoPass->GetSpecification().TargetFramebuffer->GetColorImageID();
-	}
-
 	void SceneRenderer::SetFocusPoint(const glm::vec2& point)
 	{
 		s_Data.FocusPoint = point;
+	}
+
+	void* SceneRenderer::GetFinalImageId()
+	{
+		return s_Data.GeoPass->GetTargetFramebuffer()->GetSampledImageId();
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -200,8 +153,12 @@ namespace Neon
 		// Render meshes
 		for (auto& dc : s_Data.MeshDrawList)
 		{
+			struct
+			{
+				glm::mat4 Model = glm::mat4(1.f);
+				glm::mat4 ViewProjection = glm::mat4(1.f);
+			} cameraMatrices;
 			SharedRef<Shader> meshShader = dc.Mesh->GetShader();
-			CameraMatrices cameraMatrices = {};
 			cameraMatrices.ViewProjection = viewProjection;
 			cameraMatrices.Model = dc.Transform;
 			meshShader->SetUniformBuffer(0, 0, &cameraMatrices);

@@ -7,7 +7,7 @@ layout (location = 1) in vec2 v_TexCoord;
 
 layout (location = 0) out vec4 o_Color;
 
-layout (binding = 2) readonly buffer Material
+layout (binding = 2) uniform Material
 {
     vec4 AlbedoColor;
 	float HasAlbedoTexture;
@@ -25,5 +25,5 @@ layout (binding = 6) uniform sampler2D u_MetalnessTextures[];
 
 void main()
 {
-    o_Color = texture(u_AlbedoTextures[v_MaterialIndex], v_TexCoord);
+	o_Color = u_Materials[v_MaterialIndex].HasAlbedoTexture < 0.5f ? vec4(u_Materials[v_MaterialIndex].AlbedoColor.xyz, 1.f) : texture(u_AlbedoTextures[v_MaterialIndex], v_TexCoord);
 }

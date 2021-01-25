@@ -29,8 +29,9 @@ namespace Neon
 
 		static const SharedRef<RenderPass>& GetGeoPass();
 
-		static void* GetFinalColorBufferRendererId();
 		static void SetFocusPoint(const glm::vec2& point);
+
+		static void* GetFinalImageId();
 
 		static void OnImGuiRender();
 

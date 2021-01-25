@@ -18,6 +18,7 @@ namespace Neon
 
 		void SetProperties(uint32 binding, uint32 index, void* data);
 		void LoadTexture2D(uint32 binding, uint32 index, const std::string& path);
+		void LoadDefaultTexture2D(uint32 binding, uint32 index);
 		void LoadTextureCube(uint32 binding, uint32 index, const std::string& path);
 
 	private:

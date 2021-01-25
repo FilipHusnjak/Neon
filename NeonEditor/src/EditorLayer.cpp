@@ -22,6 +22,7 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 
 		m_EditorScene->CreateMesh("assets/models/m1911/m1911.fbx", "M1911");
+		m_EditorScene->CreateMesh("assets/models/wuson/wuson.obj", "wuson");
 	}
 
 	void EditorLayer::OnAttach()
@@ -96,7 +97,8 @@ namespace Neon
 		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 1000.0f));
 		m_EditorCamera.SetViewportSize((uint32)viewportSize.x, (uint32)viewportSize.y);
 
-		ImGui::Image(Renderer::GetFinalColorBufferRendererId(), viewportSize);
+		ImGui::Image(Renderer::GetFinalImageId(), viewportSize);
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 

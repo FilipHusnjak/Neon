@@ -14,9 +14,7 @@ namespace Neon
 	{
 		NEO_CORE_ASSERT(m_Specification.Pass);
 
-		m_RenderPass = (VkRenderPass)m_Specification.Pass->GetHandle();
-
-		const auto device = VulkanContext::GetDevice()->GetHandle();
+		const auto device = VulkanContext::GetDevice();
 
 		vk::DescriptorPoolSize poolSize = {vk::DescriptorType::eCombinedImageSampler, 1};
 		vk::DescriptorPoolCreateInfo descPoolCreateInfo = {};
@@ -24,28 +22,50 @@ namespace Neon
 		descPoolCreateInfo.maxSets = 1;
 		descPoolCreateInfo.poolSizeCount = 1;
 		descPoolCreateInfo.pPoolSizes = &poolSize;
-		m_DescPool = device.createDescriptorPoolUnique(descPoolCreateInfo);
+		m_DescPool = device->GetHandle().createDescriptorPoolUnique(descPoolCreateInfo);
 
 		vk::DescriptorSetLayoutBinding binding = {};
 		binding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 		binding.descriptorCount = 1;
 		binding.stageFlags = vk::ShaderStageFlagBits::eFragment;
+
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
 		descriptorSetLayoutCreateInfo.bindingCount = 1;
 		descriptorSetLayoutCreateInfo.pBindings = &binding;
-		m_ColorImageDescSetLayout = device.createDescriptorSetLayoutUnique(descriptorSetLayoutCreateInfo);
+		m_ColorImageDescSetLayout = device->GetHandle().createDescriptorSetLayoutUnique(descriptorSetLayoutCreateInfo);
 
 		vk::DescriptorSetAllocateInfo descAllocInfo = {};
 		descAllocInfo.descriptorPool = m_DescPool.get();
 		descAllocInfo.descriptorSetCount = 1;
 		descAllocInfo.pSetLayouts = &m_ColorImageDescSetLayout.get();
-		m_ColorImageDescSet = std::move(device.allocateDescriptorSetsUnique(descAllocInfo)[0]);
+		m_ColorImageDescSet = std::move(device->GetHandle().allocateDescriptorSetsUnique(descAllocInfo)[0]);
 
-		Resize(spec.Width, spec.Height, true);
+		// Create sampler to sample from the attachment in the fragment shader
+		vk::SamplerCreateInfo samplerCreateInfo = {};
+		samplerCreateInfo.maxAnisotropy = 1.0f;
+		samplerCreateInfo.magFilter = vk::Filter::eLinear;
+		samplerCreateInfo.minFilter = vk::Filter::eLinear;
+		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+		samplerCreateInfo.addressModeV = samplerCreateInfo.addressModeU;
+		samplerCreateInfo.addressModeW = samplerCreateInfo.addressModeU;
+		samplerCreateInfo.mipLodBias = 0.0f;
+		samplerCreateInfo.maxAnisotropy = 1.0f;
+		samplerCreateInfo.minLod = 0.0f;
+		samplerCreateInfo.maxLod = 1.0f;
+		samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+		m_AttachmentSampler = device->GetHandle().createSamplerUnique(samplerCreateInfo);
+
+		Create(spec.Width, spec.Height);
 	}
 
 	void VulkanFramebuffer::Resize(uint32 width, uint32 height, bool forceRecreate /*= false*/)
 	{
+		if (m_Specification.NoResize)
+		{
+			return;
+		}
+
 		if (width == m_Specification.Width && height == m_Specification.Height && !forceRecreate)
 		{
 			return;
@@ -54,111 +74,96 @@ namespace Neon
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 
+		Create(width, height);
+	}
+
+	vk::ImageView VulkanFramebuffer::GetSampledImageView(uint32 index)
+	{
+		NEO_CORE_ASSERT(m_Specification.Pass->GetSpecification().Attachments[index].Sampled,
+						"Attachment at given index is not specified as sampled!");
+		return m_Attachments[index].View.get();
+	}
+
+	void VulkanFramebuffer::Create(uint32 width, uint32 height)
+	{
 		const auto& device = VulkanContext::GetDevice();
 
-		VulkanAllocator allocator(device, "Framebuffer");
+		// Fill a descriptor for later use in a descriptor set
+		m_AttachmentDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		m_AttachmentDescriptorInfo.sampler = m_AttachmentSampler.get();
+
+		const auto& attachmentDescriptions = m_Specification.Pass->GetSpecification().Attachments;
+		std::vector<bool> isInputAttachment(attachmentDescriptions.size(), false);
+		for (const auto& subpass : m_Specification.Pass->GetSpecification().Subpasses)
+		{
+			for (const auto& inputAttachment : subpass.InputAttachments)
+			{
+				isInputAttachment[inputAttachment] = true;
+			}
+		}
+
+		VulkanAllocator allocator = VulkanAllocator(device, "Framebuffer");
 
 		std::vector<vk::ImageView> attachments;
-
-		// COLOR ATTACHMENT
-		if (m_Specification.Pass->GetSpecification().HasColor)
+		for (uint32 i = 0; i < attachmentDescriptions.size(); i++)
 		{
-			const vk::Format COLOR_BUFFER_FORMAT =
-				FramebufferFormatToVulkanFormat(m_Specification.Pass->GetSpecification().ColorFormat);
+			const auto& attachment = attachmentDescriptions[i];
+			vk::Format format = attachment.Format == AttachmentFormat::Depth ? device->GetPhysicalDevice()->GetDepthFormat()
+																			 : ConvertAttachmentFormatToVulkan(attachment.Format);
 
 			vk::ImageCreateInfo imageCreateInfo = {};
 			imageCreateInfo.imageType = vk::ImageType::e2D;
-			imageCreateInfo.format = COLOR_BUFFER_FORMAT;
+			imageCreateInfo.format = format;
 			imageCreateInfo.extent.width = width;
 			imageCreateInfo.extent.height = height;
 			imageCreateInfo.extent.depth = 1;
 			imageCreateInfo.mipLevels = 1;
 			imageCreateInfo.arrayLayers = 1;
-			imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
+			imageCreateInfo.samples = ConvertSampleCountToVulkan(attachment.Samples);
 			imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-			// We will sample directly from the color attachment
-			imageCreateInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+			imageCreateInfo.usage = attachment.Format == AttachmentFormat::Depth ? vk::ImageUsageFlagBits::eDepthStencilAttachment
+																				 : vk::ImageUsageFlagBits::eColorAttachment;
+			if (isInputAttachment[i])
+			{
+				imageCreateInfo.usage |= vk::ImageUsageFlagBits::eInputAttachment;
+			}
+			if (attachment.Sampled)
+			{
+				imageCreateInfo.usage |= vk::ImageUsageFlagBits::eSampled;
+			}
 
-			m_ColorAttachment.Image = device->GetHandle().createImageUnique(imageCreateInfo);
+			FrameBufferAttachment& framebufferAttachment = m_Attachments.emplace_back();
+			framebufferAttachment.Image = device->GetHandle().createImageUnique(imageCreateInfo);
 
-			vk::MemoryRequirements memReqs = device->GetHandle().getImageMemoryRequirements(m_ColorAttachment.Image.get());
-			allocator.Allocate(memReqs, m_ColorAttachment.Memory);
+			vk::MemoryRequirements memReqs = device->GetHandle().getImageMemoryRequirements(framebufferAttachment.Image.get());
+			allocator.Allocate(memReqs, framebufferAttachment.Memory);
 
-			device->GetHandle().bindImageMemory(m_ColorAttachment.Image.get(), m_ColorAttachment.Memory.get(), 0);
+			device->GetHandle().bindImageMemory(framebufferAttachment.Image.get(), framebufferAttachment.Memory.get(), 0);
 
 			vk::ImageViewCreateInfo colorImageViewCreateInfo = {};
 			colorImageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-			colorImageViewCreateInfo.format = COLOR_BUFFER_FORMAT;
+			colorImageViewCreateInfo.format = format;
 			colorImageViewCreateInfo.subresourceRange = {};
-			colorImageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+			colorImageViewCreateInfo.subresourceRange.aspectMask =
+				attachment.Format == AttachmentFormat::Depth ? vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil
+															 : vk::ImageAspectFlagBits::eColor;
 			colorImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
 			colorImageViewCreateInfo.subresourceRange.levelCount = 1;
 			colorImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 			colorImageViewCreateInfo.subresourceRange.layerCount = 1;
-			colorImageViewCreateInfo.image = m_ColorAttachment.Image.get();
-			m_ColorAttachment.View = device->GetHandle().createImageViewUnique(colorImageViewCreateInfo);
+			colorImageViewCreateInfo.image = framebufferAttachment.Image.get();
+			framebufferAttachment.View = device->GetHandle().createImageViewUnique(colorImageViewCreateInfo);
 
-			// Create sampler to sample from the attachment in the fragment shader
-			vk::SamplerCreateInfo samplerCreateInfo = {};
-			samplerCreateInfo.maxAnisotropy = 1.0f;
-			samplerCreateInfo.magFilter = vk::Filter::eLinear;
-			samplerCreateInfo.minFilter = vk::Filter::eLinear;
-			samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-			samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-			samplerCreateInfo.addressModeV = samplerCreateInfo.addressModeU;
-			samplerCreateInfo.addressModeW = samplerCreateInfo.addressModeU;
-			samplerCreateInfo.mipLodBias = 0.0f;
-			samplerCreateInfo.maxAnisotropy = 1.0f;
-			samplerCreateInfo.minLod = 0.0f;
-			samplerCreateInfo.maxLod = 1.0f;
-			samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
-			m_ColorAttachmentSampler = device->GetHandle().createSamplerUnique(samplerCreateInfo);
+			if (attachment.Sampled)
+			{
+				m_AttachmentDescriptorInfo.imageView = framebufferAttachment.View.get();
+			}
 
-			attachments.push_back(m_ColorAttachment.View.get());
-		}
-
-		// DEPTH ATTACHMENT
-		if (m_Specification.Pass->GetSpecification().HasDepth)
-		{
-			vk::Format depthFormat = VulkanContext::GetDevice()->GetPhysicalDevice()->GetDepthFormat();
-
-			vk::ImageCreateInfo imageCreateInfo = {};
-			imageCreateInfo.imageType = vk::ImageType::e2D;
-			imageCreateInfo.format = depthFormat;
-			imageCreateInfo.extent.width = width;
-			imageCreateInfo.extent.height = height;
-			imageCreateInfo.extent.depth = 1;
-			imageCreateInfo.mipLevels = 1;
-			imageCreateInfo.arrayLayers = 1;
-			imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
-			imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
-			// We will sample directly from the color attachment
-			imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
-
-			m_DepthAttachment.Image = device->GetHandle().createImageUnique(imageCreateInfo);
-			vk::MemoryRequirements memReqs = device->GetHandle().getImageMemoryRequirements(m_DepthAttachment.Image.get());
-			allocator.Allocate(memReqs, m_DepthAttachment.Memory);
-
-			device->GetHandle().bindImageMemory(m_DepthAttachment.Image.get(), m_DepthAttachment.Memory.get(), 0);
-
-			vk::ImageViewCreateInfo depthStencilImageViewCreateInfo = {};
-			depthStencilImageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-			depthStencilImageViewCreateInfo.format = depthFormat;
-			depthStencilImageViewCreateInfo.subresourceRange = {};
-			depthStencilImageViewCreateInfo.subresourceRange.aspectMask =
-				vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-			depthStencilImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-			depthStencilImageViewCreateInfo.subresourceRange.levelCount = 1;
-			depthStencilImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-			depthStencilImageViewCreateInfo.subresourceRange.layerCount = 1;
-			depthStencilImageViewCreateInfo.image = m_DepthAttachment.Image.get();
-			m_DepthAttachment.View = device->GetHandle().createImageViewUnique(depthStencilImageViewCreateInfo);
-
-			attachments.push_back(m_DepthAttachment.View.get());
+			attachments.push_back(framebufferAttachment.View.get());
 		}
 
 		vk::FramebufferCreateInfo framebufferCreateInfo = {};
-		framebufferCreateInfo.renderPass = m_RenderPass;
+		framebufferCreateInfo.renderPass = static_cast<VkRenderPass>(m_Specification.Pass->GetHandle());
 		framebufferCreateInfo.attachmentCount = static_cast<uint32>(attachments.size());
 		framebufferCreateInfo.pAttachments = attachments.data();
 		framebufferCreateInfo.width = width;
@@ -167,21 +172,13 @@ namespace Neon
 
 		m_Handle = device->GetHandle().createFramebufferUnique(framebufferCreateInfo);
 
-		// Fill a descriptor for later use in a descriptor set
-		m_DescriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		m_DescriptorImageInfo.imageView = m_ColorAttachment.View.get();
-		m_DescriptorImageInfo.sampler = m_ColorAttachmentSampler.get();
-
-		vk::DescriptorImageInfo colorImageInfo = {};
-		colorImageInfo.sampler = m_ColorAttachmentSampler.get();
-		colorImageInfo.imageView = m_ColorAttachment.View.get();
-		colorImageInfo.imageLayout = m_DescriptorImageInfo.imageLayout;
 		vk::WriteDescriptorSet descWrite = {};
 		descWrite.dstSet = m_ColorImageDescSet.get();
 		descWrite.descriptorCount = 1;
 		descWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-		descWrite.pImageInfo = &colorImageInfo;
+		descWrite.pImageInfo = &m_AttachmentDescriptorInfo;
 
 		device->GetHandle().updateDescriptorSets({descWrite}, nullptr);
 	}
+
 } // namespace Neon

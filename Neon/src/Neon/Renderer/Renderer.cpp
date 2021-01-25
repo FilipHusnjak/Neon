@@ -48,10 +48,10 @@ namespace Neon
 		s_RendererAPI->End();
 	}
 
-	void* Renderer::GetFinalColorBufferRendererId()
+	void* Renderer::GetFinalImageId()
 	{
 		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
-		return SceneRenderer::GetFinalColorBufferRendererId();
+		return SceneRenderer::GetFinalImageId();
 	}
 
 	void Renderer::Shutdown()

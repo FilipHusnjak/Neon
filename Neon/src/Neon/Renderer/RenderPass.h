@@ -4,20 +4,54 @@
 
 namespace Neon
 {
-	enum class FramebufferFormat
+	enum class AttachmentFormat
 	{
-		None,
-		RGBA8,
-		RGBA16F
+		None = 0,
+
+		RGBA8 = 1,
+		RGBA16F = 2,
+		RGBA32F = 3,
+		RG32F = 4,
+
+		Depth
+	};
+
+	enum class AttachmentLoadOp
+	{
+		DontCare,
+		Clear,
+		Load
+	};
+
+	enum class AttachmentStoreOp
+	{
+		DontCare,
+		Store
+	};
+
+	struct AttachmentSpecification
+	{
+		uint32 Samples = 1;
+		AttachmentFormat Format = AttachmentFormat::None;
+		AttachmentLoadOp LoadOp = AttachmentLoadOp::DontCare;
+		AttachmentStoreOp StoreOp = AttachmentStoreOp::DontCare;
+		bool Sampled = false;
+	};
+
+	struct Subpass
+	{
+		bool EnableDepthStencil = false;
+		std::vector<uint32> InputAttachments;
+		std::vector<uint32> ColorAttachments;
+		std::vector<uint32> ColorResolveAttachments;
 	};
 
 	struct RenderPassSpecification
 	{
-		bool HasColor = true;
-		bool HasDepth = true;
-		uint32 Samples = 1;
-		FramebufferFormat ColorFormat = FramebufferFormat::RGBA8;
-		SharedRef<Framebuffer> TargetFramebuffer;
+		glm::vec4 ClearColor = {1.f, 1.f, 1.f, 1.f};
+
+		std::vector<AttachmentSpecification> Attachments;
+		std::vector<Subpass> Subpasses;
 	};
 
 	class RenderPass : public RefCounted
@@ -28,7 +62,11 @@ namespace Neon
 
 		void SetTargetFramebuffer(const SharedRef<Framebuffer>& targetFramebuffer)
 		{
-			m_Specification.TargetFramebuffer = targetFramebuffer;
+			m_TargetFramebuffer = targetFramebuffer;
+		}
+		SharedRef<Framebuffer> GetTargetFramebuffer()
+		{
+			return m_TargetFramebuffer;
 		}
 
 		RenderPassSpecification& GetSpecification()
@@ -40,11 +78,15 @@ namespace Neon
 			return m_Specification;
 		}
 
+		virtual void Begin() const = 0;
+
 		virtual void* GetHandle() const = 0;
 
 		static SharedRef<RenderPass> Create(const RenderPassSpecification& spec);
 
 	protected:
 		RenderPassSpecification m_Specification;
+
+		SharedRef<Framebuffer> m_TargetFramebuffer;
 	};
 } // namespace Neon

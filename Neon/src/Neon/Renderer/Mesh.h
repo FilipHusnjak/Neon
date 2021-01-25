@@ -130,12 +130,10 @@ namespace Neon
 	class Mesh : public RefCounted
 	{
 	public:
-		Mesh(const std::string& filename);
+		Mesh(const std::string& filename, const SharedRef<RenderPass>& renderPass);
 		~Mesh();
 
 		void OnUpdate(float deltaSeconds);
-
-		void CreatePipeline(const SharedRef<RenderPass>& renderPass);
 
 		const SharedRef<Pipeline>& GetPipeline() const
 		{

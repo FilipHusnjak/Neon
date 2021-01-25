@@ -25,7 +25,7 @@ namespace Neon
 
 		static void End();
 
-		static void* GetFinalColorBufferRendererId();
+		static void* GetFinalImageId();
 
 		static void Shutdown();
 

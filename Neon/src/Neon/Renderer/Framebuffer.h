@@ -10,8 +10,12 @@ namespace Neon
 	{
 		uint32 Width = 1920;
 		uint32 Height = 1080;
+
+		// Use weak ref here
 		RenderPass* Pass;
-		glm::vec4 ClearColor = {1.f, 1.f, 1.f, 1.f};
+
+		// TODO: Temp, needs scale
+		bool NoResize = false;
 	};
 
 	class Framebuffer : public RefCounted
@@ -22,14 +26,14 @@ namespace Neon
 
 		virtual void Resize(uint32 width, uint32 height, bool forceRecreate = false) = 0;
 
+		virtual void* GetSampledImageId() const = 0;
+
 		const FramebufferSpecification& GetSpecification() const
 		{
 			return m_Specification;
 		}
 
 		virtual void* GetHandle() const = 0;
-
-		virtual void* GetColorImageID() const = 0;
 
 		static SharedRef<Framebuffer> Create(const FramebufferSpecification& spec);
 
@@ -60,6 +64,7 @@ namespace Neon
 		}
 
 	private:
+		// Use weak ref here
 		std::vector<Framebuffer*> m_Framebuffers;
 
 		static FramebufferPool* s_Instance;

@@ -12,17 +12,24 @@ namespace Neon
 		~VulkanFramebuffer() = default;
 		void Resize(uint32 width, uint32 height, bool forceRecreate = false) override;
 
+		void* GetSampledImageId() const override
+		{
+			return m_ColorImageDescSet.get();
+		}
+
 		void* GetHandle() const override
 		{
 			return m_Handle.get();
 		}
 
-		void* GetColorImageID() const override
-		{
-			return m_ColorImageDescSet.get();
-		}
+		vk::ImageView GetSampledImageView(uint32 index);
 
 	private:
+		void Create(uint32 width, uint32 height);
+
+	private:
+		vk::UniqueFramebuffer m_Handle;
+
 		struct FrameBufferAttachment
 		{
 			vk::UniqueImage Image;
@@ -30,15 +37,15 @@ namespace Neon
 			vk::UniqueImageView View;
 		};
 
-		FrameBufferAttachment m_ColorAttachment;
-		FrameBufferAttachment m_DepthAttachment;
-		vk::RenderPass m_RenderPass;
-		vk::UniqueSampler m_ColorAttachmentSampler;
-		vk::UniqueFramebuffer m_Handle;
-		vk::DescriptorImageInfo m_DescriptorImageInfo;
+		std::vector<FrameBufferAttachment> m_Attachments;
+
+		vk::UniqueDescriptorPool m_ImGuiDescPool;
 
 		vk::UniqueDescriptorPool m_DescPool;
 		vk::UniqueDescriptorSetLayout m_ColorImageDescSetLayout;
 		vk::UniqueDescriptorSet m_ColorImageDescSet;
+
+		vk::UniqueSampler m_AttachmentSampler;
+		vk::DescriptorImageInfo m_AttachmentDescriptorInfo;
 	};
 } // namespace Neon

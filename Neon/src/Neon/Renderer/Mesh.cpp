@@ -71,7 +71,7 @@ namespace Neon
 		}
 	};
 
-	Mesh::Mesh(const std::string& filename)
+	Mesh::Mesh(const std::string& filename, const SharedRef<RenderPass>& renderPass)
 		: m_FilePath(filename)
 	{
 		LogStream::Initialize();
@@ -258,6 +258,12 @@ namespace Neon
 		shaderSpecification.ShaderVariableCounts["Bones"] = static_cast<uint32>(m_BoneInfo.size());
 		m_MeshShader = Shader::Create(shaderSpecification, shaderPaths);
 
+		PipelineSpecification pipelineSpecification;
+		pipelineSpecification.Shader = m_MeshShader;
+		pipelineSpecification.Layout = m_VertexBufferLayout;
+		pipelineSpecification.Pass = renderPass;
+		m_MeshPipeline = Pipeline::Create(pipelineSpecification);
+
 		// Materials
 		if (m_Scene->HasMaterials())
 		{
@@ -319,6 +325,7 @@ namespace Neon
 				else
 				{
 					NEO_MESH_LOG("    No albedo map!");
+					m_Materials[i]->LoadDefaultTexture2D(3, i);
 					materialProperties.AlbedoColor = glm::vec4{aiColor.r, aiColor.g, aiColor.b, 0.f};
 					materialProperties.HasAlbedoTexture = 0.f;
 				}
@@ -335,6 +342,7 @@ namespace Neon
 				}
 				else
 				{
+					m_Materials[i]->LoadDefaultTexture2D(4, i);
 					materialProperties.HasNormalTex = 0.f;
 					NEO_MESH_LOG("    No normal map!");
 				}
@@ -352,6 +360,7 @@ namespace Neon
 				else
 				{
 					NEO_MESH_LOG("    No roughness map");
+					m_Materials[i]->LoadDefaultTexture2D(5, i);
 					materialProperties.Roughness = roughness;
 					materialProperties.HasRoughnessTex = 0.f;
 				}
@@ -386,7 +395,7 @@ namespace Neon
 				if (!metalnessTextureFound)
 				{
 					NEO_MESH_LOG("    No metalness map");
-
+					m_Materials[i]->LoadDefaultTexture2D(6, i);
 					materialProperties.Metalness = metalness;
 					materialProperties.HasMetalnessTex = 0.f;
 				}
@@ -419,15 +428,6 @@ namespace Neon
 			// TODO: We only need to recalculate bones if rendering has been requested at the current animation frame
 			UpdateBoneTransforms(m_AnimationTime);
 		}
-	}
-
-	void Mesh::CreatePipeline(const SharedRef<RenderPass>& renderPass)
-	{
-		PipelineSpecification pipelineSpecification;
-		pipelineSpecification.Shader = m_MeshShader;
-		pipelineSpecification.Layout = m_VertexBufferLayout;
-		pipelineSpecification.Pass = renderPass;
-		m_MeshPipeline = Pipeline::Create(pipelineSpecification);
 	}
 
 	void Mesh::TraverseNodes(aiNode* node, const glm::mat4& parentTransform /*= glm::mat4(1.0f)*/, uint32 level /*= 0*/)
