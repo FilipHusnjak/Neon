@@ -101,8 +101,13 @@ namespace Neon
 		depthStencilState.front = depthStencilState.back;
 
 		// Multi sampling state
+		vk::SampleCountFlagBits maxSampleCount = vk::SampleCountFlagBits::e1;
+		for (const auto& attachment : specification.Pass->GetSpecification().Attachments)
+		{
+			maxSampleCount = std::max(maxSampleCount, ConvertSampleCountToVulkan(attachment.Samples));
+		}
 		vk::PipelineMultisampleStateCreateInfo multisampleState = {};
-		multisampleState.rasterizationSamples = vk::SampleCountFlagBits::e1;
+		multisampleState.rasterizationSamples = maxSampleCount;
 
 		// Vertex input descriptor
 		VertexBufferLayout& layout = m_Specification.Layout;

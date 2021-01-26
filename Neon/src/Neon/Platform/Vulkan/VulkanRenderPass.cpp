@@ -124,6 +124,7 @@ namespace Neon
 			attachmentDescription.format = attachment.Format == AttachmentFormat::Depth
 											   ? device->GetPhysicalDevice()->GetDepthFormat()
 											   : ConvertAttachmentFormatToVulkan(attachment.Format);
+			attachmentDescription.samples = ConvertSampleCountToVulkan(attachment.Samples);
 			attachmentDescription.loadOp = ConvertLoadOpToVulkan(attachment.LoadOp);
 			attachmentDescription.storeOp = ConvertStoreOpToVulkan(attachment.StoreOp);
 			attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;

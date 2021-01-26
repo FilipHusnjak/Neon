@@ -46,10 +46,12 @@ namespace Neon
 		RenderPassSpecification geoRenderPassSpec;
 		geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
 		geoRenderPassSpec.Attachments.push_back(
-			{1, AttachmentFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, true});
+			{8, AttachmentFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
 		geoRenderPassSpec.Attachments.push_back(
-			{1, AttachmentFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
-		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {}});
+			{1, AttachmentFormat::RGBA8, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
+		geoRenderPassSpec.Attachments.push_back(
+			{8, AttachmentFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
+		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
 		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
 
 		FramebufferSpecification geoFramebufferSpec;

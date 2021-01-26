@@ -2,18 +2,18 @@
 
 #include <Neon/Core/EntryPoint.h>
 
-class SandboxApp : public Neon::Application
+class NeonEditorApp : public Neon::Application
 {
 public:
-	SandboxApp()
+	NeonEditorApp()
 	{
 		PushLayer(new Neon::EditorLayer());
 	}
 
-	~SandboxApp() = default;
+	~NeonEditorApp() = default;
 };
 
 Neon::Application* Neon::CreateApplication()
 {
-	return new SandboxApp();
+	return new NeonEditorApp();
 }

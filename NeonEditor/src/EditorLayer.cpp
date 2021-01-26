@@ -22,7 +22,9 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 
 		m_EditorScene->CreateMesh("assets/models/m1911/m1911.fbx", "M1911");
-		m_EditorScene->CreateMesh("assets/models/wuson/wuson.obj", "wuson");
+		auto entity = m_EditorScene->CreateMesh("assets/models/wuson/wuson.obj", "wuson");
+		auto& transformComponent = entity.GetComponent<TransformComponent>();
+		transformComponent.Transform = glm::translate(glm::mat4(1.0), {-10, 0, 0});
 	}
 
 	void EditorLayer::OnAttach()
