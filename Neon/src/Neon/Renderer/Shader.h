@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Neon/Renderer/Texture.h"
+#include "Neon/Renderer/VertexBuffer.h"
 
 #include <glm/glm.hpp>
 #include <shaderc/shaderc.hpp>
@@ -42,12 +43,14 @@ namespace Neon
 
 	struct ShaderSpecification
 	{
+		VertexBufferLayout VBLayout;
 		std::unordered_map<std::string, uint32> ShaderVariableCounts;
 	};
 
 	class Shader : public RefCounted
 	{
 	public:
+		Shader(const ShaderSpecification& specification);
 		virtual ~Shader() = default;
 
 		virtual void Reload() = 0;
@@ -57,7 +60,15 @@ namespace Neon
 		virtual void SetTexture2D(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) = 0;
 		virtual void SetTextureCube(uint32 binding, uint32 index, const SharedRef<TextureCube>& texture) = 0;
 
+		const VertexBufferLayout& GetVertexBufferLayout() const
+		{
+			return m_VertexBufferLayout;
+		}
+
 		static SharedRef<Shader> Create(const ShaderSpecification& shaderSpecification,
 										const std::unordered_map<ShaderType, std::string>& shaderPaths);
+
+	protected:
+		VertexBufferLayout m_VertexBufferLayout;
 	};
 } // namespace Neon

@@ -183,7 +183,6 @@ namespace Neon
 
 		SharedRef<VertexBuffer> m_VertexBuffer;
 		SharedRef<IndexBuffer> m_IndexBuffer;
-		VertexBufferLayout m_VertexBufferLayout;
 
 		std::vector<StaticVertex> m_StaticVertices;
 		std::vector<AnimatedVertex> m_AnimatedVertices;

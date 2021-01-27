@@ -231,6 +231,7 @@ namespace Neon
 
 		std::vector<VertexBufferElement> elements = {{ShaderDataType::Float3}, {ShaderDataType::Float3}, {ShaderDataType::Float3},
 													 {ShaderDataType::Float3}, {ShaderDataType::UInt},	 {ShaderDataType::Float2}};
+		VertexBufferLayout vertexBufferLayout;
 		if (m_IsAnimated)
 		{
 			for (uint32 i = 0; i < MAX_BONES_PER_VERTEX; i++)
@@ -241,26 +242,26 @@ namespace Neon
 			{
 				elements.emplace_back(ShaderDataType::Float);
 			}
-			m_VertexBufferLayout = elements;
+			vertexBufferLayout = elements;
 			m_VertexBuffer =
 				VertexBuffer::Create(m_AnimatedVertices.data(),
-									 static_cast<uint32>(m_AnimatedVertices.size()) * sizeof(AnimatedVertex), m_VertexBufferLayout);
+									 static_cast<uint32>(m_AnimatedVertices.size()) * sizeof(AnimatedVertex), vertexBufferLayout);
 		}
 		else
 		{
-			m_VertexBufferLayout = elements;
+			vertexBufferLayout = elements;
 			m_VertexBuffer = VertexBuffer::Create(
-				m_StaticVertices.data(), static_cast<uint32>(m_StaticVertices.size()) * sizeof(StaticVertex), m_VertexBufferLayout);
+				m_StaticVertices.data(), static_cast<uint32>(m_StaticVertices.size()) * sizeof(StaticVertex), vertexBufferLayout);
 		}
 
 		m_IndexBuffer = IndexBuffer::Create(m_Indices.data(), static_cast<uint32>(m_Indices.size()) * sizeof(Index));
 
+		shaderSpecification.VBLayout = vertexBufferLayout;
 		shaderSpecification.ShaderVariableCounts["Bones"] = static_cast<uint32>(m_BoneInfo.size());
 		m_MeshShader = Shader::Create(shaderSpecification, shaderPaths);
 
 		PipelineSpecification pipelineSpecification;
 		pipelineSpecification.Shader = m_MeshShader;
-		pipelineSpecification.Layout = m_VertexBufferLayout;
 		pipelineSpecification.Pass = renderPass;
 		m_MeshPipeline = Pipeline::Create(pipelineSpecification);
 
@@ -272,7 +273,7 @@ namespace Neon
 			m_Materials.resize(m_Scene->mNumMaterials, SharedRef<Material>::Create(m_MeshShader));
 			for (uint32 i = 0; i < m_Scene->mNumMaterials; i++)
 			{
-				struct  
+				struct
 				{
 					glm::vec4 AlbedoColor;
 					float HasAlbedoTexture;

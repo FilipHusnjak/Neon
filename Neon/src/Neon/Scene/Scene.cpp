@@ -33,6 +33,17 @@ namespace Neon
 
 	void Scene::Init()
 	{
+		std::unordered_map<ShaderType, std::string> skyboxShaderPaths;
+		skyboxShaderPaths[ShaderType::Vertex] = "assets/shaders/skybox_vert.glsl";
+		skyboxShaderPaths[ShaderType::Fragment] = "assets/shaders/skybox_frag.glsl";
+		ShaderSpecification skyboxShaderSpec;
+		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+		m_SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec, skyboxShaderPaths));
+		m_SkyboxMaterial->LoadTextureCube(1, 0,
+										  {"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
+										   "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
+										   "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});
+		SceneRenderer::InitializeScene(this);
 	}
 
 	void Scene::OnUpdate(float deltaSeconds)
@@ -41,7 +52,7 @@ namespace Neon
 
 	void Scene::OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera)
 	{
-		SceneRenderer::BeginScene(this, {editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f});
+		SceneRenderer::BeginScene({editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f});
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
 		for (auto entity : group)
 		{

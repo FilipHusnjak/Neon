@@ -12,18 +12,15 @@ namespace Neon
 		struct SceneInfo
 		{
 			SceneRendererCamera SceneCamera;
-
-			// Resources
+			SharedRef<Material> SkyboxMaterial;
+			SharedRef<Pipeline> SkyboxPipeline;
 			Light ActiveLight;
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
 
 		// Skybox
-		SharedRef<TextureCube> SkyboxCubemap;
-		SharedRef<Shader> SkyboxShader;
-		SharedRef<Pipeline> SkyboxPipeline;
-
+		
 		float LightDistance = 0.1f;
 		glm::mat4 LightMatrices[4];
 		glm::mat4 LightViewMatrix;
@@ -46,11 +43,11 @@ namespace Neon
 		RenderPassSpecification geoRenderPassSpec;
 		geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
 		geoRenderPassSpec.Attachments.push_back(
-			{8, AttachmentFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
+			{4, AttachmentFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
 		geoRenderPassSpec.Attachments.push_back(
 			{1, AttachmentFormat::RGBA8, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
 		geoRenderPassSpec.Attachments.push_back(
-			{8, AttachmentFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
+			{4, AttachmentFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
 		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
 		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
 
@@ -58,29 +55,19 @@ namespace Neon
 		geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
 
 		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
+	}
 
-		std::unordered_map<ShaderType, std::string> skyboxShaderPaths;
-		skyboxShaderPaths[ShaderType::Vertex] = "assets/shaders/skybox_vert.glsl";
-		skyboxShaderPaths[ShaderType::Fragment] = "assets/shaders/skybox_frag.glsl";
-		ShaderSpecification skyboxShaderSpec;
-		s_Data.SkyboxShader = Shader::Create(skyboxShaderSpec, skyboxShaderPaths);
+	void SceneRenderer::InitializeScene(const Scene* scene)
+	{
+		s_Data.SceneData = {};
 
-		VertexBufferLayout waterVertexBufferLayout =
-			std::vector<VertexBufferElement>{{ShaderDataType::Float3}, {ShaderDataType::Float3}};
-
-		VertexBufferLayout skyboxVertexBufferLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+		s_Data.ActiveScene = scene;
+		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
 
 		PipelineSpecification skyboxPipelineSpec;
-		skyboxPipelineSpec.Layout = skyboxVertexBufferLayout;
 		skyboxPipelineSpec.Pass = s_Data.GeoPass;
-		skyboxPipelineSpec.Shader = s_Data.SkyboxShader;
-		s_Data.SkyboxPipeline = Pipeline::Create(skyboxPipelineSpec);
-
-		s_Data.SkyboxCubemap =
-			TextureCube::Create({"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
-								 "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
-								 "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});
-		s_Data.SkyboxShader->SetTextureCube(1, 0, s_Data.SkyboxCubemap);
+		skyboxPipelineSpec.Shader = scene->m_SkyboxMaterial->GetShader();
+		s_Data.SceneData.SkyboxPipeline = Pipeline::Create(skyboxPipelineSpec);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
@@ -88,21 +75,17 @@ namespace Neon
 		// TODO: Implement
 	}
 
-	void SceneRenderer::BeginScene(const Scene* scene, const SceneRendererCamera& camera)
+	void SceneRenderer::BeginScene(const SceneRendererCamera& camera)
 	{
-		NEO_CORE_ASSERT(!s_Data.ActiveScene, "Another scene is currently rendering!");
-
-		s_Data.ActiveScene = scene;
+		NEO_CORE_ASSERT(s_Data.ActiveScene, "Scene not initialized!");
 
 		s_Data.SceneData.SceneCamera = camera;
-		s_Data.SceneData.ActiveLight = scene->GetLight();
+		s_Data.SceneData.ActiveLight = s_Data.ActiveScene->GetLight();
 	}
 
 	void SceneRenderer::EndScene()
 	{
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "");
-
-		s_Data.ActiveScene = nullptr;
 
 		FlushDrawList();
 	}
@@ -141,7 +124,6 @@ namespace Neon
 		GeometryPass();
 
 		s_Data.MeshDrawList.clear();
-		s_Data.SceneData = {};
 	}
 
 	void SceneRenderer::GeometryPass()
@@ -171,8 +153,8 @@ namespace Neon
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;
 		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
-		s_Data.SkyboxShader->SetUniformBuffer(0, 0, &inverseVP);
-		Renderer::SubmitFullscreenQuad(s_Data.SkyboxPipeline);
+		s_Data.SceneData.SkyboxMaterial->GetShader()->SetUniformBuffer(0, 0, &inverseVP);
+		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxPipeline);
 
 		Renderer::EndRenderPass();
 	}

@@ -9,7 +9,6 @@ namespace Neon
 	struct PipelineSpecification
 	{
 		SharedRef<Shader> Shader;
-		VertexBufferLayout Layout;
 		SharedRef<RenderPass> Pass;
 	};
 

@@ -39,4 +39,12 @@ namespace Neon
 		m_Textures.emplace_back(texture);
 	}
 
+	void Material::LoadTextureCube(uint32 binding, uint32 index, const std::array<std::string, 6>& paths)
+	{
+		SharedRef<TextureCube> texture = TextureCube::Create(paths);
+		NEO_CORE_ASSERT(texture->Loaded(), "Could not load texture!");
+		m_Shader->SetTextureCube(binding, index, texture);
+		m_Textures.emplace_back(texture);
+	}
+
 } // namespace Neon

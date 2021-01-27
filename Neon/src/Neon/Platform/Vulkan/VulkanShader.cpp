@@ -25,9 +25,10 @@ namespace Neon
 		}
 	}
 
-	VulkanShader::VulkanShader(const ShaderSpecification& shaderSpecification,
+	VulkanShader::VulkanShader(const ShaderSpecification& specification,
 							   const std::unordered_map<ShaderType, std::string>& shaderPaths)
-		: m_Specification(shaderSpecification)
+		: Shader(specification)
+		, m_Specification(specification)
 		, m_ShaderPaths(shaderPaths)
 	{
 		const auto& device = VulkanContext::GetDevice();

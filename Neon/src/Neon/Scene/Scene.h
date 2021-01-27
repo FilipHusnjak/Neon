@@ -8,6 +8,9 @@
 
 namespace Neon
 {
+	class Entity;
+	class Material;
+
 	struct Light
 	{
 		glm::vec3 Direction = {0.0f, 0.0f, 0.0f};
@@ -16,7 +19,6 @@ namespace Neon
 		float Multiplier = 1.0f;
 	};
 
-	class Entity;
 	using EntityMap = std::unordered_map<UUID, Entity>;
 
 	class Scene : public RefCounted
@@ -85,13 +87,13 @@ namespace Neon
 		Light m_Light;
 		float m_LightMultiplier = 0.3f;
 
+		SharedRef<Material> m_SkyboxMaterial;
+
 		entt::entity m_SelectedEntity;
 
-		Entity* m_PhysicsBodyEntityBuffer = nullptr;
-
 		float m_SkyboxLod = 1.0f;
-		bool m_IsPlaying = false;
 
 		friend class Entity;
+		friend class SceneRenderer;
 	};
 } // namespace Neon

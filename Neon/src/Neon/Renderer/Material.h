@@ -11,6 +11,10 @@ namespace Neon
 		Material(const SharedRef<Shader>& shader);
 		~Material() = default;
 
+		SharedRef<Shader> GetShader()
+		{
+			return m_Shader;
+		}
 		const SharedRef<Shader>& GetShader() const
 		{
 			return m_Shader;
@@ -20,6 +24,7 @@ namespace Neon
 		void LoadTexture2D(uint32 binding, uint32 index, const std::string& path);
 		void LoadDefaultTexture2D(uint32 binding, uint32 index);
 		void LoadTextureCube(uint32 binding, uint32 index, const std::string& path);
+		void LoadTextureCube(uint32 binding, uint32 index, const std::array<std::string, 6>& paths);
 
 	private:
 		SharedRef<Shader> m_Shader;

@@ -6,6 +6,11 @@
 
 namespace Neon
 {
+	Shader::Shader(const ShaderSpecification& specification)
+		: m_VertexBufferLayout(specification.VBLayout)
+	{
+	}
+
 	SharedRef<Shader> Shader::Create(const ShaderSpecification& shaderSpecification,
 									 const std::unordered_map<ShaderType, std::string>& shaderPaths)
 	{

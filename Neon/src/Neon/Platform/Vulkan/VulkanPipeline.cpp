@@ -7,7 +7,6 @@
 
 namespace Neon
 {
-
 	VulkanPipeline::VulkanPipeline(const PipelineSpecification& specification)
 		: m_Specification(specification)
 	{
@@ -110,7 +109,7 @@ namespace Neon
 		multisampleState.rasterizationSamples = maxSampleCount;
 
 		// Vertex input descriptor
-		VertexBufferLayout& layout = m_Specification.Layout;
+		const VertexBufferLayout& layout = m_Specification.Shader->GetVertexBufferLayout();
 
 		vk::VertexInputBindingDescription vertexInputBinding = {};
 		vertexInputBinding.binding = 0;
