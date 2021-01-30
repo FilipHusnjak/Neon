@@ -39,7 +39,7 @@ namespace Neon
 		ShaderSpecification skyboxShaderSpec;
 		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
 		m_SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec, skyboxShaderPaths));
-		m_SkyboxMaterial->LoadTextureCube(1, 0,
+		m_SkyboxMaterial->LoadTextureCube("u_Cubemap", 0,
 										  {"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
 										   "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
 										   "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});

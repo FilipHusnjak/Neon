@@ -9,8 +9,9 @@ layout (location = 5) in vec2 a_TexCoord;
 
 layout (location = 0) flat out uint v_MaterialIndex;
 layout (location = 1) out vec2 v_TexCoord;
+layout (location = 2) out vec3 v_Normal;
 
-layout (std140, binding = 0) uniform Camera
+layout (std140, binding = 0) uniform CameraUBO
 {
     mat4 u_Model;
     mat4 u_ViewProjection;
@@ -20,6 +21,7 @@ void main()
 {
     v_MaterialIndex = a_MaterialIndex;
     v_TexCoord = a_TexCoord;
+    v_Normal = normalize((u_Model * vec4(a_Normal, 0.0)).xyz);
 
     gl_Position = u_ViewProjection * u_Model * vec4(a_Position, 1.0);
 }

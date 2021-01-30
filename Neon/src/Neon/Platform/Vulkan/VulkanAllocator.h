@@ -36,7 +36,7 @@ namespace Neon
 		void AllocateBuffer(VulkanBuffer& outBuffer, uint32 size, vk::BufferUsageFlagBits usage,
 							vk::MemoryPropertyFlags memPropFlags);
 
-		void UpdateBuffer(VulkanBuffer& outBuffer, const void* data);
+		void UpdateBuffer(VulkanBuffer& outBuffer, const void* data, uint32 size = 0);
 
 	private:
 		std::string m_Tag;

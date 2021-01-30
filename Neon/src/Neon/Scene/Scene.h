@@ -11,14 +11,6 @@ namespace Neon
 	class Entity;
 	class Material;
 
-	struct Light
-	{
-		glm::vec3 Direction = {0.0f, 0.0f, 0.0f};
-		glm::vec3 Radiance = {0.0f, 0.0f, 0.0f};
-
-		float Multiplier = 1.0f;
-	};
-
 	using EntityMap = std::unordered_map<UUID, Entity>;
 
 	class Scene : public RefCounted
@@ -35,15 +27,6 @@ namespace Neon
 
 		void SetViewportSize(uint32 width, uint32 height);
 
-		Light& GetLight()
-		{
-			return m_Light;
-		}
-		const Light& GetLight() const
-		{
-			return m_Light;
-		}
-
 		Entity CreateEntity(const std::string& name = "");
 		Entity CreateEntityWithID(UUID uuid, const std::string& name = "", bool runtimeMap = false);
 		Entity CreateMesh(const std::string& path, const std::string& name = "");
@@ -53,6 +36,12 @@ namespace Neon
 		auto GetAllEntitiesWithComponent()
 		{
 			return m_Registry.view<T>();
+		}
+
+		template<typename T>
+		T& GetEntityComponent(entt::entity entity)
+		{
+			return m_Registry.get<T>(entity);
 		}
 
 		Entity FindEntityByTag(const std::string& tag);
@@ -83,9 +72,6 @@ namespace Neon
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		EntityMap m_EntityIDMap;
-
-		Light m_Light;
-		float m_LightMultiplier = 0.3f;
 
 		SharedRef<Material> m_SkyboxMaterial;
 

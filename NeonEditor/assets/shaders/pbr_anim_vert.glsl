@@ -13,14 +13,15 @@ layout(location = 6 + MAX_BONES_PER_VERTEX) in float a_BoneWeights[MAX_BONES_PER
 
 layout (location = 0) flat out uint v_MaterialIndex;
 layout (location = 1) out vec2 v_TexCoord;
+layout (location = 2) out vec3 v_Normal;
 
-layout (std140, binding = 0) uniform Camera
+layout (std140, binding = 0) uniform CameraUBO
 {
     mat4 u_Model;
     mat4 u_ViewProjection;
 };
 
-layout(std140, binding = 1) readonly buffer Bones
+layout(std140, binding = 1) readonly buffer BonesUBO
 {
     mat4 u_BoneTransforms[];
 };
@@ -32,9 +33,12 @@ void main()
     {
         boneTransform += u_BoneTransforms[a_BoneIds[i]] * a_BoneWeights[i];
     }
+	
+	mat4 worldTransform = u_Model * boneTransform;
 
     v_MaterialIndex = a_MaterialIndex;
     v_TexCoord = a_TexCoord;
+	v_Normal = normalize((worldTransform * vec4(a_Normal, 0.0)).xyz);
 
-    gl_Position = u_ViewProjection * u_Model * boneTransform * vec4(a_Position, 1.0);
+    gl_Position = u_ViewProjection * worldTransform * vec4(a_Position, 1.0);
 }

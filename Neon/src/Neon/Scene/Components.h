@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Neon/Renderer/Mesh.h"
+#include "Neon/Core/UUID.h"
 
 namespace Neon
 {
@@ -66,5 +67,19 @@ namespace Neon
 		{
 			return Mesh;
 		}
+	};
+
+	struct LightComponent
+	{
+		LightComponent() = default;
+		LightComponent(const LightComponent& other) = default;
+		LightComponent(const glm::vec4& direction)
+			: Direction(direction)
+		{
+		}
+
+		float Strength = 1.f;
+		glm::vec4 Direction = {0.f, 0.f, 0.f, 0.f};
+		glm::vec4 Radiance = {1.f, 1.f, 1.f, 1.f};
 	};
 } // namespace Neon

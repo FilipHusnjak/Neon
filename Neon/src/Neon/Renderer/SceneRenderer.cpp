@@ -2,28 +2,22 @@
 
 #include "Neon/Renderer/Framebuffer.h"
 #include "Neon/Renderer/Renderer.h"
+#include "Neon/Scene/Components.h"
 #include "SceneRenderer.h"
 
 namespace Neon
 {
 	struct SceneRendererData
 	{
-		const Scene* ActiveScene = nullptr;
+		Scene* ActiveScene = nullptr;
 		struct SceneInfo
 		{
 			SceneRendererCamera SceneCamera;
 			SharedRef<Material> SkyboxMaterial;
 			SharedRef<Pipeline> SkyboxPipeline;
-			Light ActiveLight;
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
-
-		// Skybox
-		
-		float LightDistance = 0.1f;
-		glm::mat4 LightMatrices[4];
-		glm::mat4 LightViewMatrix;
 
 		glm::vec2 FocusPoint = {0.5f, 0.5f};
 
@@ -57,7 +51,7 @@ namespace Neon
 		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
 	}
 
-	void SceneRenderer::InitializeScene(const Scene* scene)
+	void SceneRenderer::InitializeScene(Scene* scene)
 	{
 		s_Data.SceneData = {};
 
@@ -80,7 +74,6 @@ namespace Neon
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "Scene not initialized!");
 
 		s_Data.SceneData.SceneCamera = camera;
-		s_Data.SceneData.ActiveLight = s_Data.ActiveScene->GetLight();
 	}
 
 	void SceneRenderer::EndScene()
@@ -134,26 +127,58 @@ namespace Neon
 
 		auto viewProjection = sceneCamera.Camera.GetProjectionMatrix() * sceneCamera.ViewMatrix;
 
+		struct
+		{
+			glm::vec4 Count;
+			struct
+			{
+				glm::vec4 Strength;
+				glm::vec4 Direction;
+				glm::vec4 Radiance;
+			} Lights[100];
+		} lightUBO = {};
+
+		uint32 i = 0;
+		for (auto entity : s_Data.ActiveScene->GetAllEntitiesWithComponent<LightComponent>())
+		{
+			if (i >= 100)
+			{
+				NEO_CORE_ASSERT("Max number of light entities in the scene is {}", 100);
+			}
+			const auto& lightComponent = s_Data.ActiveScene->GetEntityComponent<LightComponent>(entity);
+			lightUBO.Lights[i].Strength[0] = lightComponent.Strength;
+			lightUBO.Lights[i].Direction = lightComponent.Direction;
+			lightUBO.Lights[i].Radiance = lightComponent.Radiance;
+			i++;
+		}
+		lightUBO.Count[0] = i;
+
+		uint32 sizeToUpdate = sizeof(glm::vec4) + i * sizeof(lightUBO.Lights[0]);
+
+		struct
+		{
+			glm::mat4 Model = glm::mat4(1.f);
+			glm::mat4 ViewProjection = glm::mat4(1.f);
+		} cameraUBO;
+		cameraUBO.ViewProjection = viewProjection;
+
 		// Render meshes
 		for (auto& dc : s_Data.MeshDrawList)
 		{
-			struct
-			{
-				glm::mat4 Model = glm::mat4(1.f);
-				glm::mat4 ViewProjection = glm::mat4(1.f);
-			} cameraMatrices;
+			cameraUBO.Model = dc.Transform;
+
 			SharedRef<Shader> meshShader = dc.Mesh->GetShader();
-			cameraMatrices.ViewProjection = viewProjection;
-			cameraMatrices.Model = dc.Transform;
-			meshShader->SetUniformBuffer(0, 0, &cameraMatrices);
+			meshShader->SetUniformBuffer("CameraUBO", 0, &cameraUBO);
+			meshShader->SetUniformBuffer("LightUBO", 0, &lightUBO);
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform);
 		}
+
 		glm::mat4 viewRotation = sceneCamera.ViewMatrix;
 		viewRotation[3][0] = 0;
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;
 		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
-		s_Data.SceneData.SkyboxMaterial->GetShader()->SetUniformBuffer(0, 0, &inverseVP);
+		s_Data.SceneData.SkyboxMaterial->GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
 		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxPipeline);
 
 		Renderer::EndRenderPass();

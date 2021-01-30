@@ -57,36 +57,36 @@ namespace Neon
 		CreateDescriptors();
 	}
 
-	void VulkanShader::SetUniformBuffer(uint32 binding, uint32 index, const void* data)
+	void VulkanShader::SetUniformBuffer(const std::string& name, uint32 index, const void* data, uint32 size /*= 0*/)
 	{
-		NEO_CORE_ASSERT(m_UniformBuffers.find(binding) != m_UniformBuffers.end(), "Uniform binding is invalid!");
-		NEO_CORE_ASSERT(index < m_UniformBuffers[binding].Count, "Descriptor index out of range!");
-		m_Allocator.UpdateBuffer(m_UniformBuffers[binding].Buffers[index], data);
+		NEO_CORE_ASSERT(m_UniformBuffers.find(name) != m_UniformBuffers.end(), "Unknown uniform buffer name!");
+		NEO_CORE_ASSERT(index < m_UniformBuffers[name].Count, "Descriptor index out of range!");
+		m_Allocator.UpdateBuffer(m_UniformBuffers[name].Buffers[index], data, size);
 	}
 
-	void VulkanShader::SetStorageBuffer(uint32 binding, const void* data)
+	void VulkanShader::SetStorageBuffer(const std::string& name, const void* data, uint32 size /*= 0*/)
 	{
-		NEO_CORE_ASSERT(m_StorageBuffers.find(binding) != m_StorageBuffers.end(), "Uniform binding is invalid!");
-		m_Allocator.UpdateBuffer(m_StorageBuffers[binding].BufferData, data);
+		NEO_CORE_ASSERT(m_StorageBuffers.find(name) != m_StorageBuffers.end(), "Unknown storage buffer name!");
+		m_Allocator.UpdateBuffer(m_StorageBuffers[name].BufferData, data, size);
 	}
 
-	void VulkanShader::SetTexture2D(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture)
+	void VulkanShader::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture)
 	{
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
 		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
 		vk::WriteDescriptorSet descWrite{
-			m_DescriptorSet.get(), binding, index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
+			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
 
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
 	}
 
-	void VulkanShader::SetTextureCube(uint32 binding, uint32 index, const SharedRef<TextureCube>& texture)
+	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture)
 	{
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
 		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
 		vk::WriteDescriptorSet descWrite{
-			m_DescriptorSet.get(), binding, index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
+			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
 
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
@@ -172,7 +172,8 @@ namespace Neon
 			auto size = static_cast<uint32>(compiler.get_declared_struct_size(bufferType));
 			auto memberCount = static_cast<uint32>(bufferType.member_types.size());
 
-			UniformBuffer& buffer = m_UniformBuffers[bindingPoint];
+			m_NameBindingMap[name] = bindingPoint;
+			UniformBuffer& buffer = m_UniformBuffers[name];
 			buffer.Name = name;
 			buffer.BindingPoint = bindingPoint;
 			buffer.Count = count;
@@ -204,7 +205,8 @@ namespace Neon
 				}
 			}
 
-			StorageBuffer& buffer = m_StorageBuffers[bindingPoint];
+			m_NameBindingMap[name] = bindingPoint;
+			StorageBuffer& buffer = m_StorageBuffers[name];
 			buffer.Name = name;
 			buffer.BindingPoint = bindingPoint;
 			buffer.Size = size * m_Specification.ShaderVariableCounts[name];
@@ -230,7 +232,8 @@ namespace Neon
 			}
 			uint32_t dimension = imageSamplerType.image.dim;
 
-			auto& imageSampler = m_ImageSamplers[bindingPoint];
+			m_NameBindingMap[name] = bindingPoint;
+			auto& imageSampler = m_ImageSamplers[name];
 			imageSampler.BindingPoint = bindingPoint;
 			imageSampler.Name = name;
 			imageSampler.Count = count;
@@ -302,13 +305,13 @@ namespace Neon
 		m_DescriptorPool = device.createDescriptorPoolUnique(descPoolCreateInfo);
 
 		std::vector<vk::DescriptorSetLayoutBinding> layoutBindings;
-		for (auto& [binding, uniformBuffer] : m_UniformBuffers)
+		for (auto& [name, uniformBuffer] : m_UniformBuffers)
 		{
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
 			layoutBinding.descriptorCount = uniformBuffer.Count;
 			layoutBinding.stageFlags = uniformBuffer.ShaderStage;
-			layoutBinding.binding = binding;
+			layoutBinding.binding = m_NameBindingMap[name];
 
 			uniformBuffer.Buffers.resize(uniformBuffer.Count);
 			for (uint32 i = 0; i < uniformBuffer.Count; i++)
@@ -317,24 +320,24 @@ namespace Neon
 										   vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			}
 		}
-		for (auto& [binding, storageBuffer] : m_StorageBuffers)
+		for (auto& [name, storageBuffer] : m_StorageBuffers)
 		{
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
 			layoutBinding.descriptorCount = 1;
 			layoutBinding.stageFlags = storageBuffer.ShaderStage;
-			layoutBinding.binding = binding;
+			layoutBinding.binding = m_NameBindingMap[name];
 
 			m_Allocator.AllocateBuffer(storageBuffer.BufferData, storageBuffer.Size, vk::BufferUsageFlagBits::eStorageBuffer,
 									   vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 		}
-		for (auto& [binding, imageSampler] : m_ImageSamplers)
+		for (auto& [name, imageSampler] : m_ImageSamplers)
 		{
 			auto& layoutBinding = layoutBindings.emplace_back();
 			layoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 			layoutBinding.descriptorCount = imageSampler.Count;
 			layoutBinding.stageFlags = imageSampler.ShaderStage;
-			layoutBinding.binding = binding;
+			layoutBinding.binding = m_NameBindingMap[name];
 		}
 
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout = {};
@@ -345,51 +348,30 @@ namespace Neon
 		vk::DescriptorSetAllocateInfo allocInfo(m_DescriptorPool.get(), 1, &m_DescriptorSetLayout.get());
 		m_DescriptorSet = std::move(device.allocateDescriptorSetsUnique(allocInfo)[0]);
 
-		for (const auto& layoutBinding : layoutBindings)
+		for (const auto& [name, uniformBuffer] : m_UniformBuffers)
 		{
-			switch (layoutBinding.descriptorType)
+			std::vector<vk::DescriptorBufferInfo> bufferInfos(uniformBuffer.Count);
+			for (uint32 i = 0; i < bufferInfos.size(); i++)
 			{
-				case vk::DescriptorType::eUniformBuffer:
-				{
-					std::vector<vk::DescriptorBufferInfo> bufferInfos(layoutBinding.descriptorCount);
-					for (uint32 i = 0; i < bufferInfos.size(); i++)
-					{
-						bufferInfos[i].buffer = m_UniformBuffers[layoutBinding.binding].Buffers[i].Handle.get();
-						bufferInfos[i].offset = 0;
-						bufferInfos[i].range = m_UniformBuffers[layoutBinding.binding].Buffers[i].Size;
-					}
-					vk::WriteDescriptorSet descWrite = {m_DescriptorSet.get(),
-														layoutBinding.binding,
-														0,
-														layoutBinding.descriptorCount,
-														vk::DescriptorType::eUniformBuffer,
-														nullptr,
-														bufferInfos.data()};
-					device.updateDescriptorSets({descWrite}, nullptr);
-				}
-				break;
-				case vk::DescriptorType::eStorageBuffer:
-				{
-					vk::DescriptorBufferInfo bufferInfo;
-
-					bufferInfo.buffer = m_StorageBuffers[layoutBinding.binding].BufferData.Handle.get();
-					bufferInfo.offset = 0;
-					bufferInfo.range = m_StorageBuffers[layoutBinding.binding].BufferData.Size;
-					vk::WriteDescriptorSet descWrite = {m_DescriptorSet.get(),
-														layoutBinding.binding,
-														0,
-														1,
-														vk::DescriptorType::eStorageBuffer,
-														nullptr,
-														&bufferInfo};
-					device.updateDescriptorSets({descWrite}, nullptr);
-				}
-				break;
-				default:
-				{
-				}
-				break;
+				bufferInfos[i].buffer = m_UniformBuffers[name].Buffers[i].Handle.get();
+				bufferInfos[i].offset = 0;
+				bufferInfos[i].range = m_UniformBuffers[name].Buffers[i].Size;
 			}
+			vk::WriteDescriptorSet descWrite = {
+				m_DescriptorSet.get(), m_NameBindingMap[name], 0, uniformBuffer.Count, vk::DescriptorType::eUniformBuffer, nullptr,
+				bufferInfos.data()};
+			device.updateDescriptorSets({descWrite}, nullptr);
+		}
+
+		for (const auto& [name, storageBuffer] : m_StorageBuffers)
+		{
+			vk::DescriptorBufferInfo bufferInfo;
+			bufferInfo.buffer = m_StorageBuffers[name].BufferData.Handle.get();
+			bufferInfo.offset = 0;
+			bufferInfo.range = m_StorageBuffers[name].BufferData.Size;
+			vk::WriteDescriptorSet descWrite = {
+				m_DescriptorSet.get(), m_NameBindingMap[name], 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &bufferInfo};
+			device.updateDescriptorSets({descWrite}, nullptr);
 		}
 	}
 

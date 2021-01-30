@@ -4,7 +4,7 @@ layout(location = 0) in vec2 a_Position;
 
 layout (location = 0) out vec3 v_Position;
 
-layout (std140, binding = 0) uniform Camera
+layout (std140, binding = 0) uniform CameraUBO
 {
     mat4 u_InverseVP;
 };

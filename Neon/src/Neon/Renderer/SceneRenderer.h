@@ -20,7 +20,7 @@ namespace Neon
 	public:
 		static void Init();
 
-		static void InitializeScene(const Scene* scene);
+		static void InitializeScene(Scene* scene);
 
 		static void SetViewportSize(uint32 width, uint32 height);
 

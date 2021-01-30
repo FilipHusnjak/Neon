@@ -25,6 +25,13 @@ namespace Neon
 		auto entity = m_EditorScene->CreateMesh("assets/models/wuson/wuson.obj", "wuson");
 		auto& transformComponent = entity.GetComponent<TransformComponent>();
 		transformComponent.Transform = glm::translate(glm::mat4(1.0), {-10, 0, 0});
+
+		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
+		lightEntity.AddComponent<LightComponent>(glm::vec4{1, 1, 0, 0});
+
+		auto lightEntity2 = m_EditorScene->CreateEntity("DirectionalLight");
+		auto& comp = lightEntity2.AddComponent<LightComponent>(glm::vec4{0, 1, 1, 0});
+		comp.Strength = 0.2f;
 	}
 
 	void EditorLayer::OnAttach()

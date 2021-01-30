@@ -27,6 +27,7 @@ namespace Neon
 										 vk::MemoryPropertyFlags memPropFlags)
 	{
 		NEO_CORE_ASSERT(m_Device, "Device not initialized!");
+		NEO_CORE_ASSERT(size > 0, "Buffer size must be greater than 0!");
 
 		vk::BufferCreateInfo bufferInfo{};
 		bufferInfo.size = size;
@@ -42,13 +43,19 @@ namespace Neon
 		outBuffer.Size = size;
 	}
 
-	void VulkanAllocator::UpdateBuffer(VulkanBuffer& outBuffer, const void* data)
+	void VulkanAllocator::UpdateBuffer(VulkanBuffer& outBuffer, const void* data, uint32 size /*= 0*/)
 	{
 		NEO_CORE_ASSERT(m_Device, "Device not initialized!");
+		NEO_CORE_ASSERT(outBuffer.Size >= size, "Buffer out of range!");
+		if (size == 0)
+		{
+			size = outBuffer.Size;
+		}
+		NEO_CORE_ASSERT(size > 0, "Updating buffer size of 0!");
 
 		void* dest;
-		m_Device->GetHandle().mapMemory(outBuffer.Memory.get(), 0, outBuffer.Size, vk::MemoryMapFlags(), &dest);
-		memcpy(dest, data, outBuffer.Size);
+		m_Device->GetHandle().mapMemory(outBuffer.Memory.get(), 0, size, vk::MemoryMapFlags(), &dest);
+		memcpy(dest, data, size);
 		m_Device->GetHandle().unmapMemory(outBuffer.Memory.get());
 	}
 

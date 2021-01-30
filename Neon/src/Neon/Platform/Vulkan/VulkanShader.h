@@ -49,10 +49,10 @@ namespace Neon
 
 		void Reload() override;
 
-		void SetUniformBuffer(uint32 binding, uint32 index, const void* data) override;
-		void SetStorageBuffer(uint32 binding, const void* data) override;
-		void SetTexture2D(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) override;
-		void SetTextureCube(uint32 binding, uint32 index, const SharedRef<TextureCube>& texture) override;
+		void SetUniformBuffer(const std::string& name, uint32 index, const void* data, uint32 size = 0) override;
+		void SetStorageBuffer(const std::string& name, const void* data, uint32 size = 0) override;
+		void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture) override;
+		void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) override;
 
 		vk::DescriptorSet GetDescriptorSet() const
 		{
@@ -93,9 +93,11 @@ namespace Neon
 		vk::UniqueDescriptorSetLayout m_DescriptorSetLayout;
 		vk::UniqueDescriptorSet m_DescriptorSet;
 
-		std::unordered_map<uint32, UniformBuffer> m_UniformBuffers;
-		std::unordered_map<uint32, StorageBuffer> m_StorageBuffers;
-		std::unordered_map<uint32, ImageSampler> m_ImageSamplers;
+		std::unordered_map<std::string, UniformBuffer> m_UniformBuffers;
+		std::unordered_map<std::string, StorageBuffer> m_StorageBuffers;
+		std::unordered_map<std::string, ImageSampler> m_ImageSamplers;
+
+		std::unordered_map<std::string, uint32> m_NameBindingMap;
 
 		std::vector<PushConstant> m_PushConstants;
 	};

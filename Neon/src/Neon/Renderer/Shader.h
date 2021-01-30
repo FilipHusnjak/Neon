@@ -55,10 +55,10 @@ namespace Neon
 
 		virtual void Reload() = 0;
 
-		virtual void SetUniformBuffer(uint32 binding, uint32 index, const void* data) = 0;
-		virtual void SetStorageBuffer(uint32 binding, const void* data) = 0;
-		virtual void SetTexture2D(uint32 binding, uint32 index, const SharedRef<Texture2D>& texture) = 0;
-		virtual void SetTextureCube(uint32 binding, uint32 index, const SharedRef<TextureCube>& texture) = 0;
+		virtual void SetUniformBuffer(const std::string& name, uint32 index, const void* data, uint32 size = 0) = 0;
+		virtual void SetStorageBuffer(const std::string& name, const void* data, uint32 size = 0) = 0;
+		virtual void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture) = 0;
+		virtual void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) = 0;
 
 		const VertexBufferLayout& GetVertexBufferLayout() const
 		{
