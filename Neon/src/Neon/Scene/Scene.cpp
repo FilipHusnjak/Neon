@@ -52,7 +52,7 @@ namespace Neon
 
 	void Scene::OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera)
 	{
-		SceneRenderer::BeginScene({editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f});
+		SceneRenderer::BeginScene({editorCamera, 0.1f, 1000.0f, 45.0f});
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
 		for (auto entity : group)
 		{

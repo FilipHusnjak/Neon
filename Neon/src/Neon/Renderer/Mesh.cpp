@@ -312,12 +312,14 @@ namespace Neon
 				("    COLOR = {0}, {1}, {2}", aiColor.r, aiColor.g, aiColor.b);
 				NEO_MESH_LOG("    TextureCount = {0}", textureCount);
 				("    ROUGHNESS = {0}", roughness);
-				if (aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS)
+				if (true || aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiTexPath) == AI_SUCCESS)
 				{
 					std::filesystem::path path = filename;
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
-					std::string texturePath = parentPath.string();
+					//std::string texturePath = parentPath.string();
+					std::string texturePath =
+						"C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/Cerberus_A.tga";
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
 					m_Materials[i]->LoadTexture2D("u_AlbedoTextures", i, texturePath);
 					materialProperties.HasAlbedoTexture = 1.f;
@@ -327,18 +329,19 @@ namespace Neon
 				{
 					NEO_MESH_LOG("    No albedo map!");
 					m_Materials[i]->LoadDefaultTexture2D("u_AlbedoTextures", i);
-					materialProperties.AlbedoColor = glm::vec4{aiColor.r, aiColor.g, aiColor.b, 0.f};
+					materialProperties.AlbedoColor = glm::vec4{aiColor.r, aiColor.g, aiColor.b, 1.f};
 					materialProperties.HasAlbedoTexture = 0.f;
 				}
 
-				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
+				if (true || aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
 				{
 					std::filesystem::path path = filename;
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
-					std::string texturePath = parentPath.string();
+					//std::string texturePath = parentPath.string();
+					std::string texturePath = "C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/Cerberus_N.tga";
 					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath);
-					materialProperties.HasNormalTex = 1.f;
+					materialProperties.HasNormalTex = 0.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
 				}
 				else
@@ -348,12 +351,13 @@ namespace Neon
 					NEO_MESH_LOG("    No normal map!");
 				}
 
-				if (aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
+				if (true || aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
 				{
 					std::filesystem::path path = filename;
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
-					std::string texturePath = parentPath.string();
+					//std::string texturePath = parentPath.string();
+					std::string texturePath = "C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/Cerberus_R.tga";
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
 					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath);
 					materialProperties.HasRoughnessTex = 1.f;
@@ -367,24 +371,26 @@ namespace Neon
 				}
 
 				bool metalnessTextureFound = false;
-				for (uint32 i = 0; i < aiMaterial->mNumProperties; i++)
+				for (uint32 j = 0; j < aiMaterial->mNumProperties; j++)
 				{
-					auto prop = aiMaterial->mProperties[i];
+					auto prop = aiMaterial->mProperties[j];
 
-					if (prop->mType == aiPTI_String)
+					if (true || prop->mType == aiPTI_String)
 					{
-						uint32 strLength = *(uint32*)prop->mData;
-						std::string str(prop->mData + 4, strLength);
+						//uint32 strLength = *(uint32*)prop->mData;
+						//std::string str(prop->mData + 4, strLength);
 
 						std::string key = prop->mKey.data;
-						if (key == "$raw.ReflectionFactor|file")
+						if (true || key == "$raw.ReflectionFactor|file")
 						{
 							metalnessTextureFound = true;
 
 							std::filesystem::path path = filename;
 							auto parentPath = path.parent_path();
-							parentPath /= str;
-							std::string texturePath = parentPath.string();
+							//parentPath /= str;
+							//std::string texturePath = parentPath.string();
+							std::string texturePath =
+								"C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/Cerberus_M.tga";
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
 							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath);
 							materialProperties.HasMetalnessTex = 1.f;

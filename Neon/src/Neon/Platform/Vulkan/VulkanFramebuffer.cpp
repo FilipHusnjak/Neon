@@ -88,6 +88,8 @@ namespace Neon
 	{
 		const auto& device = VulkanContext::GetDevice();
 
+		m_Attachments.clear();
+
 		// Fill a descriptor for later use in a descriptor set
 		m_AttachmentDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 		m_AttachmentDescriptorInfo.sampler = m_AttachmentSampler.get();

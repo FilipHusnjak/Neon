@@ -125,11 +125,10 @@ namespace Neon
 
 		auto& sceneCamera = s_Data.SceneData.SceneCamera;
 
-		auto viewProjection = sceneCamera.Camera.GetProjectionMatrix() * sceneCamera.ViewMatrix;
-
+		// Using vec4 for shader alignment!
 		struct
 		{
-			glm::vec4 Count;
+			glm::uvec4 Count = {0, 0, 0, 0};
 			struct
 			{
 				glm::vec4 Strength;
@@ -159,8 +158,10 @@ namespace Neon
 		{
 			glm::mat4 Model = glm::mat4(1.f);
 			glm::mat4 ViewProjection = glm::mat4(1.f);
+			glm::vec4 CameraPosition = glm::vec4();
 		} cameraUBO;
-		cameraUBO.ViewProjection = viewProjection;
+		cameraUBO.ViewProjection = sceneCamera.Camera.GetViewProjection();
+		cameraUBO.CameraPosition = glm::vec4(sceneCamera.Camera.GetPosition(), 1.f);
 
 		// Render meshes
 		for (auto& dc : s_Data.MeshDrawList)
@@ -173,7 +174,7 @@ namespace Neon
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform);
 		}
 
-		glm::mat4 viewRotation = sceneCamera.ViewMatrix;
+		glm::mat4 viewRotation = sceneCamera.Camera.GetViewMatrix();
 		viewRotation[3][0] = 0;
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;

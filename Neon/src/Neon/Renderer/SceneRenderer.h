@@ -9,7 +9,6 @@ namespace Neon
 	struct SceneRendererCamera
 	{
 		Neon::Camera Camera;
-		glm::mat4 ViewMatrix;
 		float Near;
 		float Far;
 		float FOV;

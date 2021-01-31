@@ -32,22 +32,10 @@ namespace Neon
 			m_ViewportHeight = height;
 		}
 
-		const glm::mat4 GetViewMatrix() const
-		{
-			return m_ViewMatrix;
-		}
-		glm::mat4 GetViewProjection() const
-		{
-			return m_ProjectionMatrix * m_ViewMatrix;
-		}
-
 		glm::vec3 GetUpDirection();
 		glm::vec3 GetRightDirection();
 		glm::vec3 GetForwardDirection();
-		const glm::vec3& GetPosition() const
-		{
-			return m_Position;
-		}
+
 		glm::quat GetOrientation() const;
 
 		float GetPitch() const
@@ -75,8 +63,6 @@ namespace Neon
 		float ZoomSpeed() const;
 
 	private:
-		glm::mat4 m_ViewMatrix;
-		glm::vec3 m_Position;
 		glm::vec3 m_FocalPoint;
 
 		glm::vec2 m_InitialMousePosition;
