@@ -469,36 +469,33 @@ namespace Neon
 
 		NEO_CORE_ASSERT(!deviceSurfaceFormats.empty(), "There are no supported surface formats");
 
+		// Use unorm formats since imGui does not support srgb
 		// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
 		// there is no preferred format, so we assume VK_FORMAT_B8G8R8A8_UNORM
 		if ((deviceSurfaceFormats.size() == 1) && (deviceSurfaceFormats[0].format == vk::Format::eUndefined))
 		{
 			m_ColorFormat = vk::Format::eB8G8R8A8Unorm;
-			m_ColorSpace = deviceSurfaceFormats[0].colorSpace;
+			m_ColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
 		}
 		else
 		{
 			// iterate over the list of available surface format and
 			// check for the presence of VK_FORMAT_B8G8R8A8_UNORM
-			bool found_B8G8R8A8_UNORM = false;
 			for (auto surfaceFormat : deviceSurfaceFormats)
 			{
-				if (surfaceFormat.format == vk::Format::eB8G8R8A8Unorm)
+				if (surfaceFormat.format == vk::Format::eB8G8R8A8Unorm &&
+					surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
 				{
 					m_ColorFormat = surfaceFormat.format;
 					m_ColorSpace = surfaceFormat.colorSpace;
-					found_B8G8R8A8_UNORM = true;
-					break;
+					return;
 				}
 			}
 
 			// in case VK_FORMAT_B8G8R8A8_UNORM is not available
 			// select the first available color format
-			if (!found_B8G8R8A8_UNORM)
-			{
-				m_ColorFormat = deviceSurfaceFormats[0].format;
-				m_ColorSpace = deviceSurfaceFormats[0].colorSpace;
-			}
+			m_ColorFormat = deviceSurfaceFormats[0].format;
+			m_ColorSpace = deviceSurfaceFormats[0].colorSpace;
 		}
 	}
 } // namespace Neon
