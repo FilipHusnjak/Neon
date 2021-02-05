@@ -135,9 +135,9 @@ namespace Neon
 
 		void OnUpdate(float deltaSeconds);
 
-		const SharedRef<Pipeline>& GetPipeline() const
+		const SharedRef<GraphicsPipeline>& GetGraphicsPipeline() const
 		{
-			return m_MeshPipeline;
+			return m_MeshGraphicsPipeline;
 		}
 
 		const SharedRef<Shader>& GetShader() const
@@ -193,7 +193,7 @@ namespace Neon
 		const aiScene* m_Scene;
 
 		SharedRef<Shader> m_MeshShader;
-		SharedRef<Pipeline> m_MeshPipeline;
+		SharedRef<GraphicsPipeline> m_MeshGraphicsPipeline;
 
 		std::vector<SharedRef<Material>> m_Materials;
 

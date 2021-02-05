@@ -32,7 +32,7 @@ namespace Neon
 		virtual void Begin() = 0;
 		virtual void BeginRenderPass(const SharedRef<RenderPass>& renderPass) = 0;
 		virtual void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform) = 0;
-		virtual void SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline) = 0;
+		virtual void SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline) = 0;
 		virtual void EndRenderPass() = 0;
 		virtual void End() = 0;
 		virtual void WaitIdle() = 0;

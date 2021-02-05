@@ -7,8 +7,8 @@
 
 namespace Neon
 {
-	VulkanPipeline::VulkanPipeline(const PipelineSpecification& specification)
-		: m_Specification(specification)
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineSpecification& specification)
+		: GraphicsPipeline(specification)
 	{
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 
@@ -164,6 +164,11 @@ namespace Neon
 
 		// Create rendering pipeline using the specified states
 		m_Handle = device.createGraphicsPipelineUnique(nullptr, pipelineCreateInfo);
+	}
+
+	VulkanComputePipeline::VulkanComputePipeline(const ComputePipelineSpecification& specification)
+		: ComputePipeline(specification)
+	{
 	}
 
 } // namespace Neon

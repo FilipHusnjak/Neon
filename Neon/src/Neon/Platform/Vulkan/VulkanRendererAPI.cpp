@@ -48,7 +48,7 @@ namespace Neon
 
 		SharedRef<VulkanShader> meshShader = mesh->GetShader().As<VulkanShader>();
 
-		SharedRef<VulkanPipeline> meshPipeline = mesh->GetPipeline().As<VulkanPipeline>();
+		SharedRef<VulkanGraphicsPipeline> meshPipeline = mesh->GetGraphicsPipeline().As<VulkanGraphicsPipeline>();
 
 		renderCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, (VkPipeline)meshPipeline->GetHandle());
 
@@ -64,16 +64,16 @@ namespace Neon
 		}
 	}
 
-	void VulkanRendererAPI::SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline)
+	void VulkanRendererAPI::SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline)
 	{
 		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
 		vk::CommandBuffer renderCommandBuffer = swapChain.GetCurrentRenderCommandBuffer();
 
-		const SharedRef<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
-		const SharedRef<VulkanShader> shader = pipeline->GetSpecification().Shader.As<VulkanShader>();
+		const SharedRef<VulkanGraphicsPipeline> vulkanPipeline = graphicsPipeline.As<VulkanGraphicsPipeline>();
+		const SharedRef<VulkanShader> shader = graphicsPipeline->GetSpecification().Shader.As<VulkanShader>();
 		renderCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, vulkanPipeline->GetLayout(), 0, 1,
 											   &shader->GetDescriptorSet(), 0, nullptr);
-		renderCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, (VkPipeline)pipeline->GetHandle());
+		renderCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, (VkPipeline)graphicsPipeline->GetHandle());
 
 		renderCommandBuffer.bindVertexBuffers(0, {(VkBuffer)m_QuadVertexBuffer->GetHandle()}, {0});
 		renderCommandBuffer.bindIndexBuffer((VkBuffer)m_QuadIndexBuffer->GetHandle(), 0, vk::IndexType::eUint32);

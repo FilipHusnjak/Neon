@@ -26,24 +26,15 @@ namespace Neon
 		return vk::Format::eUndefined;
 	}
 
-	class VulkanPipeline : public Pipeline
+	class VulkanGraphicsPipeline : public GraphicsPipeline
 	{
 	public:
-		VulkanPipeline(const PipelineSpecification& specification);
-		~VulkanPipeline() = default;
+		VulkanGraphicsPipeline(const GraphicsPipelineSpecification& specification);
+		~VulkanGraphicsPipeline() = default;
 
 		vk::PipelineLayout GetLayout() const
 		{
 			return m_PipelineLayout.get();
-		}
-
-		PipelineSpecification& GetSpecification() override
-		{
-			return m_Specification;
-		}
-		const PipelineSpecification& GetSpecification() const override
-		{
-			return m_Specification;
 		}
 
 		void* GetHandle() const override
@@ -52,9 +43,29 @@ namespace Neon
 		}
 
 	private:
-		PipelineSpecification m_Specification;
-
 		vk::UniquePipelineLayout m_PipelineLayout;
 		vk::UniquePipeline m_Handle;
 	};
+
+	class VulkanComputePipeline : public ComputePipeline
+	{
+	public:
+		VulkanComputePipeline(const ComputePipelineSpecification& specification);
+		~VulkanComputePipeline() = default;
+
+		vk::PipelineLayout GetLayout() const
+		{
+			return m_PipelineLayout.get();
+		}
+
+		void* GetHandle() const override
+		{
+			return m_Handle.get();
+		}
+
+	private:
+		vk::UniquePipelineLayout m_PipelineLayout;
+		vk::UniquePipeline m_Handle;
+	};
+
 } // namespace Neon

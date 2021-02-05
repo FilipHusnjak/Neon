@@ -30,10 +30,10 @@ namespace Neon
 		s_RendererAPI->SubmitMesh(mesh, transform);
 	}
 
-	void Renderer::SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline)
+	void Renderer::SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline)
 	{
 		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
-		s_RendererAPI->SubmitFullscreenQuad(pipeline);
+		s_RendererAPI->SubmitFullscreenQuad(graphicsPipeline);
 	}
 
 	void Renderer::EndRenderPass()

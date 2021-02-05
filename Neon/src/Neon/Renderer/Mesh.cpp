@@ -260,10 +260,10 @@ namespace Neon
 		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
 		m_MeshShader = Shader::Create(shaderSpecification, shaderPaths);
 
-		PipelineSpecification pipelineSpecification;
-		pipelineSpecification.Shader = m_MeshShader;
-		pipelineSpecification.Pass = renderPass;
-		m_MeshPipeline = Pipeline::Create(pipelineSpecification);
+		GraphicsPipelineSpecification graphicsPipelineSpecification;
+		graphicsPipelineSpecification.Shader = m_MeshShader;
+		graphicsPipelineSpecification.Pass = renderPass;
+		m_MeshGraphicsPipeline = GraphicsPipeline::Create(graphicsPipelineSpecification);
 
 		// Materials
 		if (m_Scene->HasMaterials())

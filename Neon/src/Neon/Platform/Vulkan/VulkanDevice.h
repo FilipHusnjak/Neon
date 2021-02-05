@@ -93,6 +93,10 @@ namespace Neon
 		{
 			return m_GraphicsQueue;
 		}
+		vk::Queue GetComputeQueue() const
+		{
+			return m_ComputeQueue;
+		}
 
 		vk::CommandPool GetCommandPool() const
 		{
@@ -111,6 +115,7 @@ namespace Neon
 		SharedRef<VulkanPhysicalDevice> m_PhysicalDevice;
 
 		vk::Queue m_GraphicsQueue;
+		vk::Queue m_ComputeQueue;
 
 		vk::UniqueCommandPool m_CommandPool;
 

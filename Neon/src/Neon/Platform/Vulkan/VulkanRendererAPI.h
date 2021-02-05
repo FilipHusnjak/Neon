@@ -20,7 +20,7 @@ namespace Neon
 
 		void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform) override;
 
-		void SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline) override;
+		void SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline) override;
 
 		void EndRenderPass() override;
 		

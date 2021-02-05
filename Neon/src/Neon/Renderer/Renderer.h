@@ -19,7 +19,7 @@ namespace Neon
 
 		static void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform);
 
-		static void SubmitFullscreenQuad(const SharedRef<Pipeline>& pipeline);
+		static void SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline);
 
 		static void EndRenderPass();
 

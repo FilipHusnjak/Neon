@@ -14,7 +14,7 @@ namespace Neon
 		{
 			SceneRendererCamera SceneCamera;
 			SharedRef<Material> SkyboxMaterial;
-			SharedRef<Pipeline> SkyboxPipeline;
+			SharedRef<GraphicsPipeline> SkyboxGraphicsPipeline;
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
@@ -58,10 +58,10 @@ namespace Neon
 		s_Data.ActiveScene = scene;
 		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
 
-		PipelineSpecification skyboxPipelineSpec;
-		skyboxPipelineSpec.Pass = s_Data.GeoPass;
-		skyboxPipelineSpec.Shader = scene->m_SkyboxMaterial->GetShader();
-		s_Data.SceneData.SkyboxPipeline = Pipeline::Create(skyboxPipelineSpec);
+		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
+		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
+		skyboxGraphicsPipelineSpec.Shader = scene->m_SkyboxMaterial->GetShader();
+		s_Data.SceneData.SkyboxGraphicsPipeline = GraphicsPipeline::Create(skyboxGraphicsPipelineSpec);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
@@ -180,7 +180,7 @@ namespace Neon
 		viewRotation[3][2] = 0;
 		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
 		s_Data.SceneData.SkyboxMaterial->GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
-		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxPipeline);
+		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxGraphicsPipeline);
 
 		Renderer::EndRenderPass();
 	}
