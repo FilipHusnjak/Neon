@@ -8,8 +8,8 @@ layout (location = 2) in vec3 a_Tangent;
 layout (location = 3) in vec3 a_Binormal;
 layout (location = 4) in uint a_MaterialIndex;
 layout (location = 5) in vec2 a_TexCoord;
-layout(location = 6) in uint a_BoneIds[MAX_BONES_PER_VERTEX];
-layout(location = 6 + MAX_BONES_PER_VERTEX) in float a_BoneWeights[MAX_BONES_PER_VERTEX];
+layout (location = 6) in uint a_BoneIds[MAX_BONES_PER_VERTEX];
+layout (location = 6 + MAX_BONES_PER_VERTEX) in float a_BoneWeights[MAX_BONES_PER_VERTEX];
 
 layout (location = 0) out vec3 v_WorldPosition;
 layout (location = 1) out vec3 v_Normal;
@@ -24,7 +24,7 @@ layout (std140, binding = 0) uniform CameraUBO
     vec4 u_CameraPosition;
 };
 
-layout(std140, binding = 1) readonly buffer BonesUBO
+layout (std140, binding = 1) readonly buffer BonesUBO
 {
     mat4 u_BoneTransforms[];
 };

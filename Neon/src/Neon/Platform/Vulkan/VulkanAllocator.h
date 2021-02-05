@@ -10,8 +10,8 @@ namespace Neon
 	struct VulkanBuffer
 	{
 		uint32 Size;
-		vk::UniqueDeviceMemory Memory;
 		vk::UniqueBuffer Handle;
+		vk::UniqueDeviceMemory Memory;
 	};
 
 	struct VulkanImage
@@ -19,7 +19,7 @@ namespace Neon
 		uint32 Width;
 		uint32 Height;
 		vk::Format Format;
-		vk::UniqueImage Image;
+		vk::UniqueImage Handle;
 		vk::UniqueDeviceMemory DeviceMemory;
 	};
 

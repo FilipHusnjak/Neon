@@ -33,12 +33,12 @@ namespace Neon
 
 	void Scene::Init()
 	{
-		std::unordered_map<ShaderType, std::string> skyboxShaderPaths;
-		skyboxShaderPaths[ShaderType::Vertex] = "assets/shaders/skybox_vert.glsl";
-		skyboxShaderPaths[ShaderType::Fragment] = "assets/shaders/skybox_frag.glsl";
 		ShaderSpecification skyboxShaderSpec;
+		skyboxShaderSpec.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Skybox_Vert.glsl";
+		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
+
 		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-		m_SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec, skyboxShaderPaths));
+		m_SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec));
 		m_SkyboxMaterial->LoadTextureCube("u_Cubemap", 0,
 										  {"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
 										   "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",

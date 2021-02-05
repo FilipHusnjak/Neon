@@ -179,7 +179,8 @@ project "NeonEditor"
 		"Neon/src",
 		"Neon/vendor",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.shaderc}"
 	}
 	
 	filter "system:windows"

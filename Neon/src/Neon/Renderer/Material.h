@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Neon/Renderer/Pipeline.h"
-#include "Neon/Renderer/Shader.h"
 
 namespace Neon
 {

@@ -1,6 +1,6 @@
 #version 450
 
-layout(location = 0) out vec4 o_Color;
+layout (location = 0) out vec4 o_Color;
 
 layout (binding = 1) uniform samplerCube u_Cubemap;
 

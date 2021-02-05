@@ -97,6 +97,10 @@ namespace Neon
 		{
 			return m_ComputeQueue;
 		}
+		vk::Queue GetTransferQueue() const
+		{
+			return m_TransferQueue;
+		}
 
 		vk::CommandPool GetCommandPool() const
 		{
@@ -116,6 +120,7 @@ namespace Neon
 
 		vk::Queue m_GraphicsQueue;
 		vk::Queue m_ComputeQueue;
+		vk::Queue m_TransferQueue;
 
 		vk::UniqueCommandPool m_CommandPool;
 

@@ -28,6 +28,9 @@ namespace Neon
 		};
 
 		std::vector<MeshDrawCommand> MeshDrawList;
+
+		SharedRef<Shader> m_ComputeShader;
+		SharedRef<ComputePipeline> m_ComputePipeline;
 	};
 
 	static SceneRendererData s_Data;
@@ -49,6 +52,13 @@ namespace Neon
 		geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
 
 		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
+
+		ShaderSpecification computeShaderSpecification;
+		computeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/EquirectangularToCubeMap_Compute.glsl";
+		s_Data.m_ComputeShader = Shader::Create(computeShaderSpecification);
+		ComputePipelineSpecification computePipelineSpecification;
+		computePipelineSpecification.Shader = s_Data.m_ComputeShader;
+		s_Data.m_ComputePipeline = ComputePipeline::Create(computePipelineSpecification);
 	}
 
 	void SceneRenderer::InitializeScene(Scene* scene)

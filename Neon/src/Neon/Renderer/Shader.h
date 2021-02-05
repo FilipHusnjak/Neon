@@ -11,7 +11,8 @@ namespace Neon
 	enum class ShaderType
 	{
 		Vertex,
-		Fragment
+		Fragment,
+		Compute
 	};
 
 	static shaderc_shader_kind ShaderTypeToShadercShaderType(ShaderType shaderType)
@@ -22,6 +23,8 @@ namespace Neon
 				return shaderc_vertex_shader;
 			case ShaderType::Fragment:
 				return shaderc_fragment_shader;
+			case ShaderType::Compute:
+				return shaderc_compute_shader;
 			default:
 				NEO_CORE_ASSERT(false, "Uknown shader type!");
 				return shaderc_glsl_infer_from_source;
@@ -45,10 +48,14 @@ namespace Neon
 	{
 		VertexBufferLayout VBLayout;
 		std::unordered_map<std::string, uint32> ShaderVariableCounts;
+		std::unordered_map<ShaderType, std::string> ShaderPaths;
 	};
 
 	class Shader : public RefCounted
 	{
+	public:
+		static SharedRef<Shader> Create(const ShaderSpecification& shaderSpecification);
+
 	public:
 		Shader(const ShaderSpecification& specification);
 		virtual ~Shader() = default;
@@ -59,16 +66,19 @@ namespace Neon
 		virtual void SetStorageBuffer(const std::string& name, const void* data, uint32 size = 0) = 0;
 		virtual void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture) = 0;
 		virtual void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) = 0;
+		virtual void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) = 0;
 
 		const VertexBufferLayout& GetVertexBufferLayout() const
 		{
-			return m_VertexBufferLayout;
+			return m_Specification.VBLayout;
 		}
 
-		static SharedRef<Shader> Create(const ShaderSpecification& shaderSpecification,
-										const std::unordered_map<ShaderType, std::string>& shaderPaths);
+		const ShaderSpecification& GetShaderSpecification() const
+		{
+			return m_Specification;
+		}
 
 	protected:
-		VertexBufferLayout m_VertexBufferLayout;
+		ShaderSpecification m_Specification;
 	};
 } // namespace Neon

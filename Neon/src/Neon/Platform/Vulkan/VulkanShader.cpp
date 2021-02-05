@@ -19,17 +19,16 @@ namespace Neon
 				return vk::ShaderStageFlagBits::eVertex;
 			case ShaderType::Fragment:
 				return vk::ShaderStageFlagBits::eFragment;
+			case ShaderType::Compute:
+				return vk::ShaderStageFlagBits::eCompute;
 			default:
 				NEO_CORE_ASSERT(false, "Uknown shader type!");
 				return vk::ShaderStageFlagBits();
 		}
 	}
 
-	VulkanShader::VulkanShader(const ShaderSpecification& specification,
-							   const std::unordered_map<ShaderType, std::string>& shaderPaths)
+	VulkanShader::VulkanShader(const ShaderSpecification& specification)
 		: Shader(specification)
-		, m_Specification(specification)
-		, m_ShaderPaths(shaderPaths)
 	{
 		const auto& device = VulkanContext::GetDevice();
 		m_Allocator = VulkanAllocator(device, "Shader");
@@ -38,7 +37,7 @@ namespace Neon
 
 	void VulkanShader::Reload()
 	{
-		for (const auto& [shaderType, shaderPath] : m_ShaderPaths)
+		for (const auto& [shaderType, shaderPath] : m_Specification.ShaderPaths)
 		{
 			std::vector<char> shaderSource;
 			bool fileRead = File::ReadFromFile(shaderPath, shaderSource, true);
@@ -92,9 +91,20 @@ namespace Neon
 		device.updateDescriptorSets({descWrite}, nullptr);
 	}
 
+	void VulkanShader::SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture)
+	{
+		const auto vulkanTexture = texture.As<VulkanTextureCube>();
+		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
+		vk::WriteDescriptorSet descWrite{
+			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eStorageImage, &imageInfo};
+
+		vk::Device device = VulkanContext::GetDevice()->GetHandle();
+		device.updateDescriptorSets({descWrite}, nullptr);
+	}
+
 	void VulkanShader::GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile)
 	{
-		std::string shaderPath = m_ShaderPaths.at(shaderType);
+		std::string shaderPath = m_Specification.ShaderPaths.at(shaderType);
 		std::filesystem::path p = shaderPath;
 
 		std::string folderPath = (p.parent_path() / "cached\\").string();
@@ -151,7 +161,7 @@ namespace Neon
 
 		NEO_CORE_TRACE("===========================");
 		NEO_CORE_TRACE(" Vulkan Shader Reflection");
-		NEO_CORE_TRACE(" {0}", m_ShaderPaths.at(shaderType));
+		NEO_CORE_TRACE(" {0}", m_Specification.ShaderPaths.at(shaderType));
 		NEO_CORE_TRACE("===========================");
 
 		spirv_cross::Compiler compiler(shaderBinary);
@@ -230,7 +240,7 @@ namespace Neon
 			{
 				count = m_Specification.ShaderVariableCounts[name];
 			}
-			uint32_t dimension = imageSamplerType.image.dim;
+			uint32 dimension = imageSamplerType.image.dim;
 
 			m_NameBindingMap[name] = bindingPoint;
 			auto& imageSampler = m_ImageSamplers[name];
@@ -238,6 +248,32 @@ namespace Neon
 			imageSampler.Name = name;
 			imageSampler.Count = count;
 			imageSampler.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
+
+			NEO_CORE_TRACE("  Name: {0}", name);
+			NEO_CORE_TRACE("  Count: {0}", count);
+			NEO_CORE_TRACE("  Binding Point: {0}", bindingPoint);
+			NEO_CORE_TRACE("-------------------");
+		}
+
+		NEO_CORE_TRACE("Storage Images:");
+		for (const auto& resource : resources.storage_images)
+		{
+			const auto& name = resource.name;
+			auto& storageImageType = compiler.get_type(resource.base_type_id);
+			uint32 bindingPoint = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32 count = std::max(1u, storageImageType.array[0]);
+			if (m_Specification.ShaderVariableCounts.find(name) != m_Specification.ShaderVariableCounts.end())
+			{
+				count = m_Specification.ShaderVariableCounts[name];
+			}
+			uint32 dimension = storageImageType.image.dim;
+
+			m_NameBindingMap[name] = bindingPoint;
+			auto& storageImage = m_StorageImages[name];
+			storageImage.BindingPoint = bindingPoint;
+			storageImage.Name = name;
+			storageImage.Count = count;
+			storageImage.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Count: {0}", count);
@@ -292,6 +328,15 @@ namespace Neon
 				typeCount.descriptorCount += imageSampler.Count;
 			}
 		}
+		if (!m_StorageImages.empty())
+		{
+			vk::DescriptorPoolSize& typeCount = poolSizes.emplace_back();
+			typeCount.type = vk::DescriptorType::eStorageImage;
+			for (const auto& [binding, storageImage] : m_StorageImages)
+			{
+				typeCount.descriptorCount += storageImage.Count;
+			}
+		}
 
 		// TODO: Move this to the centralized renderer
 		// Create the global descriptor pool
@@ -337,6 +382,14 @@ namespace Neon
 			layoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 			layoutBinding.descriptorCount = imageSampler.Count;
 			layoutBinding.stageFlags = imageSampler.ShaderStage;
+			layoutBinding.binding = m_NameBindingMap[name];
+		}
+		for (auto& [name, storageImage] : m_StorageImages)
+		{
+			auto& layoutBinding = layoutBindings.emplace_back();
+			layoutBinding.descriptorType = vk::DescriptorType::eStorageImage;
+			layoutBinding.descriptorCount = storageImage.Count;
+			layoutBinding.stageFlags = storageImage.ShaderStage;
 			layoutBinding.binding = m_NameBindingMap[name];
 		}
 

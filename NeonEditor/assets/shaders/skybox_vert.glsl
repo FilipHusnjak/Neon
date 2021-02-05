@@ -1,6 +1,6 @@
 #version 450
 
-layout(location = 0) in vec2 a_Position;
+layout (location = 0) in vec2 a_Position;
 
 layout (location = 0) out vec3 v_Position;
 

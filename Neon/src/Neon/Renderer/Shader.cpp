@@ -7,12 +7,11 @@
 namespace Neon
 {
 	Shader::Shader(const ShaderSpecification& specification)
-		: m_VertexBufferLayout(specification.VBLayout)
+		: m_Specification(specification)
 	{
 	}
 
-	SharedRef<Shader> Shader::Create(const ShaderSpecification& shaderSpecification,
-									 const std::unordered_map<ShaderType, std::string>& shaderPaths)
+	SharedRef<Shader> Shader::Create(const ShaderSpecification& shaderSpecification)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -23,7 +22,7 @@ namespace Neon
 			}
 			case RendererAPI::API::Vulkan:
 			{
-				return SharedRef<VulkanShader>::Create(shaderSpecification, shaderPaths);
+				return SharedRef<VulkanShader>::Create(shaderSpecification);
 			}
 		}
 		NEO_CORE_ASSERT(false, "Renderer API not selected!");

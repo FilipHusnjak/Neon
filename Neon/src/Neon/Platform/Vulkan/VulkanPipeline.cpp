@@ -37,11 +37,11 @@ namespace Neon
 
 		m_PipelineLayout = device.createPipelineLayoutUnique(pPipelineLayoutCreateInfo);
 
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = {};
+		vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
 		// The layout used for this pipeline (can be shared among multiple pipelines using the same layout)
-		pipelineCreateInfo.layout = m_PipelineLayout.get();
+		graphicsPipelineCreateInfo.layout = m_PipelineLayout.get();
 		// Renderpass this pipeline is attached to
-		pipelineCreateInfo.renderPass = (VkRenderPass)vulkanRenderPass->GetHandle();
+		graphicsPipelineCreateInfo.renderPass = (VkRenderPass)vulkanRenderPass->GetHandle();
 
 		// Construct the different states making up the pipeline
 
@@ -142,18 +142,18 @@ namespace Neon
 
 		const auto& shaderStages = vulkanShader->GetShaderStages();
 		// Set pipeline shader stage info
-		pipelineCreateInfo.stageCount = static_cast<uint32>(shaderStages.size());
-		pipelineCreateInfo.pStages = shaderStages.data();
+		graphicsPipelineCreateInfo.stageCount = static_cast<uint32>(shaderStages.size());
+		graphicsPipelineCreateInfo.pStages = shaderStages.data();
 
 		// Assign the pipeline states to the pipeline creation info structure
-		pipelineCreateInfo.pVertexInputState = &vertexInputState;
-		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
-		pipelineCreateInfo.pRasterizationState = &rasterizationState;
-		pipelineCreateInfo.pColorBlendState = &colorBlendState;
-		pipelineCreateInfo.pMultisampleState = &multisampleState;
-		pipelineCreateInfo.pViewportState = &viewportState;
-		pipelineCreateInfo.pDepthStencilState = &depthStencilState;
-		pipelineCreateInfo.pDynamicState = &dynamicState;
+		graphicsPipelineCreateInfo.pVertexInputState = &vertexInputState;
+		graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
+		graphicsPipelineCreateInfo.pRasterizationState = &rasterizationState;
+		graphicsPipelineCreateInfo.pColorBlendState = &colorBlendState;
+		graphicsPipelineCreateInfo.pMultisampleState = &multisampleState;
+		graphicsPipelineCreateInfo.pViewportState = &viewportState;
+		graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilState;
+		graphicsPipelineCreateInfo.pDynamicState = &dynamicState;
 
 		// TODO: Pipeline cache??
 		/*
@@ -163,12 +163,44 @@ namespace Neon
 		VK_CHECK_RESULT(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &pipelineCache));*/
 
 		// Create rendering pipeline using the specified states
-		m_Handle = device.createGraphicsPipelineUnique(nullptr, pipelineCreateInfo);
+		m_Handle = device.createGraphicsPipelineUnique(nullptr, graphicsPipelineCreateInfo);
 	}
 
 	VulkanComputePipeline::VulkanComputePipeline(const ComputePipelineSpecification& specification)
 		: ComputePipeline(specification)
 	{
+		vk::Device device = VulkanContext::GetDevice()->GetHandle();
+
+		NEO_CORE_ASSERT(m_Specification.Shader, "Shader not initialized!");
+		NEO_CORE_ASSERT(m_Specification.Shader->GetShaderSpecification().ShaderPaths.size() == 1);
+		NEO_CORE_ASSERT(m_Specification.Shader->GetShaderSpecification().ShaderPaths.find(ShaderType::Compute) !=
+						m_Specification.Shader->GetShaderSpecification().ShaderPaths.end());
+
+		SharedRef<VulkanShader> vulkanShader = SharedRef<VulkanShader>(m_Specification.Shader);
+
+		vk::DescriptorSetLayout descriptorSetLayout = vulkanShader->GetDescriptorSetLayout();
+
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
+		if (descriptorSetLayout)
+		{
+			pPipelineLayoutCreateInfo.setLayoutCount = 1;
+			pPipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+		}
+		std::vector<vk::PushConstantRange> pushConstantRanges;
+		for (const auto& pushConstant : vulkanShader->GetPushConstants())
+		{
+			pushConstantRanges.emplace_back(pushConstant.ShaderStage, 0, pushConstant.Size);
+		}
+		pPipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32>(pushConstantRanges.size());
+		pPipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
+
+		m_PipelineLayout = device.createPipelineLayoutUnique(pPipelineLayoutCreateInfo);
+
+		vk::ComputePipelineCreateInfo computePipelineCreateInfo;
+		computePipelineCreateInfo.layout = m_PipelineLayout.get();
+		computePipelineCreateInfo.stage = vulkanShader->GetShaderStages()[0];
+
+		device.createComputePipelineUnique(nullptr, computePipelineCreateInfo);
 	}
 
 } // namespace Neon

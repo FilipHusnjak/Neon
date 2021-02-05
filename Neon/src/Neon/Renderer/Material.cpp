@@ -4,7 +4,6 @@
 
 namespace Neon
 {
-
 	Material::Material(const SharedRef<Shader>& shader)
 		: m_Shader(shader)
 	{

@@ -34,8 +34,12 @@ namespace Neon
 
 		m_QueueFamilyProperties = m_Handle.getQueueFamilyProperties();
 
-		vk::QueueFlags requestedQueueTypes = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute;
+		vk::QueueFlags requestedQueueTypes =
+			vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute | vk::QueueFlagBits::eTransfer;
 		m_QueueFamilyIndices = GetQueueFamilyIndices(requestedQueueTypes);
+
+		NEO_CORE_ASSERT(m_QueueFamilyIndices.Graphics != -1 && m_QueueFamilyIndices.Compute != -1 &&
+						m_QueueFamilyIndices.Transfer != -1);
 
 		static const float queuePriority = 1.f;
 		if (requestedQueueTypes & vk::QueueFlagBits::eGraphics)
@@ -211,6 +215,8 @@ namespace Neon
 		m_CommandPool = m_Handle.get().createCommandPoolUnique(cmdPoolInfo);
 
 		m_GraphicsQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Graphics, 0);
+		m_ComputeQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Compute, 0);
+		m_TransferQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Transfer, 0);
 	}
 
 	vk::CommandBuffer VulkanDevice::GetCommandBuffer(bool begin)

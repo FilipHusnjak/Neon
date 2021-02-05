@@ -91,18 +91,17 @@ namespace Neon
 
 		m_InverseTransform = glm::inverse(Mat4FromAssimpMat4(m_Scene->mRootNode->mTransformation));
 
-		std::unordered_map<ShaderType, std::string> shaderPaths;
+		ShaderSpecification shaderSpecification;
+		shaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Pbr_Frag.glsl";
 		if (m_IsAnimated)
 		{
-			shaderPaths[ShaderType::Vertex] = "assets/shaders/pbr_anim_vert.glsl";
-			shaderPaths[ShaderType::Fragment] = "assets/shaders/pbr_frag.glsl";
+			shaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PbrAnim_Vert.glsl";
 		}
 		else
 		{
-			shaderPaths[ShaderType::Vertex] = "assets/shaders/pbr_static_vert.glsl";
-			shaderPaths[ShaderType::Fragment] = "assets/shaders/pbr_frag.glsl";
+			shaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PbrStatic_Vert.glsl";
 		}
-		ShaderSpecification shaderSpecification;
+		
 		shaderSpecification.ShaderVariableCounts["MaterialUBO"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = m_Scene->mNumMaterials;
@@ -258,7 +257,7 @@ namespace Neon
 
 		shaderSpecification.VBLayout = vertexBufferLayout;
 		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
-		m_MeshShader = Shader::Create(shaderSpecification, shaderPaths);
+		m_MeshShader = Shader::Create(shaderSpecification);
 
 		GraphicsPipelineSpecification graphicsPipelineSpecification;
 		graphicsPipelineSpecification.Shader = m_MeshShader;

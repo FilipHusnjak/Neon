@@ -128,11 +128,11 @@ namespace Neon
 		imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 		imageCreateInfo.extent = {m_Image.Width, m_Image.Height, 1};
 		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
-		m_Image.Image = deviceHandle.createImageUnique(imageCreateInfo);
+		m_Image.Handle = deviceHandle.createImageUnique(imageCreateInfo);
 
-		vk::MemoryRequirements memoryRequirements = deviceHandle.getImageMemoryRequirements(m_Image.Image.get());
+		vk::MemoryRequirements memoryRequirements = deviceHandle.getImageMemoryRequirements(m_Image.Handle.get());
 		m_Allocator.Allocate(memoryRequirements, m_Image.DeviceMemory, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		deviceHandle.bindImageMemory(m_Image.Image.get(), m_Image.DeviceMemory.get(), 0);
+		deviceHandle.bindImageMemory(m_Image.Handle.get(), m_Image.DeviceMemory.get(), 0);
 
 		vk::CommandBuffer copyCmd = device->GetCommandBuffer(true);
 
@@ -153,7 +153,7 @@ namespace Neon
 		vk::ImageMemoryBarrier imageMemoryBarrier{};
 		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		imageMemoryBarrier.image = m_Image.Image.get();
+		imageMemoryBarrier.image = m_Image.Handle.get();
 		imageMemoryBarrier.subresourceRange = subresourceRange;
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
 		imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
@@ -166,7 +166,7 @@ namespace Neon
 								nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 		// Copy mip levels from staging buffer
-		copyCmd.copyBufferToImage(stagingBuffer.Handle.get(), m_Image.Image.get(), vk::ImageLayout::eTransferDstOptimal, 1,
+		copyCmd.copyBufferToImage(stagingBuffer.Handle.get(), m_Image.Handle.get(), vk::ImageLayout::eTransferDstOptimal, 1,
 								  &bufferCopyRegion);
 
 		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
@@ -244,7 +244,7 @@ namespace Neon
 		// Only set mip map count if optimal tiling is used
 		imageViewCreateInfo.subresourceRange.levelCount = 1;
 		// The view will be based on the texture's image
-		imageViewCreateInfo.image = m_Image.Image.get();
+		imageViewCreateInfo.image = m_Image.Handle.get();
 
 		m_View = deviceHandle.createImageViewUnique(imageViewCreateInfo);
 	}
@@ -424,7 +424,7 @@ namespace Neon
 		imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 		imageCreateInfo.extent = {m_FaceSize, m_FaceSize, 1};
 		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
-		m_Image.Image = deviceHandle.createImageUnique(imageCreateInfo);
+		m_Image.Handle = deviceHandle.createImageUnique(imageCreateInfo);
 
 		VulkanBuffer stagingBuffer;
 		uint32 size = m_Data.Size;
@@ -434,9 +434,9 @@ namespace Neon
 
 		m_Allocator.UpdateBuffer(stagingBuffer, m_Data.Data);
 
-		vk::MemoryRequirements memoryRequirements = deviceHandle.getImageMemoryRequirements(m_Image.Image.get());
+		vk::MemoryRequirements memoryRequirements = deviceHandle.getImageMemoryRequirements(m_Image.Handle.get());
 		m_Allocator.Allocate(memoryRequirements, m_Image.DeviceMemory, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		deviceHandle.bindImageMemory(m_Image.Image.get(), m_Image.DeviceMemory.get(), 0);
+		deviceHandle.bindImageMemory(m_Image.Handle.get(), m_Image.DeviceMemory.get(), 0);
 
 		vk::CommandBuffer copyCmd = device->GetCommandBuffer(true);
 
@@ -457,7 +457,7 @@ namespace Neon
 		vk::ImageMemoryBarrier imageMemoryBarrier{};
 		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		imageMemoryBarrier.image = m_Image.Image.get();
+		imageMemoryBarrier.image = m_Image.Handle.get();
 		imageMemoryBarrier.subresourceRange = subresourceRange;
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
 		imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
@@ -483,7 +483,7 @@ namespace Neon
 		}
 
 		// Copy mip levels from staging buffer
-		copyCmd.copyBufferToImage(stagingBuffer.Handle.get(), m_Image.Image.get(), vk::ImageLayout::eTransferDstOptimal, 6,
+		copyCmd.copyBufferToImage(stagingBuffer.Handle.get(), m_Image.Handle.get(), vk::ImageLayout::eTransferDstOptimal, 6,
 								  bufferCopyRegions);
 
 		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
@@ -561,7 +561,7 @@ namespace Neon
 		// Only set mip map count if optimal tiling is used
 		imageViewCreateInfo.subresourceRange.levelCount = 1;
 		// The view will be based on the texture's image
-		imageViewCreateInfo.image = m_Image.Image.get();
+		imageViewCreateInfo.image = m_Image.Handle.get();
 
 		m_View = deviceHandle.createImageViewUnique(imageViewCreateInfo);
 	}
