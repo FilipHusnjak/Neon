@@ -15,15 +15,27 @@ namespace Neon
 		CreateDefaultTexture();
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const std::string& path, bool srgb /*= false*/)
-		: Texture2D(path)
+	VulkanTexture2D::VulkanTexture2D(const std::string& path, bool srgb)
+		: Texture2D(path, srgb)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
 		int width, height, channels;
-		stbi_set_flip_vertically_on_load(1);
-		m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, 4);
-		m_Data.Size = width * height * 4;
+		stbi_set_flip_vertically_on_load(true);
+
+		if (stbi_is_hdr(path.c_str()))
+		{
+			m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+
+			m_Format = TextureFormat::Float16;
+		}
+		else
+		{
+			m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+
+			m_Format = m_Srgb ? TextureFormat::SRGBA : TextureFormat::RGBA;
+		}
+
 		if (!m_Data.Data)
 		{
 			NEO_CORE_WARN("Failed to load texture: {0}", path);
@@ -33,6 +45,10 @@ namespace Neon
 		{
 			m_Image.Width = width;
 			m_Image.Height = height;
+
+			uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
+
+			m_Data.Size = width * height * bytesPerPixel;
 
 			Invalidate();
 		}
@@ -53,7 +69,7 @@ namespace Neon
 
 		uint32 size = m_Data.Size;
 
-		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
 
 		// Copy data to an optimal tiled image
 		// This loads the texture data into a host local buffer that is copied to the optimal tiled image on the device
@@ -102,7 +118,7 @@ namespace Neon
 		// Create optimal tiled target image on the device
 		vk::ImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.imageType = vk::ImageType::e2D;
-		imageCreateInfo.format = format;
+		imageCreateInfo.format = ConvertTextureFormatToVulkanFormat(m_Format);
 		imageCreateInfo.mipLevels = 1;
 		imageCreateInfo.arrayLayers = 1;
 		imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
@@ -215,7 +231,7 @@ namespace Neon
 		// information and sub resource ranges
 		vk::ImageViewCreateInfo imageViewCreateInfo{};
 		imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-		imageViewCreateInfo.format = format;
+		imageViewCreateInfo.format = ConvertTextureFormatToVulkanFormat(m_Format);
 		imageViewCreateInfo.components = {vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB,
 										  vk::ComponentSwizzle::eA};
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
@@ -235,12 +251,12 @@ namespace Neon
 
 	void VulkanTexture2D::CreateDefaultTexture()
 	{
-		int width, height, channels;
-		width = height = 1;
-		channels = 4;
+		m_Format = TextureFormat::RGBA;
+
+		int width = 1, height = 1;
 		auto* color = new glm::u8vec4(255, 0, 255, 255);
 		m_Data.Data = reinterpret_cast<stbi_uc*>(color);
-		m_Data.Size = width * height * 4;
+		m_Data.Size = width * height * GetBytesPerPixel(m_Format);
 
 		m_Image.Width = width;
 		m_Image.Height = height;
@@ -255,29 +271,44 @@ namespace Neon
 		CreateDefaultTexture();
 	}
 
-	VulkanTextureCube::VulkanTextureCube(const std::string& path, bool srgb /*= false*/)
-		: TextureCube(path)
+	VulkanTextureCube::VulkanTextureCube(const std::string& path, bool srgb)
+		: TextureCube(path, srgb)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(false);
-		byte* data = stbi_load(path.c_str(), &width, &height, &channels, 4);
+
+		byte* data;
+		if (stbi_is_hdr(path.c_str()))
+		{
+			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+
+			m_Format = TextureFormat::Float16;
+		}
+		else
+		{
+			data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+
+			m_Format = m_Srgb ? TextureFormat::SRGBA : TextureFormat::RGBA;
+		}
 
 		if (!data)
 		{
-			NEO_CORE_WARN("Failed to load texture: {0}", path);
+			NEO_CORE_WARN("Failed to load texture cube: {0}", path);
 			CreateDefaultTexture();
 		}
 		else
 		{
+			uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
+
 			m_FaceSize = width / 4;
 			NEO_CORE_ASSERT(m_FaceSize == height / 3, "Non-square faces!");
 
-			m_Data.Size = 6 * m_FaceSize * m_FaceSize * 4;
+			m_Data.Size = 6 * m_FaceSize * m_FaceSize * bytesPerPixel;
 			m_Data.Data = new byte[m_Data.Size];
 
-			size_t faceOffset = static_cast<size_t>(m_FaceSize) * m_FaceSize * 4;
+			size_t faceOffset = static_cast<size_t>(m_FaceSize) * m_FaceSize * bytesPerPixel;
 
 			// Front
 			GetFace(data, m_Data.Data, m_FaceSize, m_FaceSize);
@@ -301,6 +332,7 @@ namespace Neon
 	}
 
 	VulkanTextureCube::VulkanTextureCube(const std::array<std::string, 6>& paths, bool srgb /*= false*/)
+		: TextureCube(paths, srgb)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
@@ -309,29 +341,49 @@ namespace Neon
 		m_Data.Size = 0;
 
 		uint32 offset = 0;
+		uint32 bytesPerPixel = 4;
 		for (auto& path : paths)
 		{
 			int width, height, channels;
-			byte* data = stbi_load(path.c_str(), &width, &height, &channels, 4);
+			byte* data;
+			if (stbi_is_hdr(path.c_str()))
+			{
+				data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+
+				m_Format = TextureFormat::Float16;
+			}
+			else
+			{
+				data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+
+				m_Format = m_Srgb ? TextureFormat::SRGBA : TextureFormat::RGBA;
+			}
 
 			NEO_CORE_ASSERT(width == height, "Non-square faces!");
 
-			// TODO: Implement default cubemap?
-			NEO_CORE_ASSERT(data, "Failed to load cube map!");
+			if (!data)
+			{
+				NEO_CORE_WARN("Failed to load cube map, loading default one...");
+				delete[] m_Data.Data;
+				CreateDefaultTexture();
+				return;
+			}
 
 			if (m_Data.Size == 0)
 			{
+				bytesPerPixel = GetBytesPerPixel(m_Format);
+
 				m_FaceSize = width;
 
-				m_Data.Size = 6 * m_FaceSize * m_FaceSize * 4;
+				m_Data.Size = 6 * m_FaceSize * m_FaceSize * bytesPerPixel;
 				m_Data.Data = new byte[m_Data.Size];
 			}
 
 			NEO_CORE_ASSERT(m_FaceSize == width, "All cubemap images have to be the same size!");
 
-			memcpy(m_Data.Data + offset, data, static_cast<size_t>(m_FaceSize) * m_FaceSize * 4);
+			memcpy(m_Data.Data + offset, data, static_cast<size_t>(m_FaceSize) * m_FaceSize * bytesPerPixel);
 
-			offset += m_FaceSize * m_FaceSize * 4;
+			offset += m_FaceSize * m_FaceSize * bytesPerPixel;
 
 			stbi_image_free(data);
 		}
@@ -356,13 +408,13 @@ namespace Neon
 		auto device = VulkanContext::GetDevice();
 		auto deviceHandle = device->GetHandle();
 
-		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
 
 		// Create optimal tiled target image on the device
 		vk::ImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
 		imageCreateInfo.imageType = vk::ImageType::e2D;
-		imageCreateInfo.format = format;
+		imageCreateInfo.format = ConvertTextureFormatToVulkanFormat(m_Format);
 		imageCreateInfo.mipLevels = 1;
 		imageCreateInfo.arrayLayers = 6;
 		imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
@@ -427,7 +479,7 @@ namespace Neon
 			bufferCopyRegions[i].imageExtent.width = m_FaceSize;
 			bufferCopyRegions[i].imageExtent.height = m_FaceSize;
 			bufferCopyRegions[i].imageExtent.depth = 1;
-			bufferCopyRegions[i].bufferOffset = static_cast<size_t>(i) * 4 * m_FaceSize * m_FaceSize;
+			bufferCopyRegions[i].bufferOffset = static_cast<size_t>(i) * bytesPerPixel * m_FaceSize * m_FaceSize;
 		}
 
 		// Copy mip levels from staging buffer
@@ -496,7 +548,7 @@ namespace Neon
 		// information and sub resource ranges
 		vk::ImageViewCreateInfo imageViewCreateInfo{};
 		imageViewCreateInfo.viewType = vk::ImageViewType::eCube;
-		imageViewCreateInfo.format = format;
+		imageViewCreateInfo.format = ConvertTextureFormatToVulkanFormat(m_Format);
 		imageViewCreateInfo.components = {vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB,
 										  vk::ComponentSwizzle::eA};
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
@@ -516,8 +568,24 @@ namespace Neon
 
 	void VulkanTextureCube::CreateDefaultTexture()
 	{
-		// TODO: Implement or delete?
-		NEO_CORE_ASSERT(false, "Failed to load cube map");
+		m_Format = TextureFormat::RGBA;
+
+		int width = 1, height = 1;
+		auto* color = new glm::u8vec4[6];
+		for (uint32 i = 0; i < 6; i++)
+		{
+			color[i] = {30, 30, 30, 255};
+		}
+
+		m_Data.Data = reinterpret_cast<stbi_uc*>(color);
+		m_Data.Size = 6 * width * height * GetBytesPerPixel(m_Format);
+
+		m_FaceSize = width;
+
+		m_Image.Width = width;
+		m_Image.Height = height;
+
+		Invalidate();
 	}
 
 	void VulkanTextureCube::GetFace(const byte* sourceData, byte* destData, uint32 xOffset, uint32 yOffset)

@@ -13,6 +13,8 @@ namespace Neon
 				return vk::Format::eUndefined;
 			case AttachmentFormat::RGBA8:
 				return vk::Format::eR8G8B8A8Unorm;
+			case AttachmentFormat::SRGBA8:
+				return vk::Format::eR8G8B8A8Srgb;
 			case AttachmentFormat::RGBA16F:
 				return vk::Format::eR16G16B16A16Sfloat;
 			case AttachmentFormat::RGBA32F:

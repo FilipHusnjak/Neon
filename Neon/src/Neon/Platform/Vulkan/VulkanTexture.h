@@ -5,11 +5,29 @@
 
 namespace Neon
 {
+	static vk::Format ConvertTextureFormatToVulkanFormat(TextureFormat format)
+	{
+		switch (format)
+		{
+			case TextureFormat::None:
+				return vk::Format::eUndefined;
+			case TextureFormat::RGBA:
+				return vk::Format::eR8G8B8A8Unorm;
+			case TextureFormat::SRGBA:
+				return vk::Format::eR8G8B8A8Srgb;
+			case TextureFormat::Float16:
+				return vk::Format::eR16G16B16A16Sfloat;
+			default:
+				NEO_CORE_ERROR("Unknown texture format!");
+				return vk::Format::eUndefined;
+		}
+	}
+
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
 		VulkanTexture2D();
-		VulkanTexture2D(const std::string& path, bool srgb = false);
+		VulkanTexture2D(const std::string& path, bool srgb);
 
 		virtual ~VulkanTexture2D();
 
@@ -66,8 +84,8 @@ namespace Neon
 	{
 	public:
 		VulkanTextureCube();
-		VulkanTextureCube(const std::string& path, bool srgb = false);
-		VulkanTextureCube(const std::array<std::string, 6>& paths, bool srgb = false);
+		VulkanTextureCube(const std::string& path, bool srgb);
+		VulkanTextureCube(const std::array<std::string, 6>& paths, bool srgb);
 
 		virtual ~VulkanTextureCube();
 
