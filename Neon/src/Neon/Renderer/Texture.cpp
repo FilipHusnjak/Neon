@@ -10,10 +10,12 @@ namespace Neon
 	{
 		switch (format)
 		{
-			case TextureFormat::RGB:
-				return 3;
 			case TextureFormat::RGBA:
 				return 4;
+			case TextureFormat::SRGBA:
+				return 4;
+			case TextureFormat::Float16:
+				return 8;
 		}
 		return 0;
 	}
@@ -29,8 +31,8 @@ namespace Neon
 		return levels;
 	}
 
-	Texture::Texture(const std::string& path)
-		: m_Path(path)
+	Texture::Texture(bool srgb)
+		: m_Srgb(srgb)
 	{
 	}
 
@@ -60,8 +62,8 @@ namespace Neon
 		return nullptr;
 	}
 
-	Texture2D::Texture2D(const std::string& path)
-		: Texture(path)
+	Texture2D::Texture2D(const std::string& path, bool srgb)
+		: Texture(srgb), m_Path(path)
 	{
 	}
 
@@ -91,8 +93,7 @@ namespace Neon
 		return nullptr;
 	}
 
-	SharedRef<TextureCube> TextureCube::Create(const std::array<std::string, 6>& paths,
-																		bool srgb /*= false*/)
+	SharedRef<TextureCube> TextureCube::Create(const std::array<std::string, 6>& paths, bool srgb /*= false*/)
 	{
 		switch (RendererAPI::Current())
 		{
@@ -105,8 +106,13 @@ namespace Neon
 		return nullptr;
 	}
 
-	TextureCube::TextureCube(const std::string& path)
-		: Texture(path)
+	TextureCube::TextureCube(const std::string& path, bool srgb)
+		: Texture(srgb), m_Path(path)
+	{
+	}
+
+	TextureCube::TextureCube(const std::array<std::string, 6>& paths, bool srgb)
+		: Texture(srgb), m_Paths(paths)
 	{
 	}
 

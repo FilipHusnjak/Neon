@@ -9,11 +9,12 @@ namespace Neon
 		None = 0,
 
 		RGBA8 = 1,
-		RGBA16F = 2,
-		RGBA32F = 3,
-		RG32F = 4,
+		SRGBA8 = 2,
+		RGBA16F = 3,
+		RGBA32F = 4,
+		RG32F = 5,
 
-		Depth
+		Depth = 6
 	};
 
 	enum class AttachmentLoadOp

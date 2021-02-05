@@ -42,7 +42,8 @@ namespace Neon
 		m_SkyboxMaterial->LoadTextureCube("u_Cubemap", 0,
 										  {"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
 										   "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
-										   "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"});
+										   "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"},
+										  true);
 		SceneRenderer::InitializeScene(this);
 	}
 
