@@ -14,8 +14,8 @@ namespace Neon
 				return 4;
 			case TextureFormat::SRGBA:
 				return 4;
-			case TextureFormat::RGBAFloat32:
-				return 16;
+			case TextureFormat::RGBAFloat16:
+				return 8;
 		}
 		return 0;
 	}

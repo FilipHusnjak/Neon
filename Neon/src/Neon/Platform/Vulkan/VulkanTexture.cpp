@@ -1,7 +1,10 @@
 #include "neopch.h"
 
+#include "Neon/Core/ThreadPool.h"
 #include "Neon/Platform/Vulkan/VulkanContext.h"
 #include "VulkanTexture.h"
+
+#include <softfloat/softfloat.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -26,9 +29,41 @@ namespace Neon
 		if (stbi_is_hdr(path.c_str()))
 		{
 			stbi_set_flip_vertically_on_load(false);
-			m_Data.Data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+			float* data = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb);
 
-			m_Format = TextureFormat::RGBAFloat32;
+			m_Format = TextureFormat::RGBAFloat16;
+
+			if (data)
+			{
+				auto* newData = new uint16[width * (size_t)height * (size_t)GetBytesPerPixel(m_Format)];
+				{
+					ThreadPool pool;
+
+					auto task = [data, newData, width](uint32 low, uint32 high) {
+						for (uint32 y = low; y < high; y++)
+						{
+							float* src = data + 3 * (size_t)width * y;
+							uint16* dest = newData + 4 * (size_t)width * y;
+							for (uint32 x = 0; x < static_cast<uint32>(width); x++)
+							{
+								dest[4 * x] = float_to_sf16(src[3 * x], SF_NEARESTEVEN);
+								dest[4 * x + 1] = float_to_sf16(src[3 * x + 1], SF_NEARESTEVEN);
+								dest[4 * x + 2] = float_to_sf16(src[3 * x + 2], SF_NEARESTEVEN);
+							}
+						}
+					};
+
+					uint32 step = height / pool.GetThreadCount();
+					for (uint32 i = 0; i < static_cast<uint32>(height); i += step)
+					{
+						pool.QueueTask(task, i, std::min((uint32)height - 1, i + step));
+					}
+				}
+
+				stbi_image_free(data);
+
+				m_Data.Data = (byte*)newData;
+			}
 		}
 		else
 		{
@@ -289,7 +324,7 @@ namespace Neon
 				m_Format = TextureFormat::SRGBA;
 				break;
 			case TextureType::HDR:
-				m_Format = TextureFormat::RGBAFloat32;
+				m_Format = TextureFormat::RGBAFloat16;
 				break;
 			default:
 				m_Format = TextureFormat::RGBA;
@@ -316,7 +351,7 @@ namespace Neon
 		{
 			data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = TextureFormat::RGBAFloat32;
+			m_Format = TextureFormat::RGBAFloat16;
 		}
 		else
 		{
@@ -382,7 +417,7 @@ namespace Neon
 			{
 				data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-				m_Format = TextureFormat::RGBAFloat32;
+				m_Format = TextureFormat::RGBAFloat16;
 			}
 			else
 			{

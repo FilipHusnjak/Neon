@@ -15,8 +15,8 @@ namespace Neon
 				return vk::Format::eR8G8B8A8Unorm;
 			case TextureFormat::SRGBA:
 				return vk::Format::eR8G8B8A8Srgb;
-			case TextureFormat::RGBAFloat32:
-				return vk::Format::eR32G32B32A32Sfloat;
+			case TextureFormat::RGBAFloat16:
+				return vk::Format::eR16G16B16A16Sfloat;
 			default:
 				NEO_CORE_ERROR("Unknown texture format!");
 				return vk::Format::eUndefined;

@@ -7,7 +7,7 @@ namespace Neon
 		None = 0,
 		SRGBA = 1,
 		RGBA = 2,
-		RGBAFloat32 = 3
+		RGBAFloat16 = 3
 	};
 
 	enum class TextureWrap
