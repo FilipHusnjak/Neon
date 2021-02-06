@@ -26,8 +26,8 @@ namespace Neon
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
-		VulkanTexture2D(TextureType type);
-		VulkanTexture2D(const std::string& path, TextureType type);
+		VulkanTexture2D(const TextureSpecification& specification);
+		VulkanTexture2D(const std::string& path, const TextureSpecification& specification);
 
 		virtual ~VulkanTexture2D();
 
@@ -83,10 +83,10 @@ namespace Neon
 	class VulkanTextureCube : public TextureCube
 	{
 	public:
-		VulkanTextureCube(TextureType type);
-		VulkanTextureCube(uint32 faceSize, TextureType type);
-		VulkanTextureCube(const std::string& path, TextureType type);
-		VulkanTextureCube(const std::array<std::string, 6>& paths, TextureType type);
+		VulkanTextureCube(const TextureSpecification& specification);
+		VulkanTextureCube(uint32 faceSize, const TextureSpecification& specification);
+		VulkanTextureCube(const std::string& path, const TextureSpecification& specification);
+		VulkanTextureCube(const std::array<std::string, 6>& paths, const TextureSpecification& specification);
 
 		virtual ~VulkanTextureCube();
 

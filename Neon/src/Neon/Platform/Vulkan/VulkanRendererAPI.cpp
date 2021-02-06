@@ -95,8 +95,6 @@ namespace Neon
 		computeCommandBuffer.dispatch(groupCountX, groupCountY, groupCountZ);
 
 		device->FlushComputeCommandBuffer(computeCommandBuffer);
-
-		Renderer::WaitIdle();
 	}
 
 	void VulkanRendererAPI::EndRenderPass()

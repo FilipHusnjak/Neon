@@ -24,13 +24,20 @@ namespace Neon
 		HDR = 2
 	};
 
+	struct TextureSpecification
+	{
+		TextureType Type = TextureType::RGB;
+		uint32 MipLevelCount = 1;
+		TextureWrap Wrap = TextureWrap::Repeat;
+	};
+
 	class Texture : public RefCounted
 	{
 	public:
 		static uint32 GetBytesPerPixel(TextureFormat format);
 		static uint32 CalculateMipMapCount(uint32 width, uint32 height);
 
-		Texture(TextureType type);
+		Texture(const TextureSpecification& specification);
 		virtual ~Texture() = default;
 
 		virtual uint32 GetMipLevelCount() const = 0;
@@ -43,18 +50,18 @@ namespace Neon
 		virtual bool operator==(const Texture& other) const = 0;
 
 	protected:
-		TextureType m_Type = TextureType::RGB;
+		TextureSpecification m_Specification;
 		TextureFormat m_Format = TextureFormat::None;
 	};
 
 	class Texture2D : public Texture
 	{
 	public:
-		static SharedRef<Texture2D> Create(TextureType type);
-		static SharedRef<Texture2D> Create(const std::string& path, TextureType type);
+		static SharedRef<Texture2D> Create(const TextureSpecification& specification);
+		static SharedRef<Texture2D> Create(const std::string& path, const TextureSpecification& specification);
 
-		Texture2D(TextureType type);
-		Texture2D(const std::string& path, TextureType type);
+		Texture2D(const TextureSpecification& specification);
+		Texture2D(const std::string& path, const TextureSpecification& specification);
 		virtual ~Texture2D() = default;
 
 		virtual Buffer GetTextureData() = 0;
@@ -76,13 +83,13 @@ namespace Neon
 	class TextureCube : public Texture
 	{
 	public:
-		static SharedRef<TextureCube> Create(const uint32 faceSize, TextureType type);
-		static SharedRef<TextureCube> Create(const std::string& path, TextureType type);
-		static SharedRef<TextureCube> Create(const std::array<std::string, 6>& paths, TextureType type);
+		static SharedRef<TextureCube> Create(const uint32 faceSize, const TextureSpecification& specification);
+		static SharedRef<TextureCube> Create(const std::string& path, const TextureSpecification& specification);
+		static SharedRef<TextureCube> Create(const std::array<std::string, 6>& paths, const TextureSpecification& specification);
 
-		TextureCube(TextureType type);
-		TextureCube(const std::string& path, TextureType type);
-		TextureCube(const std::array<std::string, 6>& paths, TextureType type);
+		TextureCube(const TextureSpecification& specification);
+		TextureCube(const std::string& path, const TextureSpecification& specification);
+		TextureCube(const std::array<std::string, 6>& paths, const TextureSpecification& specification);
 		virtual ~TextureCube() = default;
 
 		virtual Buffer GetTextureData() = 0;

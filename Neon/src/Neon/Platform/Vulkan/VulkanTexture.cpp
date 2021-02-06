@@ -11,16 +11,16 @@
 
 namespace Neon
 {
-	VulkanTexture2D::VulkanTexture2D(TextureType type)
-		: Texture2D(type)
+	VulkanTexture2D::VulkanTexture2D(const TextureSpecification& specification)
+		: Texture2D(specification)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
 		CreateDefaultTexture();
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const std::string& path, TextureType type)
-		: Texture2D(path, type)
+	VulkanTexture2D::VulkanTexture2D(const std::string& path, const TextureSpecification& specification)
+		: Texture2D(path, specification)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
@@ -70,7 +70,7 @@ namespace Neon
 			stbi_set_flip_vertically_on_load(true);
 			m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
+			m_Format = specification.Type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
 		}
 
 		if (!m_Data.Data)
@@ -109,7 +109,6 @@ namespace Neon
 		uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
 
 		// Copy data to an optimal tiled image
-		// This loads the texture data into a host local buffer that is copied to the optimal tiled image on the device
 
 		// Create a host-visible staging buffer that contains the raw image data
 		// This buffer will be the data source for copying texture data to the optimal tiled image on the device
@@ -119,28 +118,6 @@ namespace Neon
 
 		// Copy texture data into host local staging buffer
 		m_Allocator.UpdateBuffer(stagingBuffer, m_Data.Data);
-
-		/*
-		// Setup buffer copy regions for each mip level
-		std::vector<VkBufferImageCopy> bufferCopyRegions;
-		uint32_t offset = 0;
-
-		for (uint32_t i = 0; i < texture.mipLevels; i++) {
-			VkBufferImageCopy bufferCopyRegion = {};
-			bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			bufferCopyRegion.imageSubresource.mipLevel = i;
-			bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
-			bufferCopyRegion.imageSubresource.layerCount = 1;
-			bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex2D[i].extent().x);
-			bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex2D[i].extent().y);
-			bufferCopyRegion.imageExtent.depth = 1;
-			bufferCopyRegion.bufferOffset = offset;
-
-			bufferCopyRegions.push_back(bufferCopyRegion);
-
-			offset += static_cast<uint32_t>(tex2D[i].size());
-		}
-		*/
 
 		vk::BufferImageCopy bufferCopyRegion = {};
 		bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -156,7 +133,7 @@ namespace Neon
 		vk::ImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.imageType = vk::ImageType::e2D;
 		imageCreateInfo.format = ConvertTextureFormatToVulkanFormat(m_Format);
-		imageCreateInfo.mipLevels = 1;
+		imageCreateInfo.mipLevels = m_Specification.MipLevelCount;
 		imageCreateInfo.arrayLayers = 1;
 		imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 		imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
@@ -182,7 +159,7 @@ namespace Neon
 		// Start at first mip level
 		subresourceRange.baseMipLevel = 0;
 		// We will transition on all mip levels
-		subresourceRange.levelCount = 1; // TODO: Support mips
+		subresourceRange.levelCount = m_Specification.MipLevelCount;
 		// The 2D texture only has one layer
 		subresourceRange.layerCount = 1;
 
@@ -223,9 +200,6 @@ namespace Neon
 
 		device->FlushGraphicsCommandBuffer(copyCmd);
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// CREATE TEXTURE SAMPLER
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Create a texture sampler
 		// In Vulkan textures are accessed by samplers
 		// This separates all the sampling information from the texture data. This means you could have multiple sampler objects for the same texture with different settings
@@ -242,24 +216,23 @@ namespace Neon
 		samplerCreateInfo.compareOp = vk::CompareOp::eNever;
 		samplerCreateInfo.minLod = 0.0f;
 		// Set max level-of-detail to mip level count of the texture
-		samplerCreateInfo.maxLod = 1.0f;
+		samplerCreateInfo.maxLod = static_cast<float>(m_Specification.MipLevelCount);
+		samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+
 		// Enable anisotropic filtering
 		// This feature is optional, so we must check if it's supported on the device
-
-		// TODO:
-		/*if (vulkanDevice->features.samplerAnisotropy) {
+		if (device->GetPhysicalDevice()->GetSupportedFeatures().samplerAnisotropy)
+		{
 			// Use max. level of anisotropy for this example
-			sampler.maxAnisotropy = 1.0f;// vulkanDevice->properties.limits.maxSamplerAnisotropy;
-			sampler.anisotropyEnable = VK_TRUE;
+			samplerCreateInfo.maxAnisotropy = device->GetPhysicalDevice()->GetProperties().limits.maxSamplerAnisotropy;
+			samplerCreateInfo.anisotropyEnable = VK_TRUE;
 		}
-		else {
+		else
+		{
 			// The device does not support anisotropic filtering
-			sampler.maxAnisotropy = 1.0;
-			sampler.anisotropyEnable = VK_FALSE;
-		}*/
-		samplerCreateInfo.maxAnisotropy = 1.0;
-		samplerCreateInfo.anisotropyEnable = VK_FALSE;
-		samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+			samplerCreateInfo.maxAnisotropy = 1.0;
+			samplerCreateInfo.anisotropyEnable = VK_FALSE;
+		}
 		m_Sampler = deviceHandle.createSamplerUnique(samplerCreateInfo);
 
 		// Create image view
@@ -275,11 +248,11 @@ namespace Neon
 		// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
 		imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewCreateInfo.subresourceRange.layerCount = 1;
 		// Linear tiling usually won't support mip maps
 		// Only set mip map count if optimal tiling is used
-		imageViewCreateInfo.subresourceRange.levelCount = 1;
+		imageViewCreateInfo.subresourceRange.levelCount = m_Specification.MipLevelCount;
+		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewCreateInfo.subresourceRange.layerCount = 1;
 		// The view will be based on the texture's image
 		imageViewCreateInfo.image = m_Image.Handle.get();
 
@@ -301,21 +274,21 @@ namespace Neon
 		Invalidate();
 	}
 
-	VulkanTextureCube::VulkanTextureCube(TextureType type)
-		: TextureCube(type)
+	VulkanTextureCube::VulkanTextureCube(const TextureSpecification& specification)
+		: TextureCube(specification)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
 		CreateDefaultTexture();
 	}
 
-	VulkanTextureCube::VulkanTextureCube(uint32 faceSize, TextureType type)
-		: TextureCube(type)
+	VulkanTextureCube::VulkanTextureCube(uint32 faceSize, const TextureSpecification& specification)
+		: TextureCube(specification)
 		, m_FaceSize(faceSize)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
-		switch (type)
+		switch (specification.Type)
 		{
 			case TextureType::RGB:
 				m_Format = TextureFormat::RGBA;
@@ -338,8 +311,8 @@ namespace Neon
 		Invalidate();
 	}
 
-	VulkanTextureCube::VulkanTextureCube(const std::string& path, TextureType type)
-		: TextureCube(path, type)
+	VulkanTextureCube::VulkanTextureCube(const std::string& path, const TextureSpecification& specification)
+		: TextureCube(path, specification)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
@@ -357,7 +330,7 @@ namespace Neon
 		{
 			data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
+			m_Format = specification.Type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
 		}
 
 		if (!data)
@@ -398,8 +371,8 @@ namespace Neon
 		}
 	}
 
-	VulkanTextureCube::VulkanTextureCube(const std::array<std::string, 6>& paths, TextureType type)
-		: TextureCube(paths, type)
+	VulkanTextureCube::VulkanTextureCube(const std::array<std::string, 6>& paths, const TextureSpecification& specification)
+		: TextureCube(paths, specification)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
@@ -423,7 +396,7 @@ namespace Neon
 			{
 				data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-				m_Format = type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
+				m_Format = specification.Type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
 			}
 
 			NEO_CORE_ASSERT(width == height, "Non-square faces!");
@@ -482,7 +455,7 @@ namespace Neon
 		imageCreateInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
 		imageCreateInfo.imageType = vk::ImageType::e2D;
 		imageCreateInfo.format = ConvertTextureFormatToVulkanFormat(m_Format);
-		imageCreateInfo.mipLevels = 1;
+		imageCreateInfo.mipLevels = m_Specification.MipLevelCount;
 		imageCreateInfo.arrayLayers = 6;
 		imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 		imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
@@ -518,7 +491,7 @@ namespace Neon
 		// Start at first mip level
 		subresourceRange.baseMipLevel = 0;
 		// We will transition on all mip levels
-		subresourceRange.levelCount = 1; // TODO: Support mips
+		subresourceRange.levelCount = m_Specification.MipLevelCount;
 		// The 2D texture only has one layer
 		subresourceRange.layerCount = 6;
 
@@ -592,24 +565,23 @@ namespace Neon
 		samplerCreateInfo.compareOp = vk::CompareOp::eNever;
 		samplerCreateInfo.minLod = 0.0f;
 		// Set max level-of-detail to mip level count of the texture
-		samplerCreateInfo.maxLod = 1.0f;
+		samplerCreateInfo.maxLod = static_cast<float>(m_Specification.MipLevelCount);
+		samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+
 		// Enable anisotropic filtering
 		// This feature is optional, so we must check if it's supported on the device
-
-		// TODO:
-		/*if (vulkanDevice->features.samplerAnisotropy) {
+		if (device->GetPhysicalDevice()->GetSupportedFeatures().samplerAnisotropy)
+		{
 			// Use max. level of anisotropy for this example
-			sampler.maxAnisotropy = 1.0f;// vulkanDevice->properties.limits.maxSamplerAnisotropy;
-			sampler.anisotropyEnable = VK_TRUE;
+			samplerCreateInfo.maxAnisotropy = device->GetPhysicalDevice()->GetProperties().limits.maxSamplerAnisotropy;
+			samplerCreateInfo.anisotropyEnable = VK_TRUE;
 		}
-		else {
+		else
+		{
 			// The device does not support anisotropic filtering
-			sampler.maxAnisotropy = 1.0;
-			sampler.anisotropyEnable = VK_FALSE;
-		}*/
-		samplerCreateInfo.maxAnisotropy = 1.0;
-		samplerCreateInfo.anisotropyEnable = VK_FALSE;
-		samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+			samplerCreateInfo.maxAnisotropy = 1.0;
+			samplerCreateInfo.anisotropyEnable = VK_FALSE;
+		}
 		m_Sampler = deviceHandle.createSamplerUnique(samplerCreateInfo);
 
 		// Create image view
@@ -629,7 +601,7 @@ namespace Neon
 		// Linear tiling usually won't support mip maps
 		// Only set mip map count if optimal tiling is used
 		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-		imageViewCreateInfo.subresourceRange.levelCount = 1;
+		imageViewCreateInfo.subresourceRange.levelCount = m_Specification.MipLevelCount;
 		// The view will be based on the texture's image
 		imageViewCreateInfo.image = m_Image.Handle.get();
 

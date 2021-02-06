@@ -34,6 +34,11 @@ namespace Neon
 			return m_Properties;
 		}
 
+		vk::PhysicalDeviceFeatures GetSupportedFeatures() const
+		{
+			return m_SupportedFeatures;
+		}
+
 		static SharedRef<VulkanPhysicalDevice> Select();
 
 	private:
@@ -51,7 +56,7 @@ namespace Neon
 
 		vk::PhysicalDevice m_Handle;
 		vk::PhysicalDeviceProperties m_Properties;
-		vk::PhysicalDeviceFeatures m_Features;
+		vk::PhysicalDeviceFeatures m_SupportedFeatures;
 		vk::PhysicalDeviceMemoryProperties m_MemoryProperties;
 
 		vk::Format m_DepthFormat = vk::Format::eUndefined;

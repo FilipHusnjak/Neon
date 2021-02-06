@@ -27,7 +27,7 @@ namespace Neon
 		NEO_CORE_ASSERT(m_Handle, "Physical device was not found");
 
 		m_Properties = m_Handle.getProperties();
-		m_Features = m_Handle.getFeatures();
+		m_SupportedFeatures = m_Handle.getFeatures();
 		m_MemoryProperties = m_Handle.getMemoryProperties();
 
 		m_SupportedExtensions = m_Handle.enumerateDeviceExtensionProperties();
@@ -199,7 +199,7 @@ namespace Neon
 		descriptorFeatures.runtimeDescriptorArray = VK_TRUE;
 		descriptorFeatures.pNext = &scalarLayoutFeatures;
 		vk::PhysicalDeviceFeatures deviceFeatures;
-		deviceFeatures.samplerAnisotropy = VK_TRUE;
+		deviceFeatures.samplerAnisotropy = m_PhysicalDevice->GetSupportedFeatures().samplerAnisotropy;
 		deviceFeatures.shaderClipDistance = VK_TRUE;
 		vk::PhysicalDeviceFeatures2 deviceFeatures2;
 		deviceFeatures2.pNext = &descriptorFeatures;

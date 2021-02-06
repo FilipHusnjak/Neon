@@ -318,7 +318,7 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
-					m_Materials[i]->LoadTexture2D("u_AlbedoTextures", i, texturePath, TextureType::SRGB);
+					m_Materials[i]->LoadTexture2D("u_AlbedoTextures", i, texturePath, {TextureType::SRGB});
 					materialProperties.HasAlbedoTexture = 1.f;
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
@@ -337,7 +337,7 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					//std::string texturePath = parentPath.string();
 					std::string texturePath = "assets/models/cerberus/textures/Cerberus_N.tga";
-					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath, TextureType::RGB);
+					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath, {});
 					materialProperties.HasNormalTex = 1.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
 				}
@@ -356,7 +356,7 @@ namespace Neon
 					//std::string texturePath = parentPath.string();
 					std::string texturePath = "assets/models/cerberus/textures/Cerberus_R.tga";
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
-					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath, TextureType::RGB);
+					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath, {});
 					materialProperties.HasRoughnessTex = 1.f;
 				}
 				else
@@ -388,7 +388,7 @@ namespace Neon
 							//std::string texturePath = parentPath.string();
 							std::string texturePath = "assets/models/cerberus/textures/Cerberus_M.tga";
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
-							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath, TextureType::RGB);
+							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath, {});
 							materialProperties.HasMetalnessTex = 1.f;
 							break;
 						}
