@@ -84,7 +84,7 @@ namespace Neon
 			return m_Handle.get();
 		}
 
-		SharedRef<VulkanPhysicalDevice>GetPhysicalDevice() const
+		SharedRef<VulkanPhysicalDevice> GetPhysicalDevice() const
 		{
 			return m_PhysicalDevice;
 		}
@@ -102,15 +102,18 @@ namespace Neon
 			return m_TransferQueue;
 		}
 
-		vk::CommandPool GetCommandPool() const
+		vk::CommandPool GetGraphicsCommandPool() const
 		{
-			return m_CommandPool.get();
+			return m_GraphicsCommandPool.get();
 		}
 
-		vk::CommandBuffer GetCommandBuffer(bool begin);
-		void FlushCommandBuffer(vk::CommandBuffer commandBuffer);
+		vk::CommandBuffer GetGraphicsCommandBuffer(bool begin) const;
+		void FlushGraphicsCommandBuffer(vk::CommandBuffer commandBuffer) const;
 
-		vk::CommandBuffer CreateSecondaryCommandBuffer();
+		vk::CommandBuffer GetComputeCommandBuffer(bool begin) const;
+		void FlushComputeCommandBuffer(vk::CommandBuffer commandBuffer) const;
+
+		vk::CommandBuffer CreateSecondaryCommandBuffer() const;
 
 		static SharedRef<VulkanDevice> Create(SharedRef<VulkanPhysicalDevice>& physicalDevice);
 
@@ -122,7 +125,8 @@ namespace Neon
 		vk::Queue m_ComputeQueue;
 		vk::Queue m_TransferQueue;
 
-		vk::UniqueCommandPool m_CommandPool;
+		vk::UniqueCommandPool m_GraphicsCommandPool;
+		vk::UniqueCommandPool m_ComputeCommandPool;
 
 		const std::vector<const char*> m_ValidationLayers = {"VK_LAYER_KHRONOS_validation"};
 	};

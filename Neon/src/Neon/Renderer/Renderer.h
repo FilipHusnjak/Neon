@@ -21,9 +21,14 @@ namespace Neon
 
 		static void SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline);
 
+		static void DispatchCompute(const SharedRef<ComputePipeline>& computePipeline, uint32 groupCountX, uint32 groupCountY,
+									uint32 groupCountZ);
+
 		static void EndRenderPass();
 
 		static void End();
+
+		static void WaitIdle();
 
 		static void* GetFinalImageId();
 

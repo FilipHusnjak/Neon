@@ -8,32 +8,34 @@
 
 namespace Neon
 {
-	VulkanTexture2D::VulkanTexture2D()
+	VulkanTexture2D::VulkanTexture2D(TextureType type)
+		: Texture2D(type)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
 		CreateDefaultTexture();
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const std::string& path, bool srgb)
-		: Texture2D(path, srgb)
+	VulkanTexture2D::VulkanTexture2D(const std::string& path, TextureType type)
+		: Texture2D(path, type)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
 		int width, height, channels;
-		stbi_set_flip_vertically_on_load(true);
 
 		if (stbi_is_hdr(path.c_str()))
 		{
-			m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+			stbi_set_flip_vertically_on_load(false);
+			m_Data.Data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = TextureFormat::Float16;
+			m_Format = TextureFormat::RGBAFloat32;
 		}
 		else
 		{
+			stbi_set_flip_vertically_on_load(true);
 			m_Data.Data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = m_Srgb ? TextureFormat::SRGBA : TextureFormat::RGBA;
+			m_Format = type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
 		}
 
 		if (!m_Data.Data)
@@ -134,7 +136,7 @@ namespace Neon
 		m_Allocator.Allocate(memoryRequirements, m_Image.DeviceMemory, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		deviceHandle.bindImageMemory(m_Image.Handle.get(), m_Image.DeviceMemory.get(), 0);
 
-		vk::CommandBuffer copyCmd = device->GetCommandBuffer(true);
+		vk::CommandBuffer copyCmd = device->GetGraphicsCommandBuffer(true);
 
 		// Image memory barriers for the texture image
 
@@ -171,7 +173,7 @@ namespace Neon
 
 		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
 		imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
 		imageMemoryBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
@@ -184,7 +186,7 @@ namespace Neon
 		// Store current layout for later reuse
 		m_Layout = imageMemoryBarrier.newLayout;
 
-		device->FlushCommandBuffer(copyCmd);
+		device->FlushGraphicsCommandBuffer(copyCmd);
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// CREATE TEXTURE SAMPLER
@@ -264,15 +266,45 @@ namespace Neon
 		Invalidate();
 	}
 
-	VulkanTextureCube::VulkanTextureCube()
+	VulkanTextureCube::VulkanTextureCube(TextureType type)
+		: TextureCube(type)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
 		CreateDefaultTexture();
 	}
 
-	VulkanTextureCube::VulkanTextureCube(const std::string& path, bool srgb)
-		: TextureCube(path, srgb)
+	VulkanTextureCube::VulkanTextureCube(uint32 faceSize, TextureType type)
+		: TextureCube(type)
+		, m_FaceSize(faceSize)
+	{
+		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
+
+		switch (type)
+		{
+			case TextureType::RGB:
+				m_Format = TextureFormat::RGBA;
+				break;
+			case TextureType::SRGB:
+				m_Format = TextureFormat::SRGBA;
+				break;
+			case TextureType::HDR:
+				m_Format = TextureFormat::RGBAFloat32;
+				break;
+			default:
+				m_Format = TextureFormat::RGBA;
+				NEO_CORE_ASSERT(false, "Unknown texture type!");
+				break;
+		}
+
+		m_Data.Size = 6 * m_FaceSize * m_FaceSize * GetBytesPerPixel(m_Format);
+		m_Data.Data = new byte[m_Data.Size];
+
+		Invalidate();
+	}
+
+	VulkanTextureCube::VulkanTextureCube(const std::string& path, TextureType type)
+		: TextureCube(path, type)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
@@ -282,15 +314,15 @@ namespace Neon
 		byte* data;
 		if (stbi_is_hdr(path.c_str()))
 		{
-			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+			data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = TextureFormat::Float16;
+			m_Format = TextureFormat::RGBAFloat32;
 		}
 		else
 		{
 			data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-			m_Format = m_Srgb ? TextureFormat::SRGBA : TextureFormat::RGBA;
+			m_Format = type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
 		}
 
 		if (!data)
@@ -331,8 +363,8 @@ namespace Neon
 		}
 	}
 
-	VulkanTextureCube::VulkanTextureCube(const std::array<std::string, 6>& paths, bool srgb /*= false*/)
-		: TextureCube(paths, srgb)
+	VulkanTextureCube::VulkanTextureCube(const std::array<std::string, 6>& paths, TextureType type)
+		: TextureCube(paths, type)
 	{
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "TextureCube");
 
@@ -348,15 +380,15 @@ namespace Neon
 			byte* data;
 			if (stbi_is_hdr(path.c_str()))
 			{
-				data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+				data = (byte*)stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-				m_Format = TextureFormat::Float16;
+				m_Format = TextureFormat::RGBAFloat32;
 			}
 			else
 			{
 				data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
-				m_Format = m_Srgb ? TextureFormat::SRGBA : TextureFormat::RGBA;
+				m_Format = type == TextureType::SRGB ? TextureFormat::SRGBA : TextureFormat::RGBA;
 			}
 
 			NEO_CORE_ASSERT(width == height, "Non-square faces!");
@@ -423,7 +455,9 @@ namespace Neon
 		// Set initial layout of the image to undefined
 		imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 		imageCreateInfo.extent = {m_FaceSize, m_FaceSize, 1};
-		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+		// TODO: Check which usages are necessary
+		imageCreateInfo.usage =
+			vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage;
 		m_Image.Handle = deviceHandle.createImageUnique(imageCreateInfo);
 
 		VulkanBuffer stagingBuffer;
@@ -438,7 +472,7 @@ namespace Neon
 		m_Allocator.Allocate(memoryRequirements, m_Image.DeviceMemory, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		deviceHandle.bindImageMemory(m_Image.Handle.get(), m_Image.DeviceMemory.get(), 0);
 
-		vk::CommandBuffer copyCmd = device->GetCommandBuffer(true);
+		vk::CommandBuffer copyCmd = device->GetGraphicsCommandBuffer(true);
 
 		// Image memory barriers for the texture image
 
@@ -488,9 +522,10 @@ namespace Neon
 
 		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
 		imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
-		imageMemoryBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		// TODO: use shader read only optimal when possible
+		imageMemoryBarrier.newLayout = vk::ImageLayout::eGeneral;
 
 		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
 		// Source pipeline stage stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
@@ -501,7 +536,7 @@ namespace Neon
 		// Store current layout for later reuse
 		m_Layout = imageMemoryBarrier.newLayout;
 
-		device->FlushCommandBuffer(copyCmd);
+		device->FlushGraphicsCommandBuffer(copyCmd);
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// CREATE TEXTURE SAMPLER
@@ -554,11 +589,11 @@ namespace Neon
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
 		// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
 		imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
 		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewCreateInfo.subresourceRange.layerCount = 1;
+		imageViewCreateInfo.subresourceRange.layerCount = 6;
 		// Linear tiling usually won't support mip maps
 		// Only set mip map count if optimal tiling is used
+		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
 		imageViewCreateInfo.subresourceRange.levelCount = 1;
 		// The view will be based on the texture's image
 		imageViewCreateInfo.image = m_Image.Handle.get();
@@ -590,7 +625,9 @@ namespace Neon
 
 	void VulkanTextureCube::GetFace(const byte* sourceData, byte* destData, uint32 xOffset, uint32 yOffset)
 	{
-		uint32 imageWidth = m_FaceSize * 4;
+		uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
+
+		uint32 imageWidth = m_FaceSize * bytesPerPixel;
 		for (uint32 y = 0; y < m_FaceSize; y++)
 		{
 			uint32 sourceY = y + yOffset;
@@ -598,19 +635,21 @@ namespace Neon
 			{
 				uint32 sourceX = x + xOffset;
 
-				uint32 baseSourceIndex = (sourceY * imageWidth + sourceX) * 4;
-				uint32 baseDestinationIndex = (y * m_FaceSize + x) * 4;
-				destData[baseDestinationIndex] = sourceData[baseSourceIndex];
-				destData[baseDestinationIndex + 1] = sourceData[baseSourceIndex + 1];
-				destData[baseDestinationIndex + 2] = sourceData[baseSourceIndex + 2];
-				destData[baseDestinationIndex + 3] = sourceData[baseSourceIndex + 3];
+				uint32 baseSourceIndex = (sourceY * imageWidth + sourceX) * bytesPerPixel;
+				uint32 baseDestinationIndex = (y * m_FaceSize + x) * bytesPerPixel;
+				for (uint32 i = 0; i < bytesPerPixel; i++)
+				{
+					destData[baseDestinationIndex + i] = sourceData[baseSourceIndex + i];
+				}
 			}
 		}
 	}
 
 	void VulkanTextureCube::RotateFaceClockwise(byte* data)
 	{
-		auto* stagingData = new byte[static_cast<size_t>(m_FaceSize) * m_FaceSize * 4];
+		uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
+
+		auto* stagingData = new byte[static_cast<size_t>(m_FaceSize) * m_FaceSize * bytesPerPixel];
 
 		for (uint32 y = 0; y < m_FaceSize; y++)
 		{
@@ -619,23 +658,25 @@ namespace Neon
 				uint32 sourceX = y;
 				uint32 sourceY = m_FaceSize - x - 1;
 
-				uint32 baseSourceIndex = (sourceY * m_FaceSize + sourceX) * 4;
-				uint32 baseDestinationIndex = (y * m_FaceSize + x) * 4;
-				stagingData[baseDestinationIndex] = data[baseSourceIndex];
-				stagingData[baseDestinationIndex + 1] = data[baseSourceIndex + 1];
-				stagingData[baseDestinationIndex + 2] = data[baseSourceIndex + 2];
-				stagingData[baseDestinationIndex + 3] = data[baseSourceIndex + 3];
+				uint32 baseSourceIndex = (sourceY * m_FaceSize + sourceX) * bytesPerPixel;
+				uint32 baseDestinationIndex = (y * m_FaceSize + x) * bytesPerPixel;
+				for (uint32 i = 0; i < bytesPerPixel; i++)
+				{
+					stagingData[baseDestinationIndex + i] = data[baseSourceIndex + i];
+				}
 			}
 		}
 
-		memcpy(data, stagingData, static_cast<size_t>(m_FaceSize) * m_FaceSize * 4);
+		memcpy(data, stagingData, static_cast<size_t>(m_FaceSize) * m_FaceSize * bytesPerPixel);
 
 		delete[] stagingData;
 	}
 
 	void VulkanTextureCube::RotateFaceCounterClockwise(byte* data)
 	{
-		auto* stagingData = new byte[static_cast<size_t>(m_FaceSize) * m_FaceSize * 4];
+		uint32 bytesPerPixel = GetBytesPerPixel(m_Format);
+
+		auto* stagingData = new byte[static_cast<size_t>(m_FaceSize) * m_FaceSize * bytesPerPixel];
 
 		for (uint32 y = 0; y < m_FaceSize; y++)
 		{
@@ -644,16 +685,16 @@ namespace Neon
 				uint32 sourceX = m_FaceSize - y - 1;
 				uint32 sourceY = x;
 
-				uint32 baseSourceIndex = (sourceY * m_FaceSize + sourceX) * 4;
-				uint32 baseDestinationIndex = (y * m_FaceSize + x) * 4;
-				stagingData[baseDestinationIndex] = data[baseSourceIndex];
-				stagingData[baseDestinationIndex + 1] = data[baseSourceIndex + 1];
-				stagingData[baseDestinationIndex + 2] = data[baseSourceIndex + 2];
-				stagingData[baseDestinationIndex + 3] = data[baseSourceIndex + 3];
+				uint32 baseSourceIndex = (sourceY * m_FaceSize + sourceX) * bytesPerPixel;
+				uint32 baseDestinationIndex = (y * m_FaceSize + x) * bytesPerPixel;
+				for (uint32 i = 0; i < bytesPerPixel; i++)
+				{
+					stagingData[baseDestinationIndex + i] = data[baseSourceIndex + i];
+				}
 			}
 		}
 
-		memcpy(data, stagingData, static_cast<size_t>(m_FaceSize) * m_FaceSize * 4);
+		memcpy(data, stagingData, static_cast<size_t>(m_FaceSize) * m_FaceSize * bytesPerPixel);
 
 		delete[] stagingData;
 	}

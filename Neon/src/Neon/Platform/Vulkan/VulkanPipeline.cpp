@@ -200,7 +200,7 @@ namespace Neon
 		computePipelineCreateInfo.layout = m_PipelineLayout.get();
 		computePipelineCreateInfo.stage = vulkanShader->GetShaderStages()[0];
 
-		device.createComputePipelineUnique(nullptr, computePipelineCreateInfo);
+		m_Handle = device.createComputePipelineUnique(nullptr, computePipelineCreateInfo);
 	}
 
 } // namespace Neon

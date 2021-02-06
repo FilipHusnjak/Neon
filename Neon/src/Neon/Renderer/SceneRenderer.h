@@ -36,6 +36,8 @@ namespace Neon
 
 		static void OnImGuiRender();
 
+		static void CreateEnvironmentMap(const std::string& filepath);
+
 		static void Shutdown();
 
 	private:

@@ -28,12 +28,14 @@ namespace Neon
 		};
 
 		std::vector<MeshDrawCommand> MeshDrawList;
-
-		SharedRef<Shader> m_ComputeShader;
-		SharedRef<ComputePipeline> m_ComputePipeline;
 	};
 
 	static SceneRendererData s_Data;
+
+	static SharedRef<Shader> s_EnvUnfilteredComputeShader;
+	static SharedRef<ComputePipeline> s_EnvUnfilteredComputePipeline;
+
+	static SharedRef<TextureCube> s_EnvironmentTextureCube;
 
 	void SceneRenderer::Init()
 	{
@@ -55,10 +57,12 @@ namespace Neon
 
 		ShaderSpecification computeShaderSpecification;
 		computeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/EquirectangularToCubeMap_Compute.glsl";
-		s_Data.m_ComputeShader = Shader::Create(computeShaderSpecification);
+		s_EnvUnfilteredComputeShader = Shader::Create(computeShaderSpecification);
 		ComputePipelineSpecification computePipelineSpecification;
-		computePipelineSpecification.Shader = s_Data.m_ComputeShader;
-		s_Data.m_ComputePipeline = ComputePipeline::Create(computePipelineSpecification);
+		computePipelineSpecification.Shader = s_EnvUnfilteredComputeShader;
+		s_EnvUnfilteredComputePipeline = ComputePipeline::Create(computePipelineSpecification);
+
+		CreateEnvironmentMap("assets/textures/environment/birchwood_16k.hdr");
 	}
 
 	void SceneRenderer::InitializeScene(Scene* scene)
@@ -67,6 +71,8 @@ namespace Neon
 
 		s_Data.ActiveScene = scene;
 		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
+
+		s_Data.SceneData.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_EnvironmentTextureCube);
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
@@ -117,9 +123,27 @@ namespace Neon
 	{
 	}
 
+	void SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
+	{
+		const uint32 faceSize = 2048;
+
+		SharedRef<Texture2D> envMap = Texture2D::Create(filepath, TextureType::HDR);
+		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBAFloat32, "Image has to be HDR!");
+		s_EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap);
+
+		s_EnvironmentTextureCube = TextureCube::Create(faceSize, TextureType::HDR);
+		s_EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_EnvironmentTextureCube);
+
+		Renderer::DispatchCompute(s_EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
+	}
+
 	void SceneRenderer::Shutdown()
 	{
 		s_Data = {};
+
+		s_EnvironmentTextureCube.Reset();
+		s_EnvUnfilteredComputePipeline.Reset();
+		s_EnvUnfilteredComputeShader.Reset();
 	}
 
 	void SceneRenderer::FlushDrawList()

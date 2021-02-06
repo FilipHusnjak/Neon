@@ -22,6 +22,9 @@ namespace Neon
 
 		void SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline) override;
 
+		void DispatchCompute(const SharedRef<ComputePipeline>& computePipeline, uint32 groupCountX, uint32 groupCountY,
+							 uint32 groupCountZ) override;
+
 		void EndRenderPass() override;
 		
 		void End() override;

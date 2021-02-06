@@ -20,10 +20,11 @@ namespace Neon
 		}
 
 		void SetProperties(uint32 index, void* data);
-		void LoadTexture2D(const std::string& name, uint32 index, const std::string& path, bool srgb);
+		void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& textureCube);
+		void LoadTexture2D(const std::string& name, uint32 index, const std::string& path, TextureType type);
 		void LoadDefaultTexture2D(const std::string& name, uint32 index);
-		void LoadTextureCube(const std::string& name, uint32 index, const std::string& path, bool srgb);
-		void LoadTextureCube(const std::string& name, uint32 index, const std::array<std::string, 6>& paths, bool srgb);
+		void LoadTextureCube(const std::string& name, uint32 index, const std::string& path, TextureType type);
+		void LoadTextureCube(const std::string& name, uint32 index, const std::array<std::string, 6>& paths, TextureType type);
 
 	private:
 		SharedRef<Shader> m_Shader;

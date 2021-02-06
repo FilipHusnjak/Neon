@@ -41,7 +41,7 @@ namespace Neon
 
 		// Create command buffers
 		vk::CommandBufferAllocateInfo commandBufferAllocateInfo{};
-		commandBufferAllocateInfo.commandPool = device->GetCommandPool();
+		commandBufferAllocateInfo.commandPool = device->GetGraphicsCommandPool();
 		commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
 		commandBufferAllocateInfo.commandBufferCount = m_TargetMaxFramesInFlight;
 		m_RenderCommandBuffers = m_Device->GetHandle().allocateCommandBuffersUnique(commandBufferAllocateInfo);

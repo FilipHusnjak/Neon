@@ -15,8 +15,8 @@ namespace Neon
 				return vk::Format::eR8G8B8A8Unorm;
 			case TextureFormat::SRGBA:
 				return vk::Format::eR8G8B8A8Srgb;
-			case TextureFormat::Float16:
-				return vk::Format::eR16G16B16A16Sfloat;
+			case TextureFormat::RGBAFloat32:
+				return vk::Format::eR32G32B32A32Sfloat;
 			default:
 				NEO_CORE_ERROR("Unknown texture format!");
 				return vk::Format::eUndefined;
@@ -26,8 +26,8 @@ namespace Neon
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
-		VulkanTexture2D();
-		VulkanTexture2D(const std::string& path, bool srgb);
+		VulkanTexture2D(TextureType type);
+		VulkanTexture2D(const std::string& path, TextureType type);
 
 		virtual ~VulkanTexture2D();
 
@@ -83,9 +83,10 @@ namespace Neon
 	class VulkanTextureCube : public TextureCube
 	{
 	public:
-		VulkanTextureCube();
-		VulkanTextureCube(const std::string& path, bool srgb);
-		VulkanTextureCube(const std::array<std::string, 6>& paths, bool srgb);
+		VulkanTextureCube(TextureType type);
+		VulkanTextureCube(uint32 faceSize, TextureType type);
+		VulkanTextureCube(const std::string& path, TextureType type);
+		VulkanTextureCube(const std::array<std::string, 6>& paths, TextureType type);
 
 		virtual ~VulkanTextureCube();
 

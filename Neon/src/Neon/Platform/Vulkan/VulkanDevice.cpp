@@ -93,7 +93,7 @@ namespace Neon
 		{
 			for (uint32 i = 0; i < m_QueueFamilyProperties.size(); i++)
 			{
-				if ((m_QueueFamilyProperties[i].queueFlags & queueFlags) &&
+				if ((m_QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eCompute) &&
 					!(m_QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics))
 				{
 					indices.Compute = i;
@@ -108,7 +108,7 @@ namespace Neon
 		{
 			for (uint32 i = 0; i < m_QueueFamilyProperties.size(); i++)
 			{
-				if ((m_QueueFamilyProperties[i].queueFlags & queueFlags) &&
+				if ((m_QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eTransfer) &&
 					!(m_QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) &&
 					!(m_QueueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eCompute))
 				{
@@ -209,20 +209,25 @@ namespace Neon
 		deviceCreateInfo.pNext = &deviceFeatures2;
 		m_Handle = physicalDevice->GetHandle().createDeviceUnique(deviceCreateInfo);
 
-		vk::CommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.queueFamilyIndex = m_PhysicalDevice->m_QueueFamilyIndices.Graphics;
-		cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-		m_CommandPool = m_Handle.get().createCommandPoolUnique(cmdPoolInfo);
+		vk::CommandPoolCreateInfo graphicsCmdPoolInfo = {};
+		graphicsCmdPoolInfo.queueFamilyIndex = m_PhysicalDevice->m_QueueFamilyIndices.Graphics;
+		graphicsCmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+		m_GraphicsCommandPool = m_Handle.get().createCommandPoolUnique(graphicsCmdPoolInfo);
+
+		vk::CommandPoolCreateInfo computeCmdPoolInfo = {};
+		computeCmdPoolInfo.queueFamilyIndex = m_PhysicalDevice->m_QueueFamilyIndices.Compute;
+		computeCmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+		m_ComputeCommandPool = m_Handle.get().createCommandPoolUnique(computeCmdPoolInfo);
 
 		m_GraphicsQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Graphics, 0);
 		m_ComputeQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Compute, 0);
 		m_TransferQueue = m_Handle.get().getQueue(physicalDevice->m_QueueFamilyIndices.Transfer, 0);
 	}
 
-	vk::CommandBuffer VulkanDevice::GetCommandBuffer(bool begin)
+	vk::CommandBuffer VulkanDevice::GetGraphicsCommandBuffer(bool begin) const
 	{
 		vk::CommandBufferAllocateInfo cmdBufAllocateInfo = {};
-		cmdBufAllocateInfo.commandPool = m_CommandPool.get();
+		cmdBufAllocateInfo.commandPool = m_GraphicsCommandPool.get();
 		cmdBufAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
 		cmdBufAllocateInfo.commandBufferCount = 1;
 
@@ -238,7 +243,7 @@ namespace Neon
 		return cmdBuffer;
 	}
 
-	void VulkanDevice::FlushCommandBuffer(vk::CommandBuffer commandBuffer)
+	void VulkanDevice::FlushGraphicsCommandBuffer(vk::CommandBuffer commandBuffer) const
 	{
 		const uint64 DEFAULT_FENCE_TIMEOUT = 100000000000;
 
@@ -259,13 +264,56 @@ namespace Neon
 		// Wait for the fence to signal that command buffer has finished executing
 		m_Handle.get().waitForFences(fence.get(), VK_TRUE, DEFAULT_FENCE_TIMEOUT);
 
-		m_Handle.get().freeCommandBuffers(m_CommandPool.get(), commandBuffer);
+		m_Handle.get().freeCommandBuffers(m_GraphicsCommandPool.get(), commandBuffer);
 	}
 
-	vk::CommandBuffer VulkanDevice::CreateSecondaryCommandBuffer()
+	vk::CommandBuffer VulkanDevice::GetComputeCommandBuffer(bool begin) const
 	{
 		vk::CommandBufferAllocateInfo cmdBufAllocateInfo = {};
-		cmdBufAllocateInfo.commandPool = m_CommandPool.get();
+		cmdBufAllocateInfo.commandPool = m_ComputeCommandPool.get();
+		cmdBufAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+		cmdBufAllocateInfo.commandBufferCount = 1;
+
+		vk::CommandBuffer cmdBuffer = m_Handle.get().allocateCommandBuffers(cmdBufAllocateInfo)[0];
+
+		// If requested, also start the new command buffer
+		if (begin)
+		{
+			vk::CommandBufferBeginInfo cmdBufferBeginInfo{};
+			cmdBuffer.begin(cmdBufferBeginInfo);
+		}
+
+		return cmdBuffer;
+	}
+
+	void VulkanDevice::FlushComputeCommandBuffer(vk::CommandBuffer commandBuffer) const
+	{
+		const uint64 DEFAULT_FENCE_TIMEOUT = 100000000000;
+
+		NEO_CORE_ASSERT(commandBuffer);
+
+		commandBuffer.end();
+
+		vk::SubmitInfo submitInfo = {};
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		// Create fence to ensure that the command buffer has finished executing
+		vk::FenceCreateInfo fenceCreateInfo = {};
+		vk::UniqueFence fence = m_Handle.get().createFenceUnique(fenceCreateInfo);
+
+		// Submit to the queue
+		m_ComputeQueue.submit(submitInfo, fence.get());
+		// Wait for the fence to signal that command buffer has finished executing
+		m_Handle.get().waitForFences(fence.get(), VK_TRUE, DEFAULT_FENCE_TIMEOUT);
+
+		m_Handle.get().freeCommandBuffers(m_ComputeCommandPool.get(), commandBuffer);
+	}
+
+	vk::CommandBuffer VulkanDevice::CreateSecondaryCommandBuffer() const
+	{
+		vk::CommandBufferAllocateInfo cmdBufAllocateInfo = {};
+		cmdBufAllocateInfo.commandPool = m_GraphicsCommandPool.get();
 		cmdBufAllocateInfo.level = vk::CommandBufferLevel::eSecondary;
 		cmdBufAllocateInfo.commandBufferCount = 1;
 

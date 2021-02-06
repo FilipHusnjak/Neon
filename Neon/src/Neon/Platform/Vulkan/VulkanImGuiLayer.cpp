@@ -173,9 +173,9 @@ namespace Neon
 		//IM_ASSERT(font != NULL);*/
 
 		// Upload Fonts
-		VkCommandBuffer commandBuffer = VulkanContext::GetDevice()->GetCommandBuffer(true);
+		VkCommandBuffer commandBuffer = VulkanContext::GetDevice()->GetGraphicsCommandBuffer(true);
 		ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-		VulkanContext::GetDevice()->FlushCommandBuffer(commandBuffer);
+		VulkanContext::GetDevice()->FlushGraphicsCommandBuffer(commandBuffer);
 
 		device->GetHandle().waitIdle();
 		ImGui_ImplVulkan_DestroyFontUploadObjects();

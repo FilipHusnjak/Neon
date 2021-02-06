@@ -81,6 +81,24 @@ namespace Neon
 		renderCommandBuffer.drawIndexed(6, 1, 0, 0, 0);
 	}
 
+	void VulkanRendererAPI::DispatchCompute(const SharedRef<ComputePipeline>& computePipeline, uint32 groupCountX,
+											uint32 groupCountY, uint32 groupCountZ)
+	{
+		const auto& device = VulkanContext::GetDevice();
+		vk::CommandBuffer computeCommandBuffer = device->GetComputeCommandBuffer(true);
+
+		const SharedRef<VulkanComputePipeline> vulkanPipeline = computePipeline.As<VulkanComputePipeline>();
+		const SharedRef<VulkanShader> shader = computePipeline->GetSpecification().Shader.As<VulkanShader>();
+		computeCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, vulkanPipeline->GetLayout(), 0, 1,
+												&shader->GetDescriptorSet(), 0, nullptr);
+		computeCommandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, (VkPipeline)computePipeline->GetHandle());
+		computeCommandBuffer.dispatch(groupCountX, groupCountY, groupCountZ);
+
+		device->FlushComputeCommandBuffer(computeCommandBuffer);
+
+		Renderer::WaitIdle();
+	}
+
 	void VulkanRendererAPI::EndRenderPass()
 	{
 		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();

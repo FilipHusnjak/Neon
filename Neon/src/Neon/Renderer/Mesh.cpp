@@ -101,7 +101,7 @@ namespace Neon
 		{
 			shaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PbrStatic_Vert.glsl";
 		}
-		
+
 		shaderSpecification.ShaderVariableCounts["MaterialUBO"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = m_Scene->mNumMaterials;
@@ -318,7 +318,7 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
-					m_Materials[i]->LoadTexture2D("u_AlbedoTextures", i, texturePath, true);
+					m_Materials[i]->LoadTexture2D("u_AlbedoTextures", i, texturePath, TextureType::SRGB);
 					materialProperties.HasAlbedoTexture = 1.f;
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
@@ -336,8 +336,8 @@ namespace Neon
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					//std::string texturePath = parentPath.string();
-					std::string texturePath = "C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/textures/Cerberus_N.tga";
-					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath, false);
+					std::string texturePath = "assets/models/cerberus/textures/Cerberus_N.tga";
+					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath, TextureType::RGB);
 					materialProperties.HasNormalTex = 1.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
 				}
@@ -354,9 +354,9 @@ namespace Neon
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					//std::string texturePath = parentPath.string();
-					std::string texturePath = "C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/textures/Cerberus_R.tga";
+					std::string texturePath = "assets/models/cerberus/textures/Cerberus_R.tga";
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
-					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath, false);
+					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath, TextureType::RGB);
 					materialProperties.HasRoughnessTex = 1.f;
 				}
 				else
@@ -386,10 +386,9 @@ namespace Neon
 							auto parentPath = path.parent_path();
 							//parentPath /= str;
 							//std::string texturePath = parentPath.string();
-							std::string texturePath =
-								"C:/VisualStudioProjects/Neon/NeonEditor/assets/models/cerberus/textures/Cerberus_M.tga";
+							std::string texturePath = "assets/models/cerberus/textures/Cerberus_M.tga";
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
-							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath, false);
+							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath, TextureType::RGB);
 							materialProperties.HasMetalnessTex = 1.f;
 							break;
 						}

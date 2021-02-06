@@ -36,6 +36,13 @@ namespace Neon
 		s_RendererAPI->SubmitFullscreenQuad(graphicsPipeline);
 	}
 
+	void Renderer::DispatchCompute(const SharedRef<ComputePipeline>& computePipeline, uint32 groupCountX, uint32 groupCountY,
+								   uint32 groupCountZ)
+	{
+		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
+		s_RendererAPI->DispatchCompute(computePipeline, groupCountX, groupCountY, groupCountZ);
+	}
+
 	void Renderer::EndRenderPass()
 	{
 		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
@@ -46,6 +53,12 @@ namespace Neon
 	{
 		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
 		s_RendererAPI->End();
+	}
+
+	void Renderer::WaitIdle()
+	{
+		NEO_CORE_ASSERT(s_RendererAPI, "Renderer API not selected!");
+		s_RendererAPI->WaitIdle();
 	}
 
 	void* Renderer::GetFinalImageId()
