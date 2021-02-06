@@ -93,7 +93,8 @@ project "Neon"
 		"%{IncludeDir.shaderc}",
 		"%{IncludeDir.SPIRV_Cross}",
 		"%{prj.name}/vendor/assimp/include",
-		"%{prj.name}/vendor/stb/include"
+		"%{prj.name}/vendor/stb/include",
+		"%{prj.name}/vendor/softfloat/include"
 	}
 	
 	links 
