@@ -78,7 +78,7 @@ namespace Neon
 		{
 		}
 
-		float Strength = 3.f;
+		float Strength = 1.f;
 		glm::vec4 Direction = {0.f, 0.f, 0.f, 0.f};
 		glm::vec4 Radiance = {1.f, 1.f, 1.f, 1.f};
 	};

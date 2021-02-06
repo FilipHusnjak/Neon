@@ -13,11 +13,13 @@ namespace Neon
 		struct SceneInfo
 		{
 			SceneRendererCamera SceneCamera;
-			SharedRef<Material> SkyboxMaterial;
-			SharedRef<GraphicsPipeline> SkyboxGraphicsPipeline;
+			std::string EnvironmentPath;
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
+
+		SharedRef<Material> SkyboxMaterial;
+		SharedRef<GraphicsPipeline> SkyboxGraphicsPipeline;
 
 		glm::vec2 FocusPoint = {0.5f, 0.5f};
 
@@ -61,8 +63,6 @@ namespace Neon
 		ComputePipelineSpecification computePipelineSpecification;
 		computePipelineSpecification.Shader = s_EnvUnfilteredComputeShader;
 		s_EnvUnfilteredComputePipeline = ComputePipeline::Create(computePipelineSpecification);
-
-		CreateEnvironmentMap("assets/textures/environment/birchwood_16k.hdr");
 	}
 
 	void SceneRenderer::InitializeScene(Scene* scene)
@@ -70,14 +70,20 @@ namespace Neon
 		s_Data.SceneData = {};
 
 		s_Data.ActiveScene = scene;
-		s_Data.SceneData.SkyboxMaterial = scene->m_SkyboxMaterial;
 
-		s_Data.SceneData.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_EnvironmentTextureCube);
+		CreateEnvironmentMap(scene->m_EnvironmentPath);
+
+		ShaderSpecification skyboxShaderSpec;
+		skyboxShaderSpec.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Skybox_Vert.glsl";
+		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
+		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+		s_Data.SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec));
+		s_Data.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_EnvironmentTextureCube);
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
-		skyboxGraphicsPipelineSpec.Shader = scene->m_SkyboxMaterial->GetShader();
-		s_Data.SceneData.SkyboxGraphicsPipeline = GraphicsPipeline::Create(skyboxGraphicsPipelineSpec);
+		skyboxGraphicsPipelineSpec.Shader = s_Data.SkyboxMaterial->GetShader();
+		s_Data.SkyboxGraphicsPipeline = GraphicsPipeline::Create(skyboxGraphicsPipelineSpec);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
@@ -128,7 +134,7 @@ namespace Neon
 		const uint32 faceSize = 2048;
 
 		SharedRef<Texture2D> envMap = Texture2D::Create(filepath, TextureType::HDR);
-		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBAFloat32, "Image has to be HDR!");
+		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBAFloat16, "Image has to be HDR!");
 		s_EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap);
 
 		s_EnvironmentTextureCube = TextureCube::Create(faceSize, TextureType::HDR);
@@ -213,8 +219,8 @@ namespace Neon
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;
 		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
-		s_Data.SceneData.SkyboxMaterial->GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
-		Renderer::SubmitFullscreenQuad(s_Data.SceneData.SkyboxGraphicsPipeline);
+		s_Data.SkyboxMaterial->GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
+		Renderer::SubmitFullscreenQuad(s_Data.SkyboxGraphicsPipeline);
 
 		Renderer::EndRenderPass();
 	}

@@ -33,17 +33,7 @@ namespace Neon
 
 	void Scene::Init()
 	{
-		ShaderSpecification skyboxShaderSpec;
-		skyboxShaderSpec.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Skybox_Vert.glsl";
-		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
-
-		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-		m_SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec));
-		/*m_SkyboxMaterial->LoadTextureCube("u_Cubemap", 0,
-										  {"assets/textures/skybox/meadow/posz.jpg", "assets/textures/skybox/meadow/negz.jpg",
-										   "assets/textures/skybox/meadow/posy.jpg", "assets/textures/skybox/meadow/negy.jpg",
-										   "assets/textures/skybox/meadow/negx.jpg", "assets/textures/skybox/meadow/posx.jpg"},
-										  true);*/
+		m_EnvironmentPath = "assets/textures/environment/birchwood_16k.hdr";
 		SceneRenderer::InitializeScene(this);
 	}
 

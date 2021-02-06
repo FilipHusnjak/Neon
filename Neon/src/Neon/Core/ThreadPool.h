@@ -17,6 +17,11 @@ namespace Neon
 
 		~ThreadPool();
 
+		uint32 GetThreadCount() const
+		{
+			return static_cast<uint32>(m_Workers.size());
+		}
+
 		template<class F, class... Args>
 		auto QueueTask(F&& f, Args&&... args)
 		{

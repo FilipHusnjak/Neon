@@ -73,7 +73,7 @@ namespace Neon
 
 		EntityMap m_EntityIDMap;
 
-		SharedRef<Material> m_SkyboxMaterial;
+		std::string m_EnvironmentPath;
 
 		entt::entity m_SelectedEntity;
 
