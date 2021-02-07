@@ -148,6 +148,11 @@ namespace Neon
 		Shutdown();
 	}
 
+	void WindowsWindow::Init()
+	{
+		m_RendererContext->Init();
+	}
+
 	void WindowsWindow::ProcessEvents()
 	{
 		glfwPollEvents();

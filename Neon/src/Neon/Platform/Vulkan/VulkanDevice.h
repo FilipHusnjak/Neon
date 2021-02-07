@@ -23,6 +23,14 @@ namespace Neon
 		{
 			return m_QueueFamilyIndices.Graphics;
 		}
+		int32 GetComputeQueueIndex() const
+		{
+			return m_QueueFamilyIndices.Compute;
+		}
+		int32 GetTransferQueueIndex() const
+		{
+			return m_QueueFamilyIndices.Transfer;
+		}
 
 		vk::Format GetDepthFormat() const
 		{
@@ -111,14 +119,6 @@ namespace Neon
 		{
 			return m_GraphicsCommandPool.get();
 		}
-
-		vk::CommandBuffer GetGraphicsCommandBuffer(bool begin) const;
-		void FlushGraphicsCommandBuffer(vk::CommandBuffer commandBuffer) const;
-
-		vk::CommandBuffer GetComputeCommandBuffer(bool begin) const;
-		void FlushComputeCommandBuffer(vk::CommandBuffer commandBuffer) const;
-
-		vk::CommandBuffer CreateSecondaryCommandBuffer() const;
 
 		static SharedRef<VulkanDevice> Create(SharedRef<VulkanPhysicalDevice>& physicalDevice);
 

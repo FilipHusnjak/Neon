@@ -6,7 +6,12 @@
 
 namespace Neon
 {
-	SharedRef<GraphicsPipeline> GraphicsPipeline::Create(const GraphicsPipelineSpecification& spec)
+	Pipeline::Pipeline(const SharedRef<Shader>& shader)
+		: m_Shader(shader)
+	{
+	}
+
+	SharedRef<GraphicsPipeline> GraphicsPipeline::Create(const SharedRef<Shader>& shader, const GraphicsPipelineSpecification& spec)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -17,19 +22,20 @@ namespace Neon
 			}
 			case RendererAPI::API::Vulkan:
 			{
-				return SharedRef<VulkanGraphicsPipeline>::Create(spec);
+				return SharedRef<VulkanGraphicsPipeline>::Create(shader, spec);
 			}
 		}
 		NEO_CORE_ASSERT(false, "Renderer API not selected!");
 		return nullptr;
 	}
 
-	GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineSpecification& specification)
-		: m_Specification(specification)
+	GraphicsPipeline::GraphicsPipeline(const SharedRef<Shader>& shader, const GraphicsPipelineSpecification& specification)
+		: Pipeline(shader)
+		, m_Specification(specification)
 	{
 	}
 
-	SharedRef<ComputePipeline> ComputePipeline::Create(const ComputePipelineSpecification& spec)
+	SharedRef<ComputePipeline> ComputePipeline::Create(const SharedRef<Shader>& shader, const ComputePipelineSpecification& spec)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -40,15 +46,16 @@ namespace Neon
 			}
 			case RendererAPI::API::Vulkan:
 			{
-				return SharedRef<VulkanComputePipeline>::Create(spec);
+				return SharedRef<VulkanComputePipeline>::Create(shader, spec);
 			}
 		}
 		NEO_CORE_ASSERT(false, "Renderer API not selected!");
 		return nullptr;
 	}
 
-	ComputePipeline::ComputePipeline(const ComputePipelineSpecification& specification)
-		: m_Specification(specification)
+	ComputePipeline::ComputePipeline(const SharedRef<Shader>& shader, const ComputePipelineSpecification& specification)
+		: Pipeline(shader)
+		, m_Specification(specification)
 	{
 	}
 

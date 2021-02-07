@@ -65,7 +65,7 @@ namespace Neon
 		{
 			m_TargetFramebuffer = targetFramebuffer;
 		}
-		SharedRef<Framebuffer> GetTargetFramebuffer()
+		const SharedRef<Framebuffer>& GetTargetFramebuffer() const
 		{
 			return m_TargetFramebuffer;
 		}
@@ -78,8 +78,6 @@ namespace Neon
 		{
 			return m_Specification;
 		}
-
-		virtual void Begin() const = 0;
 
 		virtual void* GetHandle() const = 0;
 

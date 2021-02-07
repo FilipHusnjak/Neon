@@ -148,7 +148,8 @@ namespace Neon
 		m_Allocator.Allocate(memoryRequirements, m_Image.DeviceMemory, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		deviceHandle.bindImageMemory(m_Image.Handle.get(), m_Image.DeviceMemory.get(), 0);
 
-		vk::CommandBuffer copyCmd = device->GetGraphicsCommandBuffer(true);
+		auto& commandBuffer = VulkanContext::Get()->GetCommandBuffer(CommandBufferType::Graphics, true);
+		vk::CommandBuffer copyCmd = (VkCommandBuffer)commandBuffer->GetHandle();
 
 		// Image memory barriers for the texture image
 
@@ -198,7 +199,7 @@ namespace Neon
 		// Store current layout for later reuse
 		m_Layout = imageMemoryBarrier.newLayout;
 
-		device->FlushGraphicsCommandBuffer(copyCmd);
+		VulkanContext::Get()->SubmitCommandBuffer(commandBuffer);
 
 		// Create a texture sampler
 		// In Vulkan textures are accessed by samplers
@@ -213,7 +214,7 @@ namespace Neon
 		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.mipLodBias = 0.0f;
-		samplerCreateInfo.compareOp = vk::CompareOp::eNever;
+		samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
 		samplerCreateInfo.minLod = 0.0f;
 		// Set max level-of-detail to mip level count of the texture
 		samplerCreateInfo.maxLod = static_cast<float>(m_Specification.MipLevelCount);
@@ -445,6 +446,8 @@ namespace Neon
 
 	void VulkanTextureCube::Invalidate()
 	{
+		m_Image.Width = m_Image.Height = m_FaceSize;
+
 		auto device = VulkanContext::GetDevice();
 		auto deviceHandle = device->GetHandle();
 
@@ -480,7 +483,8 @@ namespace Neon
 		m_Allocator.Allocate(memoryRequirements, m_Image.DeviceMemory, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		deviceHandle.bindImageMemory(m_Image.Handle.get(), m_Image.DeviceMemory.get(), 0);
 
-		vk::CommandBuffer copyCmd = device->GetGraphicsCommandBuffer(true);
+		auto& commandBuffer = VulkanContext::Get()->GetCommandBuffer(CommandBufferType::Graphics, true);
+		vk::CommandBuffer copyCmd = (VkCommandBuffer)commandBuffer->GetHandle();
 
 		// Image memory barriers for the texture image
 
@@ -544,7 +548,7 @@ namespace Neon
 		// Store current layout for later reuse
 		m_Layout = imageMemoryBarrier.newLayout;
 
-		device->FlushGraphicsCommandBuffer(copyCmd);
+		VulkanContext::Get()->SubmitCommandBuffer(commandBuffer);
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// CREATE TEXTURE SAMPLER
@@ -562,7 +566,7 @@ namespace Neon
 		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.mipLodBias = 0.0f;
-		samplerCreateInfo.compareOp = vk::CompareOp::eNever;
+		samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
 		samplerCreateInfo.minLod = 0.0f;
 		// Set max level-of-detail to mip level count of the texture
 		samplerCreateInfo.maxLod = static_cast<float>(m_Specification.MipLevelCount);

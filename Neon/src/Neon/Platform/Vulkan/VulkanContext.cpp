@@ -1,5 +1,7 @@
 #include "neopch.h"
 
+#include "Neon/Platform/Vulkan/VulkanCommandBuffer.h"
+#include "Neon/Renderer/RendererAPI.h"
 #include "VulkanContext.h"
 
 #include <GLFW/glfw3.h>
@@ -68,6 +70,16 @@ namespace Neon
 
 		m_PhysicalDevice = VulkanPhysicalDevice::Select();
 		m_Device = VulkanDevice::Create(m_PhysicalDevice);
+	}
+
+	void VulkanContext::Init()
+	{
+		vk::PhysicalDeviceProperties props = m_PhysicalDevice->GetProperties();
+
+		RendererAPI::RenderAPICapabilities& caps = RendererAPI::GetCapabilities();
+		caps.Vendor = props.deviceName.operator std::string();
+		caps.Renderer = "Vulkan";
+		caps.Version = "1.2";
 
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(m_Device->GetHandle());
 
@@ -76,15 +88,25 @@ namespace Neon
 		// This window size should be ignored
 		uint32_t width = 1920, height = 1080;
 		m_SwapChain.Create(&width, &height);
+
+		m_GraphicsCommandPool = CommandPool::Create(CommandBufferType::Graphics);
+		m_ComputeCommandPool = CommandPool::Create(CommandBufferType::Compute);
+
+		for (uint32 i = 0; i < m_SwapChain.GetTargetMaxFramesInFlight(); i++)
+		{
+			m_RenderCommandBuffers.push_back(CommandBuffer::Create(m_GraphicsCommandPool));
+		}
 	}
 
 	void VulkanContext::BeginFrame()
 	{
 		m_SwapChain.BeginFrame();
+		GetPrimaryRenderCommandBuffer()->Begin();
 	}
 
 	void VulkanContext::SwapBuffers()
 	{
+		GetPrimaryRenderCommandBuffer()->End();
 		m_SwapChain.Present();
 	}
 
@@ -92,4 +114,52 @@ namespace Neon
 	{
 		m_SwapChain.OnResize(width, height);
 	}
+
+	SharedRef<CommandBuffer> VulkanContext::GetCommandBuffer(CommandBufferType type, bool begin) const
+	{
+		SharedRef<CommandBuffer> commandBuffer;
+		switch (type)
+		{
+			case CommandBufferType::Graphics:
+				commandBuffer = CommandBuffer::Create(m_GraphicsCommandPool);
+				break;
+			case CommandBufferType::Compute:
+				commandBuffer = CommandBuffer::Create(m_ComputeCommandPool);
+				break;
+			default:
+				NEO_CORE_ASSERT(false, "Uknown command buffer type");
+				break;
+		}
+
+		if (begin)
+		{
+			commandBuffer->Begin();
+		}
+
+		return commandBuffer;
+	}
+
+	void VulkanContext::SubmitCommandBuffer(SharedRef<CommandBuffer>& commandBuffer) const
+	{
+		NEO_CORE_ASSERT(commandBuffer);
+
+		const uint64 DEFAULT_FENCE_TIMEOUT = 100000000000;
+
+		const auto& device = VulkanContext::GetDevice();
+
+		auto vulkanCommandBuffer = commandBuffer.As<VulkanCommandBuffer>();
+
+		vulkanCommandBuffer->End();
+
+		// Create fence to ensure that the command buffer has finished executing
+		vk::FenceCreateInfo fenceCreateInfo = {};
+		vk::UniqueFence fence = device->GetHandle().createFenceUnique(fenceCreateInfo);
+
+		vulkanCommandBuffer->SetFence(fence.get());
+		vulkanCommandBuffer->Submit();
+
+		// Wait for the fence to signal that command buffer has finished executing
+		device->GetHandle().waitForFences(fence.get(), VK_TRUE, DEFAULT_FENCE_TIMEOUT);
+	}
+
 } // namespace Neon

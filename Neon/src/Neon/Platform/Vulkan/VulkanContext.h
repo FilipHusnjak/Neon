@@ -1,11 +1,9 @@
 #pragma once
 
-#include "Renderer/Renderer.h"
-#include "Renderer/RendererContext.h"
-
-#include "Vulkan.h"
-#include "VulkanDevice.h"
-#include "VulkanSwapChain.h"
+#include "Neon/Platform/Vulkan/Vulkan.h"
+#include "Neon/Platform/Vulkan/VulkanDevice.h"
+#include "Neon/Platform/Vulkan/VulkanSwapChain.h"
+#include "Neon/Renderer/RendererContext.h"
 
 struct GLFWwindow;
 
@@ -17,15 +15,12 @@ namespace Neon
 		VulkanContext(GLFWwindow* windowHandle);
 		virtual ~VulkanContext() = default;
 
+		void Init() override;
+
 		void BeginFrame() override;
 		void SwapBuffers() override;
 
 		void OnResize(uint32 width, uint32 height) override;
-
-		const VulkanSwapChain& GetSwapChain() const
-		{
-			return m_SwapChain;
-		}
 
 		uint32 GetTargetMaxFramesInFlight() const override
 		{
@@ -39,13 +34,31 @@ namespace Neon
 
 		static SharedRef<VulkanContext> Get()
 		{
-			return SharedRef<VulkanContext>(Renderer::GetContext());
+			return SharedRef<VulkanContext>(RendererContext::Get());
 		}
 
 		static SharedRef<VulkanDevice> GetDevice()
 		{
 			return Get()->m_Device;
 		}
+
+		const SharedRef<CommandBuffer>& GetPrimaryRenderCommandBuffer() const override
+		{
+			return m_RenderCommandBuffers[m_SwapChain.GetCurrentFrameIndex()];
+		}
+
+		const VulkanSwapChain& GetSwapChain() const
+		{
+			return m_SwapChain;
+		}
+
+		void WaitIdle() const override
+		{
+			m_Device->GetHandle().waitIdle();
+		}
+
+		SharedRef<CommandBuffer> GetCommandBuffer(CommandBufferType type, bool begin) const override;
+		void SubmitCommandBuffer(SharedRef<CommandBuffer>& commandBuffer) const override;
 
 	private:
 		GLFWwindow* m_WindowHandle;
@@ -64,6 +77,11 @@ namespace Neon
 		std::vector<const char*> m_InstanceExtensions = {VK_KHR_SURFACE_EXTENSION_NAME,
 														 VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 														 VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_EXT_DEBUG_REPORT_EXTENSION_NAME};
+
+		SharedRef<CommandPool> m_GraphicsCommandPool;
+		SharedRef<CommandPool> m_ComputeCommandPool;
+
+		std::vector<SharedRef<CommandBuffer>> m_RenderCommandBuffers;
 
 		friend class VulkanSwapChain;
 	};

@@ -34,6 +34,7 @@ namespace Neon
 			uint32 BindingPoint = 0;
 			uint32 Count = 0;
 			vk::ShaderStageFlags ShaderStage;
+			SharedRef<Texture> Texture;
 		};
 
 		struct StorageImage
@@ -42,7 +43,7 @@ namespace Neon
 			uint32 BindingPoint = 0;
 			uint32 Count = 0;
 			vk::ShaderStageFlags ShaderStage;
-			VulkanImage Image;
+			SharedRef<Texture> Texture;
 		};
 
 		struct PushConstant
@@ -50,6 +51,7 @@ namespace Neon
 			std::string Name;
 			uint32 Size;
 			vk::ShaderStageFlags ShaderStage;
+			UniqueRef<byte> Data;
 		};
 
 		VulkanShader(const ShaderSpecification& shaderSpecification);
@@ -59,14 +61,11 @@ namespace Neon
 
 		void SetUniformBuffer(const std::string& name, uint32 index, const void* data, uint32 size = 0) override;
 		void SetStorageBuffer(const std::string& name, const void* data, uint32 size = 0) override;
+		void SetPushConstant(const std::string& name, const void* data, uint32 size = 0) override;
 		void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture) override;
 		void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) override;
 		void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) override;
 
-		vk::DescriptorSet GetDescriptorSet() const
-		{
-			return m_DescriptorSet.get();
-		}
 		vk::DescriptorSetLayout GetDescriptorSetLayout() const
 		{
 			return m_DescriptorSetLayout.get();
@@ -74,11 +73,6 @@ namespace Neon
 		const std::vector<vk::PipelineShaderStageCreateInfo>& GetShaderStages() const
 		{
 			return m_ShaderStages;
-		}
-
-		const std::vector<PushConstant>& GetPushConstants() const
-		{
-			return m_PushConstants;
 		}
 
 	private:
@@ -103,9 +97,12 @@ namespace Neon
 		std::unordered_map<std::string, StorageBuffer> m_StorageBuffers;
 		std::unordered_map<std::string, ImageSampler> m_ImageSamplers;
 		std::unordered_map<std::string, StorageImage> m_StorageImages;
+		std::unordered_map<std::string, PushConstant> m_PushConstants;
 
 		std::unordered_map<std::string, uint32> m_NameBindingMap;
 
-		std::vector<PushConstant> m_PushConstants;
+		friend class VulkanCommandBuffer;
+		friend class VulkanGraphicsPipeline;
+		friend class VulkanComputePipeline;
 	};
 } // namespace Neon

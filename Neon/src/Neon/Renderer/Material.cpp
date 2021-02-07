@@ -17,13 +17,11 @@ namespace Neon
 	void Material::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture2D)
 	{
 		m_Shader->SetTexture2D(name, index, texture2D);
-		m_Textures.emplace_back(texture2D);
 	}
 
 	void Material::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& textureCube)
 	{
 		m_Shader->SetTextureCube(name, index, textureCube);
-		m_Textures.emplace_back(textureCube);
 	}
 
 	void Material::LoadTexture2D(const std::string& name, uint32 index, const std::string& path,

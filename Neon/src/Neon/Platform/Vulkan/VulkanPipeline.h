@@ -26,13 +26,26 @@ namespace Neon
 		return vk::Format::eUndefined;
 	}
 
+	static vk::PipelineBindPoint NeonToVulkanPipelineBindPoint(PipelineBindPoint bindPoint)
+	{
+		switch (bindPoint)
+		{
+			case PipelineBindPoint::Graphics:
+				return vk::PipelineBindPoint::eGraphics;
+			case PipelineBindPoint::Compute:
+				return vk::PipelineBindPoint::eCompute;
+		}
+		NEO_CORE_ASSERT(false, "Uknown pipeline bind point!");
+		return vk::PipelineBindPoint::eGraphics;
+	}
+
 	class VulkanGraphicsPipeline : public GraphicsPipeline
 	{
 	public:
-		VulkanGraphicsPipeline(const GraphicsPipelineSpecification& specification);
+		VulkanGraphicsPipeline(const SharedRef<Shader>& shader, const GraphicsPipelineSpecification& specification);
 		~VulkanGraphicsPipeline() = default;
 
-		vk::PipelineLayout GetLayout() const
+		void* GetLayout() const override
 		{
 			return m_PipelineLayout.get();
 		}
@@ -50,10 +63,10 @@ namespace Neon
 	class VulkanComputePipeline : public ComputePipeline
 	{
 	public:
-		VulkanComputePipeline(const ComputePipelineSpecification& specification);
+		VulkanComputePipeline(const SharedRef<Shader>& shader, const ComputePipelineSpecification& specification);
 		~VulkanComputePipeline() = default;
 
-		vk::PipelineLayout GetLayout() const
+		void* GetLayout() const override
 		{
 			return m_PipelineLayout.get();
 		}

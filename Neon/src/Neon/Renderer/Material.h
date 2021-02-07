@@ -32,7 +32,5 @@ namespace Neon
 
 	private:
 		SharedRef<Shader> m_Shader;
-
-		std::vector<SharedRef<Texture>> m_Textures;
 	};
 } // namespace Neon

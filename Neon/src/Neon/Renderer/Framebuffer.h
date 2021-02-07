@@ -21,6 +21,9 @@ namespace Neon
 	class Framebuffer : public RefCounted
 	{
 	public:
+		static SharedRef<Framebuffer> Create(const FramebufferSpecification& spec);
+
+	public:
 		Framebuffer(const FramebufferSpecification& spec);
 		virtual ~Framebuffer() = default;
 
@@ -34,8 +37,6 @@ namespace Neon
 		}
 
 		virtual void* GetHandle() const = 0;
-
-		static SharedRef<Framebuffer> Create(const FramebufferSpecification& spec);
 
 	protected:
 		FramebufferSpecification m_Specification;

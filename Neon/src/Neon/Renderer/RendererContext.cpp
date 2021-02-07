@@ -1,7 +1,8 @@
 #include "neopch.h"
 
-#include "Platform/Vulkan/VulkanContext.h"
-#include "Renderer.h"
+#include "Neon/Core/Application.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
+#include "Neon/Renderer/Renderer.h"
 #include "RendererContext.h"
 
 namespace Neon
@@ -23,4 +24,10 @@ namespace Neon
 		NEO_CORE_ASSERT(false, "Unknown RendererAPI is selected");
 		return nullptr;
 	}
+
+	SharedRef<RendererContext> RendererContext::Get()
+	{
+		return Application::Get().GetWindow().GetRenderContext();
+	}
+
 } // namespace Neon

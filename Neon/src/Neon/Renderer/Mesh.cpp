@@ -260,9 +260,8 @@ namespace Neon
 		m_MeshShader = Shader::Create(shaderSpecification);
 
 		GraphicsPipelineSpecification graphicsPipelineSpecification;
-		graphicsPipelineSpecification.Shader = m_MeshShader;
 		graphicsPipelineSpecification.Pass = renderPass;
-		m_MeshGraphicsPipeline = GraphicsPipeline::Create(graphicsPipelineSpecification);
+		m_MeshGraphicsPipeline = GraphicsPipeline::Create(m_MeshShader, graphicsPipelineSpecification);
 
 		// Materials
 		if (m_Scene->HasMaterials())

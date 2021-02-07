@@ -3,6 +3,7 @@
 #include "Neon/Platform/Vulkan/Vulkan.h"
 #include "Neon/Platform/Vulkan/VulkanAllocator.h"
 #include "Neon/Platform/Vulkan/VulkanDevice.h"
+#include "Neon/Renderer/CommandBuffer.h"
 
 struct GLFWwindow;
 
@@ -56,10 +57,6 @@ namespace Neon
 		{
 			return GetFramebuffer(m_CurrentSwapChainImageIndex);
 		}
-		vk::CommandBuffer GetCurrentRenderCommandBuffer() const
-		{
-			return GetRenderCommandBuffer(m_CurrentFrameIndex);
-		}
 
 		uint32 GetCurrentFrameIndex() const
 		{
@@ -69,11 +66,6 @@ namespace Neon
 		{
 			NEO_CORE_ASSERT(index < m_Framebuffers.size(), "Framebuffer index out of range");
 			return m_Framebuffers[index].get();
-		}
-		vk::CommandBuffer GetRenderCommandBuffer(uint32 index) const
-		{
-			NEO_CORE_ASSERT(index < m_RenderCommandBuffers.size(), "Commandbuffer index out of range");
-			return m_RenderCommandBuffers[index].get();
 		}
 
 		vk::Format GetColorFormat() const
@@ -87,7 +79,7 @@ namespace Neon
 		}
 
 	private:
-		vk::Result AcquireNextImage(vk::Semaphore imageAcquiredSemaphore, uint32* imageIndex);
+		vk::Result AcquireNextImage(vk::Semaphore imageAcquiredSemaphore, uint32& imageIndex);
 		vk::Result QueuePresent(vk::Queue queue, uint32 imageIndex, vk::Semaphore waitSemaphore = vk::Semaphore{});
 
 		void CreateFramebuffers();
@@ -122,7 +114,6 @@ namespace Neon
 		} m_DepthStencil;
 
 		std::vector<vk::UniqueFramebuffer> m_Framebuffers;
-		std::vector<vk::UniqueCommandBuffer> m_RenderCommandBuffers;
 
 		struct Semaphores
 		{

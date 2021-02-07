@@ -1,5 +1,6 @@
 #include "neopch.h"
 
+#include "Neon/Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Neon/Platform/Vulkan/VulkanContext.h"
 #include "VulkanSwapChain.h"
 
@@ -38,13 +39,6 @@ namespace Neon
 		}
 
 		m_QueueNodeIndex = m_Device->GetPhysicalDevice()->GetGraphicsQueueIndex();
-
-		// Create command buffers
-		vk::CommandBufferAllocateInfo commandBufferAllocateInfo{};
-		commandBufferAllocateInfo.commandPool = device->GetGraphicsCommandPool();
-		commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-		commandBufferAllocateInfo.commandBufferCount = m_TargetMaxFramesInFlight;
-		m_RenderCommandBuffers = m_Device->GetHandle().allocateCommandBuffersUnique(commandBufferAllocateInfo);
 	}
 
 	void VulkanSwapChain::InitSurface(GLFWwindow* windowHandle)
@@ -319,7 +313,7 @@ namespace Neon
 	{
 		uint32 semaphoreIndex = m_FreeSemaphoreIndices.front();
 		m_FreeSemaphoreIndices.pop_back();
-		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores[semaphoreIndex].ImageAcquired.get(), &m_CurrentSwapChainImageIndex));
+		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores[semaphoreIndex].ImageAcquired.get(), m_CurrentSwapChainImageIndex));
 		m_CurrentFrameIndex = m_ImageIndexToFrameIndex[m_CurrentSwapChainImageIndex];
 
 		if (m_ImageIndexToSemaphoreIndex.find(m_CurrentFrameIndex) != m_ImageIndexToSemaphoreIndex.end())
@@ -335,20 +329,16 @@ namespace Neon
 
 	void VulkanSwapChain::Present()
 	{
+		auto& vulkanGraphicsCommandBuffer = RendererContext::Get()->GetPrimaryRenderCommandBuffer().As<VulkanCommandBuffer>();
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
-		vk::PipelineStageFlags waitStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		// The submit info structure specifices a command buffer queue submission batch
-		vk::SubmitInfo submitInfo = {};
-		submitInfo.pWaitDstStageMask = &waitStageMask;
-		submitInfo.pWaitSemaphores = &m_Semaphores[m_ImageIndexToSemaphoreIndex[m_CurrentFrameIndex]].ImageAcquired.get();
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_Semaphores[m_ImageIndexToSemaphoreIndex[m_CurrentFrameIndex]].RenderComplete.get();
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pCommandBuffers = &m_RenderCommandBuffers[m_CurrentFrameIndex].get();
-		submitInfo.commandBufferCount = 1;
+		vulkanGraphicsCommandBuffer->SetWaitStage(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+		vulkanGraphicsCommandBuffer->AddSignalSemaphore(
+			m_Semaphores[m_ImageIndexToSemaphoreIndex[m_CurrentFrameIndex]].RenderComplete.get());
+		vulkanGraphicsCommandBuffer->AddWaitSemaphore(
+			m_Semaphores[m_ImageIndexToSemaphoreIndex[m_CurrentFrameIndex]].ImageAcquired.get());
+		vulkanGraphicsCommandBuffer->SetFence(m_WaitFences[m_CurrentFrameIndex].get());
 
-		// Submit to the graphics queue passing a wait fence
-		m_Device->GetGraphicsQueue().submit(submitInfo, m_WaitFences[m_CurrentFrameIndex].get());
+		vulkanGraphicsCommandBuffer->Submit();
 
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
@@ -371,12 +361,11 @@ namespace Neon
 		//VK_CHECK_RESULT(m_Device->GetHandle().waitForFences(m_WaitFences[m_CurrentFrameIndex].get(), VK_TRUE, UINT64_MAX));
 	}
 
-	vk::Result VulkanSwapChain::AcquireNextImage(vk::Semaphore imageAcquiredSemaphore, uint32* imageIndex)
+	vk::Result VulkanSwapChain::AcquireNextImage(vk::Semaphore imageAcquiredSemaphore, uint32& imageIndex)
 	{
-		NEO_CORE_ASSERT(imageIndex);
 		vk::ResultValue resultValue =
 			m_Device->GetHandle().acquireNextImageKHR(m_Handle, UINT64_MAX, imageAcquiredSemaphore, nullptr);
-		*imageIndex = resultValue.value;
+		imageIndex = resultValue.value;
 		return resultValue.result;
 	}
 

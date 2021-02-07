@@ -4,7 +4,6 @@
 #include "Neon/Renderer/Mesh.h"
 #include "Neon/Renderer/RenderPass.h"
 #include "Neon/Renderer/RendererAPI.h"
-#include "Neon/Renderer/RendererContext.h"
 
 namespace Neon
 {
@@ -12,8 +11,6 @@ namespace Neon
 	{
 	public:
 		static void Init();
-
-		static void Begin();
 
 		static void BeginRenderPass(const SharedRef<RenderPass>& renderPass);
 
@@ -26,25 +23,23 @@ namespace Neon
 
 		static void EndRenderPass();
 
-		static void End();
-
 		static void WaitIdle();
 
 		static void* GetFinalImageId();
 
 		static void Shutdown();
 
+		static void SelectCommandBuffer(const SharedRef<CommandBuffer>& commandBuffer)
+		{
+			s_SelectedCommandBuffer = commandBuffer;
+		}
+
 		static RendererAPI::API GetAPI()
 		{
 			return RendererAPI::Current();
 		}
 
-		static SharedRef<RendererContext> GetContext()
-		{
-			return Application::Get().GetWindow().GetRenderContext();
-		}
-
 	private:
-		static UniqueRef<RendererAPI> s_RendererAPI;
+		static SharedRef<CommandBuffer> s_SelectedCommandBuffer;
 	};
 } // namespace Neon

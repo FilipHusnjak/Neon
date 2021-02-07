@@ -69,6 +69,14 @@ namespace Neon
 		m_Allocator.UpdateBuffer(m_StorageBuffers[name].BufferData, data, size);
 	}
 
+	void VulkanShader::SetPushConstant(const std::string& name, const void* data, uint32 size /*= 0*/)
+	{
+		NEO_CORE_ASSERT(m_PushConstants.find(name) != m_PushConstants.end(), "Unknown push constant name!");
+		NEO_CORE_ASSERT(size <= m_PushConstants[name].Size);
+		size = size == 0 ? m_PushConstants[name].Size : size;
+		memcpy(m_PushConstants[name].Data.get(), data, size);
+	}
+
 	void VulkanShader::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture)
 	{
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
@@ -78,6 +86,8 @@ namespace Neon
 
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
+
+		m_ImageSamplers[name].Texture = texture;
 	}
 
 	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture)
@@ -89,6 +99,8 @@ namespace Neon
 
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
+
+		m_ImageSamplers[name].Texture = texture;
 	}
 
 	void VulkanShader::SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture)
@@ -100,6 +112,8 @@ namespace Neon
 
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
+
+		m_StorageImages[name].Texture = texture;
 	}
 
 	void VulkanShader::GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile)
@@ -288,7 +302,10 @@ namespace Neon
 			auto& pushConstantType = compiler.get_type(resource.base_type_id);
 
 			auto size = static_cast<uint32>(compiler.get_declared_struct_size(pushConstantType));
-			m_PushConstants.push_back({name, size, ShaderTypeToVulkanShaderType(shaderType)});
+			m_PushConstants[name].Name = name;
+			m_PushConstants[name].Size = size;
+			m_PushConstants[name].ShaderStage = ShaderTypeToVulkanShaderType(shaderType);
+			m_PushConstants[name].Data = std::unique_ptr<byte>(new byte[size]);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Size: {0}", size);

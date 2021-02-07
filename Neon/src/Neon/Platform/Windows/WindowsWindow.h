@@ -12,6 +12,8 @@ namespace Neon
 		WindowsWindow(const WindowProps& props = WindowProps());
 		virtual ~WindowsWindow();
 
+		void Init() override;
+
 		void ProcessEvents() override;
 		void SwapBuffers() override;
 

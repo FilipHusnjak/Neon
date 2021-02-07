@@ -25,21 +25,6 @@ namespace Neon
 			int MaxTextureUnits = 0;
 		};
 
-	public:
-		virtual ~RendererAPI() = default;
-
-		virtual void Init();
-		virtual void Begin() = 0;
-		virtual void BeginRenderPass(const SharedRef<RenderPass>& renderPass) = 0;
-		virtual void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform) = 0;
-		virtual void SubmitFullscreenQuad(const SharedRef<GraphicsPipeline>& graphicsPipeline) = 0;
-		virtual void DispatchCompute(const SharedRef<ComputePipeline>& computePipeline, uint32 groupCountX, uint32 groupCountY,
-									 uint32 groupCountZ) = 0;
-		virtual void EndRenderPass() = 0;
-		virtual void End() = 0;
-		virtual void WaitIdle() = 0;
-		virtual void Shutdown();
-
 		static RenderAPICapabilities& GetCapabilities()
 		{
 			static RenderAPICapabilities capabilities;
@@ -50,14 +35,6 @@ namespace Neon
 		{
 			return s_API;
 		}
-		static UniqueRef<RendererAPI> Create();
-
-	protected:
-		const std::vector<glm::vec2> m_QuadVertices = {{-1.f, -1.f}, {1.f, -1.f}, {-1.f, 1.f}, {1.f, 1.f}};
-		const std::vector<uint32> m_QuadIndices = {0, 2, 1, 1, 2, 3};
-
-		SharedRef<VertexBuffer> m_QuadVertexBuffer;
-		SharedRef<IndexBuffer> m_QuadIndexBuffer;
 
 	private:
 		static API s_API;

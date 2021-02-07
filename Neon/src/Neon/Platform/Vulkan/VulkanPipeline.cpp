@@ -7,13 +7,14 @@
 
 namespace Neon
 {
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineSpecification& specification)
-		: GraphicsPipeline(specification)
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const SharedRef<Shader>& shader,
+												   const GraphicsPipelineSpecification& specification)
+		: GraphicsPipeline(shader, specification)
 	{
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 
-		NEO_CORE_ASSERT(m_Specification.Shader, "Shader not initialized!");
-		SharedRef<VulkanShader> vulkanShader = SharedRef<VulkanShader>(m_Specification.Shader);
+		NEO_CORE_ASSERT(shader, "Shader not initialized!");
+		SharedRef<VulkanShader> vulkanShader = SharedRef<VulkanShader>(shader);
 
 		NEO_CORE_ASSERT(m_Specification.Pass, "RenderPass not initialized!");
 		SharedRef<VulkanRenderPass> vulkanRenderPass = SharedRef<VulkanRenderPass>(m_Specification.Pass);
@@ -28,7 +29,7 @@ namespace Neon
 			pPipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
 		}
 		std::vector<vk::PushConstantRange> pushConstantRanges;
-		for (const auto& pushConstant : vulkanShader->GetPushConstants())
+		for (const auto& [name, pushConstant] : vulkanShader->m_PushConstants)
 		{
 			pushConstantRanges.emplace_back(pushConstant.ShaderStage, 0, pushConstant.Size);
 		}
@@ -109,7 +110,7 @@ namespace Neon
 		multisampleState.rasterizationSamples = maxSampleCount;
 
 		// Vertex input descriptor
-		const VertexBufferLayout& layout = m_Specification.Shader->GetVertexBufferLayout();
+		const VertexBufferLayout& layout = shader->GetVertexBufferLayout();
 
 		vk::VertexInputBindingDescription vertexInputBinding = {};
 		vertexInputBinding.binding = 0;
@@ -166,17 +167,17 @@ namespace Neon
 		m_Handle = device.createGraphicsPipelineUnique(nullptr, graphicsPipelineCreateInfo);
 	}
 
-	VulkanComputePipeline::VulkanComputePipeline(const ComputePipelineSpecification& specification)
-		: ComputePipeline(specification)
+	VulkanComputePipeline::VulkanComputePipeline(const SharedRef<Shader>& shader, const ComputePipelineSpecification& specification)
+		: ComputePipeline(shader, specification)
 	{
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 
-		NEO_CORE_ASSERT(m_Specification.Shader, "Shader not initialized!");
-		NEO_CORE_ASSERT(m_Specification.Shader->GetShaderSpecification().ShaderPaths.size() == 1);
-		NEO_CORE_ASSERT(m_Specification.Shader->GetShaderSpecification().ShaderPaths.find(ShaderType::Compute) !=
-						m_Specification.Shader->GetShaderSpecification().ShaderPaths.end());
+		NEO_CORE_ASSERT(shader, "Shader not initialized!");
+		NEO_CORE_ASSERT(shader->GetShaderSpecification().ShaderPaths.size() == 1);
+		NEO_CORE_ASSERT(shader->GetShaderSpecification().ShaderPaths.find(ShaderType::Compute) !=
+						shader->GetShaderSpecification().ShaderPaths.end());
 
-		SharedRef<VulkanShader> vulkanShader = SharedRef<VulkanShader>(m_Specification.Shader);
+		SharedRef<VulkanShader> vulkanShader = SharedRef<VulkanShader>(shader);
 
 		vk::DescriptorSetLayout descriptorSetLayout = vulkanShader->GetDescriptorSetLayout();
 
@@ -187,7 +188,7 @@ namespace Neon
 			pPipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
 		}
 		std::vector<vk::PushConstantRange> pushConstantRanges;
-		for (const auto& pushConstant : vulkanShader->GetPushConstants())
+		for (const auto& [name, pushConstant] : vulkanShader->m_PushConstants)
 		{
 			pushConstantRanges.emplace_back(pushConstant.ShaderStage, 0, pushConstant.Size);
 		}

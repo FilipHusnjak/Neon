@@ -36,7 +36,7 @@ namespace Neon
 		uint32 width = swapChain.GetWidth();
 		uint32 height = swapChain.GetHeight();
 
-		vk::CommandBuffer renderCommandBuffer = swapChain.GetCurrentRenderCommandBuffer();
+		vk::CommandBuffer renderCommandBuffer = (VkCommandBuffer)VulkanContext::Get()->GetPrimaryRenderCommandBuffer()->GetHandle();
 
 		// Update viewport state
 		vk::Viewport viewport = {};
@@ -173,9 +173,9 @@ namespace Neon
 		//IM_ASSERT(font != NULL);*/
 
 		// Upload Fonts
-		VkCommandBuffer commandBuffer = VulkanContext::GetDevice()->GetGraphicsCommandBuffer(true);
-		ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-		VulkanContext::GetDevice()->FlushGraphicsCommandBuffer(commandBuffer);
+		auto& commandBuffer = VulkanContext::Get()->GetCommandBuffer(CommandBufferType::Graphics, true);
+		ImGui_ImplVulkan_CreateFontsTexture((VkCommandBuffer)commandBuffer->GetHandle());
+		VulkanContext::Get()->SubmitCommandBuffer(commandBuffer);
 
 		device->GetHandle().waitIdle();
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
