@@ -11,7 +11,6 @@ namespace Neon
 	{
 	public:
 		EditorCamera();
-		EditorCamera(const glm::mat4& projectionMatrix);
 
 		void Focus();
 		void OnUpdate(float deltaSeconds);

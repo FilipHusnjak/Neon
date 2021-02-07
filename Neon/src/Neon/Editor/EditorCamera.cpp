@@ -12,30 +12,16 @@
 
 namespace Neon
 {
-	EditorCamera::EditorCamera(const glm::mat4& projectionMatrix)
-		: Camera(projectionMatrix)
-	{
-		m_FocalPoint = glm::vec3(0.0f);
-
-		glm::vec3 position = {-5, 5, 5};
-		m_Distance = glm::distance(position, m_FocalPoint);
-
-		m_Yaw = 3.0f * M_PI / 4.0f;
-		m_Pitch = M_PI / 4.0f;
-
-		UpdateCameraView();
-	}
-
 	EditorCamera::EditorCamera()
 	{
 		m_FocalPoint = glm::vec3(0.0f);
 
-		glm::vec3 position = {-5, 5, 5};
-		m_Distance = glm::distance(position, m_FocalPoint);
+		m_Distance = 100.f;
 
 		m_Yaw = 3.0f * M_PI / 4.0f;
 		m_Pitch = M_PI / 4.0f;
 
+		CalculatePosition();
 		UpdateCameraView();
 	}
 
