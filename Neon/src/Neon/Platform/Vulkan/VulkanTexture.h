@@ -55,15 +55,18 @@ namespace Neon
 			return m_Data;
 		}
 
-		vk::DescriptorImageInfo GetTextureDescription() const
+		vk::DescriptorImageInfo GetTextureDescription(uint32 mipLevel) const
 		{
-			return {m_Sampler.get(), m_View.get(), m_Layout};
+			NEO_CORE_ASSERT(mipLevel < m_Specification.MipLevelCount);
+			return {m_Sampler.get(), m_Views[mipLevel].get(), m_Layout};
 		}
 
 		bool operator==(const Texture& other) const override
 		{
 			throw std::logic_error("The method or operation is not implemented.");
 		}
+
+		void RegenerateMipMaps() override;
 
 	private:
 		void Invalidate();
@@ -75,7 +78,7 @@ namespace Neon
 
 		vk::ImageLayout m_Layout{};
 		vk::UniqueSampler m_Sampler{};
-		vk::UniqueImageView m_View{};
+		std::vector<vk::UniqueImageView> m_Views;
 
 		VulkanAllocator m_Allocator{};
 	};
@@ -110,15 +113,18 @@ namespace Neon
 			return m_Data;
 		}
 
-		vk::DescriptorImageInfo GetTextureDescription() const
+		vk::DescriptorImageInfo GetTextureDescription(uint32 mipLevel) const
 		{
-			return {m_Sampler.get(), m_View.get(), m_Layout};
+			NEO_CORE_ASSERT(mipLevel < m_Specification.MipLevelCount);
+			return {m_Sampler.get(), m_Views[mipLevel].get(), m_Layout};
 		}
 
 		bool operator==(const Texture& other) const override
 		{
 			throw std::logic_error("The method or operation is not implemented.");
 		}
+
+		void RegenerateMipMaps() override;
 
 	private:
 		void Invalidate();
@@ -136,7 +142,7 @@ namespace Neon
 
 		vk::ImageLayout m_Layout{};
 		vk::UniqueSampler m_Sampler{};
-		vk::UniqueImageView m_View{};
+		std::vector<vk::UniqueImageView> m_Views;
 
 		VulkanAllocator m_Allocator{};
 	};

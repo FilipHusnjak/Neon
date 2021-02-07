@@ -75,10 +75,10 @@ namespace Neon
 
 		ShaderSpecification envFilteredComputeShaderSpecification;
 		envFilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/EnvironmentMipFilter_Compute.glsl";
-		//s_Data.EnvFilteredComputeShader = Shader::Create(envFilteredComputeShaderSpecification);
+		s_Data.EnvFilteredComputeShader = Shader::Create(envFilteredComputeShaderSpecification);
 		ComputePipelineSpecification envFilteredComputePipelineSpecification;
-		//s_Data.EnvFilteredComputePipeline =
-		//	ComputePipeline::Create(s_Data.EnvFilteredComputeShader, envFilteredComputePipelineSpecification);
+		s_Data.EnvFilteredComputePipeline =
+			ComputePipeline::Create(s_Data.EnvFilteredComputeShader, envFilteredComputePipelineSpecification);
 
 		ShaderSpecification irradianceComputeShaderSpecification;
 		irradianceComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/EnvironmentIrradiance_Compute.glsl";
@@ -101,7 +101,7 @@ namespace Neon
 		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
 		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
 		s_Data.SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec));
-		s_Data.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_Data.EnvUnfilteredTextureCube);
+		s_Data.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_Data.EnvUnfilteredTextureCube, 0);
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
@@ -156,14 +156,15 @@ namespace Neon
 		const uint32 faceSize = 2048;
 		const uint32 irradianceMapSize = 32;
 
-		SharedRef<Texture2D> envMap = Texture2D::Create(filepath, {TextureType::HDR});
+		SharedRef<Texture2D> envMap = Texture2D::Create(filepath, {TextureType::HDR, 6});
 		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBAFloat16, "Image has to be HDR!");
-		s_Data.EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap);
+		s_Data.EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap, 5);
 
-		s_Data.EnvUnfilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR});
-		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvUnfilteredTextureCube);
+		s_Data.EnvUnfilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR, 6});
+		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvUnfilteredTextureCube, 0);
 
 		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
+		s_Data.EnvUnfilteredTextureCube->RegenerateMipMaps();
 
 		/*s_Data.EnvFilteredComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvUnfilteredTextureCube);
 		s_Data.EnvFilteredComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.EnvFilteredTextureCube);
@@ -177,8 +178,8 @@ namespace Neon
 		}*/
 
 		s_Data.IrradianceTextureCube = TextureCube::Create(irradianceMapSize, {TextureType::HDR, 6});
-		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvUnfilteredTextureCube);
-		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube);
+		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvUnfilteredTextureCube, 0);
+		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube, 0);
 
 		Renderer::DispatchCompute(s_Data.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
 	}

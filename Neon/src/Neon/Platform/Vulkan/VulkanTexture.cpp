@@ -11,6 +11,74 @@
 
 namespace Neon
 {
+	static void GenerateMipMaps(vk::CommandBuffer vulkanCommandBuffer, const VulkanImage& image,
+								vk::ImageMemoryBarrier& imageMemoryBarrier)
+	{
+		uint32 mipCount = imageMemoryBarrier.subresourceRange.levelCount;
+		imageMemoryBarrier.subresourceRange.levelCount = 1;
+
+		uint32 mipWidth = image.Width;
+		uint32 mipHeight = image.Height;
+		for (uint32 i = 1; i < mipCount; i++)
+		{
+			imageMemoryBarrier.subresourceRange.baseMipLevel = i - 1;
+			imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+			imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+			imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+			imageMemoryBarrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+
+			vulkanCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer,
+												vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+			vk::ImageBlit blit{};
+			blit.srcOffsets[0] = {0, 0, 0};
+			blit.srcOffsets[1] = {static_cast<int32>(mipWidth), static_cast<int32>(mipHeight), 1};
+			blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+			blit.srcSubresource.mipLevel = i - 1;
+			blit.srcSubresource.baseArrayLayer = 0;
+			blit.srcSubresource.layerCount = imageMemoryBarrier.subresourceRange.layerCount;
+			blit.dstOffsets[0] = {0, 0, 0};
+			blit.dstOffsets[1] = {mipWidth > 1 ? static_cast<int32>(mipWidth) / 2 : 1,
+								  mipHeight > 1 ? static_cast<int32>(mipHeight) / 2 : 1, 1};
+			blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+			blit.dstSubresource.mipLevel = i;
+			blit.dstSubresource.baseArrayLayer = 0;
+			blit.dstSubresource.layerCount = imageMemoryBarrier.subresourceRange.layerCount;
+
+			vulkanCommandBuffer.blitImage(image.Handle.get(), vk::ImageLayout::eTransferSrcOptimal, image.Handle.get(),
+										  vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+
+			imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+			imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
+			imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+			imageMemoryBarrier.newLayout = vk::ImageLayout::eGeneral;
+
+			vulkanCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader,
+												vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+			if (mipWidth > 1)
+			{
+				mipWidth /= 2;
+			}
+			if (mipHeight > 1)
+			{
+				mipHeight /= 2;
+			}
+		}
+
+		imageMemoryBarrier.subresourceRange.baseMipLevel = mipCount - 1;
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
+		imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+		imageMemoryBarrier.newLayout = vk::ImageLayout::eGeneral;
+
+		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
+		// Source pipeline stage stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
+		// Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
+		vulkanCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader,
+											vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+	}
+
 	VulkanTexture2D::VulkanTexture2D(const TextureSpecification& specification)
 		: Texture2D(specification)
 	{
@@ -99,6 +167,41 @@ namespace Neon
 		}
 	}
 
+	void VulkanTexture2D::RegenerateMipMaps()
+	{
+		auto& commandBuffer = VulkanContext::Get()->GetCommandBuffer(CommandBufferType::Graphics, true);
+		vk::CommandBuffer vulkanCommandBuffer = (VkCommandBuffer)commandBuffer->GetHandle();
+
+		// The sub resource range describes the regions of the image that will be transitioned using the memory barriers below
+		vk::ImageSubresourceRange subresourceRange = {};
+		// Image only contains color data
+		subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		// Start at first mip level
+		subresourceRange.baseMipLevel = 0;
+		// We will transition on all mip levels
+		subresourceRange.levelCount = m_Specification.MipLevelCount;
+		// The 2D texture only has one layer
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.layerCount = 1;
+
+		// Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
+		vk::ImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.image = m_Image.Handle.get();
+		imageMemoryBarrier.subresourceRange = subresourceRange;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+		imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
+		imageMemoryBarrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+
+		vulkanCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer,
+											vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+		GenerateMipMaps(vulkanCommandBuffer, m_Image, imageMemoryBarrier);
+
+		VulkanContext::Get()->SubmitCommandBuffer(commandBuffer);
+	}
+
 	void VulkanTexture2D::Invalidate()
 	{
 		auto device = VulkanContext::GetDevice();
@@ -141,7 +244,8 @@ namespace Neon
 		// Set initial layout of the image to undefined
 		imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 		imageCreateInfo.extent = {m_Image.Width, m_Image.Height, 1};
-		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+		imageCreateInfo.usage =
+			vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
 		m_Image.Handle = deviceHandle.createImageUnique(imageCreateInfo);
 
 		vk::MemoryRequirements memoryRequirements = deviceHandle.getImageMemoryRequirements(m_Image.Handle.get());
@@ -162,6 +266,7 @@ namespace Neon
 		// We will transition on all mip levels
 		subresourceRange.levelCount = m_Specification.MipLevelCount;
 		// The 2D texture only has one layer
+		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.layerCount = 1;
 
 		// Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
@@ -184,17 +289,7 @@ namespace Neon
 		copyCmd.copyBufferToImage(stagingBuffer.Handle.get(), m_Image.Handle.get(), vk::ImageLayout::eTransferDstOptimal, 1,
 								  &bufferCopyRegion);
 
-		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
-		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
-		imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
-		imageMemoryBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
-		// Source pipeline stage stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
-		// Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
-		copyCmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader,
-								vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+		GenerateMipMaps(copyCmd, m_Image, imageMemoryBarrier);
 
 		// Store current layout for later reuse
 		m_Layout = imageMemoryBarrier.newLayout;
@@ -248,16 +343,19 @@ namespace Neon
 		// The subresource range describes the set of mip levels (and array layers) that can be accessed through this image view
 		// It's possible to create multiple image views for a single image referring to different (and/or overlapping) ranges of the image
 		imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-		// Linear tiling usually won't support mip maps
-		// Only set mip map count if optimal tiling is used
-		imageViewCreateInfo.subresourceRange.levelCount = m_Specification.MipLevelCount;
 		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewCreateInfo.subresourceRange.layerCount = 1;
 		// The view will be based on the texture's image
 		imageViewCreateInfo.image = m_Image.Handle.get();
 
-		m_View = deviceHandle.createImageViewUnique(imageViewCreateInfo);
+		// Linear tiling usually won't support mip maps
+		// Only set mip map count if optimal tiling is used
+		for (uint32 i = 0; i < m_Specification.MipLevelCount; i++)
+		{
+			imageViewCreateInfo.subresourceRange.levelCount = m_Specification.MipLevelCount - i;
+			imageViewCreateInfo.subresourceRange.baseMipLevel = i;
+			m_Views.push_back(deviceHandle.createImageViewUnique(imageViewCreateInfo));
+		}
 	}
 
 	void VulkanTexture2D::CreateDefaultTexture()
@@ -444,6 +542,41 @@ namespace Neon
 		}
 	}
 
+	void VulkanTextureCube::RegenerateMipMaps()
+	{
+		auto& commandBuffer = VulkanContext::Get()->GetCommandBuffer(CommandBufferType::Graphics, true);
+		vk::CommandBuffer vulkanCommandBuffer = (VkCommandBuffer)commandBuffer->GetHandle();
+
+		// The sub resource range describes the regions of the image that will be transitioned using the memory barriers below
+		vk::ImageSubresourceRange subresourceRange = {};
+		// Image only contains color data
+		subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		// Start at first mip level
+		subresourceRange.baseMipLevel = 0;
+		// We will transition on all mip levels
+		subresourceRange.levelCount = m_Specification.MipLevelCount;
+		// The 2D texture only has one layer
+		subresourceRange.baseArrayLayer = 0;
+		subresourceRange.layerCount = 6;
+
+		// Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
+		vk::ImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.image = m_Image.Handle.get();
+		imageMemoryBarrier.subresourceRange = subresourceRange;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+		imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
+		imageMemoryBarrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+
+		vulkanCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer,
+											vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+
+		GenerateMipMaps(vulkanCommandBuffer, m_Image, imageMemoryBarrier);
+
+		VulkanContext::Get()->SubmitCommandBuffer(commandBuffer);
+	}
+
 	void VulkanTextureCube::Invalidate()
 	{
 		m_Image.Width = m_Image.Height = m_FaceSize;
@@ -467,8 +600,8 @@ namespace Neon
 		imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 		imageCreateInfo.extent = {m_FaceSize, m_FaceSize, 1};
 		// TODO: Check which usages are necessary
-		imageCreateInfo.usage =
-			vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage;
+		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc |
+								vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage;
 		m_Image.Handle = deviceHandle.createImageUnique(imageCreateInfo);
 
 		VulkanBuffer stagingBuffer;
@@ -497,6 +630,7 @@ namespace Neon
 		// We will transition on all mip levels
 		subresourceRange.levelCount = m_Specification.MipLevelCount;
 		// The 2D texture only has one layer
+		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.layerCount = 6;
 
 		// Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
@@ -532,43 +666,29 @@ namespace Neon
 		copyCmd.copyBufferToImage(stagingBuffer.Handle.get(), m_Image.Handle.get(), vk::ImageLayout::eTransferDstOptimal, 6,
 								  bufferCopyRegions);
 
-		// Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
-		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
-		imageMemoryBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
-		// TODO: use shader read only optimal when possible
-		imageMemoryBarrier.newLayout = vk::ImageLayout::eGeneral;
-
-		// Insert a memory dependency at the proper pipeline stages that will execute the image layout transition
-		// Source pipeline stage stage is copy command execution (VK_PIPELINE_STAGE_TRANSFER_BIT)
-		// Destination pipeline stage fragment shader access (VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
-		copyCmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader,
-								vk::DependencyFlags(), 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+		GenerateMipMaps(copyCmd, m_Image, imageMemoryBarrier);
 
 		// Store current layout for later reuse
 		m_Layout = imageMemoryBarrier.newLayout;
 
 		VulkanContext::Get()->SubmitCommandBuffer(commandBuffer);
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// CREATE TEXTURE SAMPLER
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Create a texture sampler
 		// In Vulkan textures are accessed by samplers
 		// This separates all the sampling information from the texture data. This means you could have multiple sampler objects for the same texture with different settings
 		// Note: Similar to the samplers available with OpenGL 3.3
 		vk::SamplerCreateInfo samplerCreateInfo{};
-		samplerCreateInfo.maxAnisotropy = 1.0f;
+		samplerCreateInfo.maxAnisotropy = 1.f;
 		samplerCreateInfo.magFilter = vk::Filter::eLinear;
 		samplerCreateInfo.minFilter = vk::Filter::eLinear;
 		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
 		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
-		samplerCreateInfo.mipLodBias = 0.0f;
+		samplerCreateInfo.mipLodBias = 0.f;
+		samplerCreateInfo.compareEnable = VK_FALSE;
 		samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
-		samplerCreateInfo.minLod = 0.0f;
-		// Set max level-of-detail to mip level count of the texture
+		samplerCreateInfo.minLod = 0.f;
 		samplerCreateInfo.maxLod = static_cast<float>(m_Specification.MipLevelCount);
 		samplerCreateInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
 
@@ -602,14 +722,17 @@ namespace Neon
 		imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewCreateInfo.subresourceRange.layerCount = 6;
-		// Linear tiling usually won't support mip maps
-		// Only set mip map count if optimal tiling is used
-		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-		imageViewCreateInfo.subresourceRange.levelCount = m_Specification.MipLevelCount;
 		// The view will be based on the texture's image
 		imageViewCreateInfo.image = m_Image.Handle.get();
 
-		m_View = deviceHandle.createImageViewUnique(imageViewCreateInfo);
+		// Linear tiling usually won't support mip maps
+		// Only set mip map count if optimal tiling is used
+		for (uint32 i = 0; i < m_Specification.MipLevelCount; i++)
+		{
+			imageViewCreateInfo.subresourceRange.levelCount = m_Specification.MipLevelCount - i;
+			imageViewCreateInfo.subresourceRange.baseMipLevel = i;
+			m_Views.push_back(deviceHandle.createImageViewUnique(imageViewCreateInfo));
+		}
 	}
 
 	void VulkanTextureCube::CreateDefaultTexture()

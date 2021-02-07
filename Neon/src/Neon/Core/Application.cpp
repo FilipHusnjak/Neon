@@ -19,6 +19,7 @@ namespace Neon
 
 		m_Window = std::unique_ptr<Window>(
 			Window::Create(WindowProps{applicationProps.Name, applicationProps.WindowWidth, applicationProps.WindowHeight}));
+		m_Window->Init();
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
 		m_Window->SetVSync(false);
 
@@ -77,7 +78,7 @@ namespace Neon
 			{
 				m_Window->GetRenderContext()->BeginFrame();
 
-				Renderer::Begin();
+				Renderer::SelectCommandBuffer(RendererContext::Get()->GetPrimaryRenderCommandBuffer());
 
 				for (Layer* layer : m_LayerStack)
 				{
@@ -102,8 +103,6 @@ namespace Neon
 				}
 
 				m_ImGuiLayer->End();
-
-				Renderer::End();
 
 				m_Window->SwapBuffers();
 			}

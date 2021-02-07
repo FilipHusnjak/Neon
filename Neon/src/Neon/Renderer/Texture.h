@@ -47,6 +47,8 @@ namespace Neon
 			return m_Format;
 		}
 
+		virtual void RegenerateMipMaps() = 0;
+
 		virtual bool operator==(const Texture& other) const = 0;
 
 	protected:

@@ -30,6 +30,8 @@ namespace Neon
 		Window(const WindowProps& props);
 		virtual ~Window() = default;
 
+		virtual void Init() = 0;
+
 		virtual void ProcessEvents() = 0;
 		virtual void SwapBuffers() = 0;
 

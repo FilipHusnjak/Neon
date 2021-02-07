@@ -77,10 +77,10 @@ namespace Neon
 		memcpy(m_PushConstants[name].Data.get(), data, size);
 	}
 
-	void VulkanShader::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture)
+	void VulkanShader::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture, uint32 mipLevel)
 	{
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
-		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
+		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
 
@@ -90,10 +90,11 @@ namespace Neon
 		m_ImageSamplers[name].Texture = texture;
 	}
 
-	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture)
+	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
+									  uint32 mipLevel)
 	{
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
-		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
+		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
 
@@ -103,10 +104,11 @@ namespace Neon
 		m_ImageSamplers[name].Texture = texture;
 	}
 
-	void VulkanShader::SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture)
+	void VulkanShader::SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
+											 uint32 mipLevel)
 	{
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
-		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription();
+		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eStorageImage, &imageInfo};
 

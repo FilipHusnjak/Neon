@@ -62,9 +62,10 @@ namespace Neon
 		void SetUniformBuffer(const std::string& name, uint32 index, const void* data, uint32 size = 0) override;
 		void SetStorageBuffer(const std::string& name, const void* data, uint32 size = 0) override;
 		void SetPushConstant(const std::string& name, const void* data, uint32 size = 0) override;
-		void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture) override;
-		void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) override;
-		void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture) override;
+		void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture, uint32 mipLevel) override;
+		void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture, uint32 mipLevel) override;
+		void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
+								   uint32 mipLevel) override;
 
 		vk::DescriptorSetLayout GetDescriptorSetLayout() const
 		{
