@@ -44,7 +44,7 @@ void main()
 	v_Normal = normalize((worldTransform * vec4(a_Normal, 0.0)).xyz);
     v_TexCoord = a_TexCoord;
     v_MaterialIndex = a_MaterialIndex;
-    v_WorldNormals = mat3(u_Model) * mat3(a_Tangent, a_Binormal, a_Normal);
+    v_WorldNormals = mat3(worldTransform) * mat3(a_Tangent, a_Binormal, a_Normal);
 
     gl_Position = u_ViewProjection * worldPosition;
 }

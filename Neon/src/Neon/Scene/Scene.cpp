@@ -33,7 +33,7 @@ namespace Neon
 
 	void Scene::Init()
 	{
-		m_EnvironmentPath = "assets/textures/environment/immenstadter_horn_4k.hdr";
+		m_EnvironmentPath = "assets/textures/environment/birchwood_16k.hdr";
 		SceneRenderer::InitializeScene(this);
 	}
 
@@ -107,6 +107,8 @@ namespace Neon
 
 		SharedRef<Mesh> mesh = SharedRef<Mesh>::Create(path, SceneRenderer::GetGeoPass());
 		entity.AddComponent<MeshComponent>(mesh);
+
+		SceneRenderer::RegisterMesh(mesh);
 
 		return entity;
 	}

@@ -18,7 +18,7 @@ layout (push_constant) uniform MipLevelPC
 {
 	float MipCount;
 	float MipLevel;
-} pushC;
+} u_PushConstant;
 
 // Compute Van der Corput radical inverse
 // See: http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
@@ -120,8 +120,8 @@ void main(void)
 	vec3 color = vec3(0);
 	float weight = 0;
 
-	float deltaRoughness = 1.0 / max((pushC.MipCount - 1.0), 1.0);
-	float roughness = pushC.MipLevel * deltaRoughness;
+	float deltaRoughness = 1.0 / max((u_PushConstant.MipCount - 1.0), 1.0);
+	float roughness = u_PushConstant.MipLevel * deltaRoughness;
 
 	// Convolve environment map using GGX NDF importance sampling.
 	// Weight by cosine term since Epic claims it generally improves quality.

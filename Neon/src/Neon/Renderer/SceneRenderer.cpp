@@ -43,6 +43,8 @@ namespace Neon
 
 		SharedRef<Shader> IrradianceComputeShader;
 		SharedRef<ComputePipeline> IrradianceComputePipeline;
+
+		SharedRef<Texture2D> BRDFLUT;
 	};
 
 	static SceneRendererData s_Data;
@@ -101,7 +103,7 @@ namespace Neon
 		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
 		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
 		s_Data.SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec));
-		s_Data.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_Data.EnvFilteredTextureCube, 1);
+		s_Data.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_Data.EnvFilteredTextureCube, 0);
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
@@ -125,9 +127,19 @@ namespace Neon
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "");
 
 		FlushDrawList();
+
+		s_Data.MeshDrawList.clear();
 	}
 
-	void SceneRenderer::SubmitMesh(SharedRef<Mesh> mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/)
+	void SceneRenderer::RegisterMesh(const SharedRef<Mesh>& mesh)
+	{
+		SharedRef<Shader> meshShader = mesh->GetShader();
+		meshShader->SetTextureCube("u_EnvRadianceTex", 0, s_Data.EnvFilteredTextureCube, 0);
+		meshShader->SetTextureCube("u_EnvIrradianceTex", 0, s_Data.IrradianceTextureCube, 0);
+		meshShader->SetTexture2D("u_BRDFLUTTexture", 0, s_Data.BRDFLUT, 0);
+	}
+
+	void SceneRenderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/)
 	{
 		s_Data.MeshDrawList.push_back({mesh, transform});
 	}
@@ -179,7 +191,7 @@ namespace Neon
 				float MipCount;
 				float MipLevel;
 			} pc = {static_cast<float>(s_Data.EnvFilteredTextureCube->GetMipLevelCount()), static_cast<float>(level)};
-			s_Data.EnvFilteredComputeShader->SetPushConstant("pushC", &pc);
+			s_Data.EnvFilteredComputeShader->SetPushConstant("u_PushConstant", &pc);
 			s_Data.EnvFilteredComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.EnvFilteredTextureCube, level);
 			Renderer::DispatchCompute(s_Data.EnvFilteredComputePipeline, numGroups, numGroups, 6);
 		}
@@ -187,8 +199,10 @@ namespace Neon
 		s_Data.IrradianceTextureCube = TextureCube::Create(irradianceMapSize, {TextureType::HDR, 6});
 		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvFilteredTextureCube, 0);
 		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube, 0);
-
 		Renderer::DispatchCompute(s_Data.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
+		s_Data.IrradianceTextureCube->RegenerateMipMaps();
+
+		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga", {});
 	}
 
 	void SceneRenderer::Shutdown()
@@ -199,8 +213,6 @@ namespace Neon
 	void SceneRenderer::FlushDrawList()
 	{
 		GeometryPass();
-
-		s_Data.MeshDrawList.clear();
 	}
 
 	void SceneRenderer::GeometryPass()
