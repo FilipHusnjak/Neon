@@ -57,8 +57,8 @@ layout (binding = 9) uniform samplerCube u_EnvIrradianceTex;
 layout (binding = 10) uniform sampler2D u_BRDFLUTTexture;
 
 const float PI = 3.141592;
-const float GAMMA = 2.2;
-const float EPSILON = 0.00001;
+const float Gamma = 2.2;
+const float Epsilon = 0.00001;
 
 const vec3 FDielectric = vec3(0.04);
 
@@ -71,12 +71,12 @@ struct
 } PBRProperties;
 
 // Normal distribution function
-float NDFTrowbridgeReitzGGX(vec3 normal, vec3 halfway, float roughness)
+float NDFTrowbridgeReitzGGX(vec3 N, vec3 H, float roughness)
 {
     float alpha = roughness * roughness;
 	float alphaSq = alpha * alpha;
 
-    float NdotH = max(dot(normal, halfway), 0.0);
+    float NdotH = max(dot(N, H), 0.0);
     float denom = NdotH * NdotH * (alphaSq - 1.0) + 1.0;
     return alphaSq / (PI * denom * denom);
 }
@@ -87,12 +87,12 @@ float GeometrySchlickGGX(float cosTheta, float k)
     return cosTheta / (cosTheta * (1.0 - k) + k);
 }
 // Take both view and light direction into account using Smith's method
-float GeometrySmith(vec3 normal, vec3 view, vec3 light, float roughness)
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     float r = (roughness + 1.0);
     float k = (r * r) / 8.0;
-    return GeometrySchlickGGX(max(dot(normal, light), 0.0), k) *
-           GeometrySchlickGGX(max(dot(normal, view), 0.0), k);
+    return GeometrySchlickGGX(max(dot(N, L), 0.0), k) *
+           GeometrySchlickGGX(max(dot(N, V), 0.0), k);
 }
 
 // Shlick's approximation of the Fresnel factor.
@@ -105,29 +105,28 @@ vec3 FresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 Lighting(vec3 light, vec3 view)
+vec3 Lighting(vec3 L, vec3 V)
 {
-    vec3 halfway = normalize(view + light);
+    vec3 H = normalize(V + L);
 
     // Cook-Torrance BRDF
     vec3 F0 = mix(FDielectric, PBRProperties.Albedo.rgb, PBRProperties.Metalness);
-    float NDF = NDFTrowbridgeReitzGGX(PBRProperties.Normal, halfway, PBRProperties.Roughness);
-    float geometry = GeometrySmith(PBRProperties.Normal, view, light, PBRProperties.Roughness);
-    vec3 fresnel = FresnelSchlick(max(dot(halfway, view), 0.0), F0);
+    float NDF = NDFTrowbridgeReitzGGX(PBRProperties.Normal, H, PBRProperties.Roughness);
+    float geometry = GeometrySmith(PBRProperties.Normal, V, L, PBRProperties.Roughness);
+    vec3 fresnel = FresnelSchlick(max(dot(H, V), 0.0), F0);
     vec3 kD = (vec3(1.0) - fresnel) * (1.0 - PBRProperties.Metalness);
                 
     vec3 numerator = NDF * geometry * fresnel;
-    float NdotL = max(dot(PBRProperties.Normal, light), 0.0);
-    float denominator = 4.0 * max(dot(PBRProperties.Normal, view), 0.0) * NdotL;
-    vec3 specular = numerator / max(denominator, EPSILON);
+    float NdotL = max(dot(PBRProperties.Normal, L), 0.0);
+    float denominator = 4.0 * max(dot(PBRProperties.Normal, V), 0.0) * NdotL;
+    vec3 specular = numerator / max(denominator, Epsilon);
 
     return (kD * PBRProperties.Albedo.rgb / PI + specular) * NdotL;
 }
 
-vec3 IBL(vec3 view)
+vec3 IBL(vec3 V)
 {
-    float NdotV = max(dot(PBRProperties.Normal, view), 0.0);
-    vec3 reflection = 2.0 * NdotV * PBRProperties.Normal - view;
+    float NdotV = max(dot(PBRProperties.Normal, V), 0.0);
 
 	vec3 irradiance = texture(u_EnvIrradianceTex, PBRProperties.Normal).rgb;
     vec3 F0 = mix(FDielectric, PBRProperties.Albedo.rgb, PBRProperties.Metalness);
@@ -136,9 +135,8 @@ vec3 IBL(vec3 view)
 	vec3 diffuseIBL = PBRProperties.Albedo.rgb * irradiance;
 
 	int envRadianceTexLevels = textureQueryLevels(u_EnvRadianceTex);
-	float NoV = clamp(NdotV, 0.0, 1.0);
-	vec3 R = 2.0 * dot(view, PBRProperties.Normal) * PBRProperties.Normal - view;
-	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, reflection, (PBRProperties.Roughness) * envRadianceTexLevels).rgb;
+	vec3 R = 2.0 * NdotV * PBRProperties.Normal - V;
+	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, R, (PBRProperties.Roughness) * envRadianceTexLevels).rgb;
 
 	// Sample BRDF Lut, 1.0 - roughness for y-coord because texture was generated (in Sparky) for gloss model
 	vec2 specularBRDF = texture(u_BRDFLUTTexture, vec2(NdotV, 1.0 - PBRProperties.Roughness)).rg;
@@ -165,14 +163,14 @@ void main()
     vec3 totalColor = vec3(0, 0, 0);
     uint lightCount = clamp(u_Count, 0, MAX_LIGHT_COUNT - 1);
 
-    vec3 view = normalize(u_CameraPosition.xyz - v_WorldPosition);
+    vec3 V = normalize(u_CameraPosition.xyz - v_WorldPosition);
 	for (int i = 0; i < lightCount; i++)
 	{
-        vec3 light = -normalize(u_Lights[i].Direction.xyz);      
-        vec3 color = u_Lights[i].Radiance.rgb * Lighting(light, view);
+        vec3 L = -normalize(u_Lights[i].Direction.xyz);      
+        vec3 color = u_Lights[i].Radiance.rgb * Lighting(L, V);
         totalColor += u_Lights[i].Strength * color;
 	}
-    totalColor += IBL(view);
+    totalColor += IBL(V);
 
     const float pureWhite = 1.0;
     // Reinhard tonemapping operator.
@@ -183,5 +181,5 @@ void main()
 	// Scale color by ratio of average luminances.
 	vec3 mappedColor = (mappedLuminance / luminance) * totalColor;
 
-	o_Color = vec4(pow(mappedColor, vec3(1.0 / GAMMA)), PBRProperties.Albedo.a);
+	o_Color = vec4(pow(mappedColor, vec3(1.0 / Gamma)), PBRProperties.Albedo.a);
 }
