@@ -52,6 +52,11 @@ namespace Neon
 			return m_EntityHandle != entt::null;
 		}
 
+		bool operator==(Entity other) const
+		{
+			return m_EntityHandle == other.m_EntityHandle;
+		}
+
 	private:
 		entt::entity m_EntityHandle{entt::null};
 		Scene* m_Scene = nullptr;

@@ -16,7 +16,7 @@ namespace Neon
 	class Scene : public RefCounted
 	{
 	public:
-		Scene(const std::string debugName = "Scene");
+		Scene(const std::string name = "SampleScene");
 		~Scene();
 
 		void Init();
@@ -63,12 +63,17 @@ namespace Neon
 			m_SelectedEntity = entity;
 		}
 
+		const std::string& GetName() const
+		{
+			return m_Name;
+		}
+
 	private:
 		UUID m_SceneID;
 		entt::entity m_SceneEntity;
 		entt::registry m_Registry;
 
-		std::string m_DebugName;
+		std::string m_Name;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		EntityMap m_EntityIDMap;
@@ -81,5 +86,6 @@ namespace Neon
 
 		friend class Entity;
 		friend class SceneRenderer;
+		friend class SceneHierarchyPanel;
 	};
 } // namespace Neon

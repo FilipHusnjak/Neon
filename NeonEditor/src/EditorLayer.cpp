@@ -22,6 +22,8 @@ namespace Neon
 	{
 		m_EditorScene = SharedRef<Scene>::Create();
 
+		m_SceneHierarchyPanel.SetScene(m_EditorScene);
+
 		auto& mesh = m_EditorScene->CreateMesh("assets/models/cerberus/Cerberus_LP.FBX", "Gun");
 		auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		transformComponent.Transform = glm::rotate(glm::mat4(1.f), -3.14f / 2.f, {1, 0, 0});
@@ -100,9 +102,7 @@ namespace Neon
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
-		ImGui::Begin("Frame time");
-		ImGui::Text("FPS: %.2f\n", 1000.0 / (m_TimePassed / AVG_FRAME_COUNT));
-		ImGui::End();
+		m_SceneHierarchyPanel.OnImGuiRender();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");

@@ -92,6 +92,8 @@ namespace Neon
 
 	void SceneRenderer::InitializeScene(Scene* scene)
 	{
+		NEO_CORE_ASSERT(scene);
+
 		s_Data.SceneData = {};
 
 		s_Data.ActiveScene = scene;
@@ -127,8 +129,6 @@ namespace Neon
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "");
 
 		FlushDrawList();
-
-		s_Data.MeshDrawList.clear();
 	}
 
 	void SceneRenderer::RegisterMesh(const SharedRef<Mesh>& mesh)
@@ -212,6 +212,7 @@ namespace Neon
 	void SceneRenderer::FlushDrawList()
 	{
 		GeometryPass();
+		s_Data.MeshDrawList.clear();
 	}
 
 	void SceneRenderer::GeometryPass()

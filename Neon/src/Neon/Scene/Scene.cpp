@@ -14,8 +14,8 @@ namespace Neon
 		UUID SceneID;
 	};
 
-	Scene::Scene(const std::string debugName /*= "Scene"*/)
-		: m_DebugName(debugName)
+	Scene::Scene(const std::string name /*= "SampleScene"*/)
+		: m_Name(name)
 	{
 		m_SceneEntity = m_Registry.create();
 		m_Registry.emplace<SceneComponent>(m_SceneEntity, m_SceneID);
@@ -33,7 +33,7 @@ namespace Neon
 
 	void Scene::Init()
 	{
-		m_EnvironmentPath = "assets/textures/environment/birchwood_16k.hdr";
+		m_EnvironmentPath = "assets/textures/environment/immenstadter_horn_4k.hdr";
 		SceneRenderer::InitializeScene(this);
 	}
 
