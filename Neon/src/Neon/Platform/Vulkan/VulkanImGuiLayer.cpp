@@ -163,7 +163,7 @@ namespace Neon
 
 		VulkanImGuiLayer* instance = this;
 		Application& app = Application::Get();
-		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
+		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetHandle());
 
 		auto vulkanContext = VulkanContext::Get();
 		auto device = VulkanContext::GetDevice();

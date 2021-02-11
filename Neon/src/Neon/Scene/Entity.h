@@ -47,9 +47,9 @@ namespace Neon
 			return m_EntityHandle;
 		}
 
-		explicit operator bool() const
+		operator bool() const
 		{
-			return m_EntityHandle != entt::null;
+			return m_EntityHandle != entt::null && m_Scene;
 		}
 
 		bool operator==(Entity other) const

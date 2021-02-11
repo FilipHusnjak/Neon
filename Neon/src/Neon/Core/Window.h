@@ -47,9 +47,11 @@ namespace Neon
 		virtual const std::string& GetTitle() const = 0;
 		virtual void SetTitle(const std::string& title) = 0;
 
-		virtual void* GetNativeWindow() const = 0;
+		virtual void* GetHandle() const = 0;
 
 		virtual SharedRef<RendererContext> GetRenderContext() = 0;
+
+		virtual void Maximize() = 0;
 
 		static Window* Create(const WindowProps& props = WindowProps());
 

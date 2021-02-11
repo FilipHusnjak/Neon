@@ -22,6 +22,7 @@ namespace Neon
 		m_Window->Init();
 		m_Window->SetEventCallback([this](Event& e) { OnEvent(e); });
 		m_Window->SetVSync(false);
+		m_Window->Maximize();
 
 		m_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(m_ImGuiLayer);

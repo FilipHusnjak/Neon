@@ -38,14 +38,14 @@ namespace Neon
 			// TODO: Check why is this necessary
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		}
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		m_Handle = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
-		m_RendererContext = RendererContext::Create(m_Window);
+		m_RendererContext = RendererContext::Create(m_Handle);
 
-		glfwSetWindowUserPointer(m_Window, &m_Data);
+		glfwSetWindowUserPointer(m_Handle, &m_Data);
 
 		// Set GLFW callbacks
-		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
+		glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			WindowResizeEvent event((uint32)width, (uint32)height);
@@ -54,14 +54,14 @@ namespace Neon
 			data.Height = height;
 		});
 
-		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
+		glfwSetWindowCloseCallback(m_Handle, [](GLFWwindow* window) {
 			auto& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
 			WindowCloseEvent event;
 			data.EventCallback(event);
 		});
 
-		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+		glfwSetKeyCallback(m_Handle, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			switch (action)
@@ -81,14 +81,14 @@ namespace Neon
 			}
 		});
 
-		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int codepoint) {
+		glfwSetCharCallback(m_Handle, [](GLFWwindow* window, unsigned int codepoint) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			KeyTypedEvent event(codepoint);
 			data.EventCallback(event);
 		});
 
-		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods) {
+		glfwSetMouseButtonCallback(m_Handle, [](GLFWwindow* window, int button, int action, int mods) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			switch (action)
@@ -108,14 +108,14 @@ namespace Neon
 			}
 		});
 
-		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset) {
+		glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xOffset, double yOffset) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			MouseScrolledEvent event((float)xOffset, (float)yOffset);
 			data.EventCallback(event);
 		});
 
-		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double x, double y) {
+		glfwSetCursorPosCallback(m_Handle, [](GLFWwindow* window, double x, double y) {
 			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
 			MouseMovedEvent event((float)x, (float)y);
@@ -137,7 +137,7 @@ namespace Neon
 		// Update window size to actual size
 		{
 			int width, height;
-			glfwGetWindowSize(m_Window, &width, &height);
+			glfwGetWindowSize(m_Handle, &width, &height);
 			m_Data.Width = width;
 			m_Data.Height = height;
 		}
@@ -156,7 +156,7 @@ namespace Neon
 	void WindowsWindow::ProcessEvents()
 	{
 		glfwPollEvents();
-		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetInputMode(m_Handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
 	void WindowsWindow::SwapBuffers()
@@ -167,7 +167,7 @@ namespace Neon
 	std::pair<float, float> WindowsWindow::GetWindowPos() const
 	{
 		int x, y;
-		glfwGetWindowPos(m_Window, &x, &y);
+		glfwGetWindowPos(m_Handle, &x, &y);
 		return {static_cast<float>(x), static_cast<float>(y)};
 	}
 
@@ -184,12 +184,12 @@ namespace Neon
 	void WindowsWindow::SetTitle(const std::string& title)
 	{
 		m_Data.Title = title;
-		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
+		glfwSetWindowTitle(m_Handle, m_Data.Title.c_str());
 	}
 
 	void WindowsWindow::Shutdown()
 	{
-		glfwDestroyWindow(m_Window);
+		glfwDestroyWindow(m_Handle);
 		if (s_GLFWInitialized)
 		{
 			glfwTerminate();

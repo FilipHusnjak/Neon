@@ -45,9 +45,9 @@ namespace Neon
 		}
 		void SetTitle(const std::string& title) override;
 
-		inline void* GetNativeWindow() const override
+		inline void* GetHandle() const override
 		{
-			return m_Window;
+			return m_Handle;
 		}
 
 		SharedRef<RendererContext> GetRenderContext() override
@@ -55,11 +55,16 @@ namespace Neon
 			return m_RendererContext;
 		}
 
+		void Maximize() override
+		{
+			glfwMaximizeWindow(m_Handle);
+		}
+
 	private:
 		virtual void Shutdown();
 
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow* m_Handle;
 		GLFWcursor* m_ImGuiMouseCursors[9] = {};
 
 		float m_LastFrameTime = 0.0f;
