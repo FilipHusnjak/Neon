@@ -99,7 +99,7 @@ namespace Neon
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 
-		ImFont* pFont = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\segoeui.ttf)", 18.0f);
+		ImFont* pFont = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\segoeui.ttf)", 25.f);
 		io.FontDefault = io.Fonts->Fonts.back();
 
 		// Setup Dear ImGui style

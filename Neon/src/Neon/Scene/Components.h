@@ -1,7 +1,12 @@
 #pragma once
 
-#include "Neon/Renderer/Mesh.h"
 #include "Neon/Core/UUID.h"
+#include "Neon/Renderer/Mesh.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Neon
 {
@@ -33,22 +38,22 @@ namespace Neon
 
 	struct TransformComponent
 	{
-		glm::mat4 Transform;
+		glm::vec3 Translation;
+		glm::quat Rotation;
+		glm::vec3 Scale;
 
-		TransformComponent() = default;
+		TransformComponent(const glm::vec3& translation = {}, glm::quat rotation = glm::quat(glm::vec3(0.f)),
+						   const glm::vec3 scale = {1.f, 1.f, 1.f})
+			: Translation(translation)
+			, Rotation(rotation)
+			, Scale(scale)
+		{
+		}
 		TransformComponent(const TransformComponent& other) = default;
-		TransformComponent(const glm::mat4& transform)
-			: Transform(transform)
-		{
-		}
 
-		operator glm::mat4 &()
+		operator glm::mat4()
 		{
-			return Transform;
-		}
-		operator const glm::mat4 &() const
-		{
-			return Transform;
+			return glm::translate(glm::mat4(1.f), Translation) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.f), glm::abs(Scale));
 		}
 	};
 

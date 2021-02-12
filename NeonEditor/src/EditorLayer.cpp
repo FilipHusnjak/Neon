@@ -26,7 +26,7 @@ namespace Neon
 
 		auto& mesh = m_EditorScene->CreateMesh("assets/models/cerberus/Cerberus_LP.FBX", "Gun");
 		auto& transformComponent = mesh.GetComponent<TransformComponent>();
-		transformComponent.Transform = glm::rotate(glm::mat4(1.f), -3.14f / 2.f, {1, 0, 0});
+		//transformComponent.Transform = glm::rotate(glm::mat4(1.f), -3.14f / 2.f, {1, 0, 0});
 
 		auto lightEntity1 = m_EditorScene->CreateEntity("DirectionalLight");
 		lightEntity1.AddComponent<LightComponent>(glm::vec4{1, -1, 1, 0});

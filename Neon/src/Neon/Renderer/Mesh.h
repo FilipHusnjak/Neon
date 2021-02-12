@@ -159,6 +159,11 @@ namespace Neon
 			return m_Submeshes;
 		}
 
+		const std::string& GetFilePath() const
+		{
+			return m_FilePath;
+		}
+
 	private:
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
 		void UpdateBoneTransforms(float time);

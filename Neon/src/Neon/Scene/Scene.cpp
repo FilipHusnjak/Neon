@@ -73,7 +73,7 @@ namespace Neon
 		auto& idComponent = entity.AddComponent<IDComponent>();
 		idComponent.ID = {};
 
-		entity.AddComponent<TransformComponent>(glm::mat4(1.0f));
+		entity.AddComponent<TransformComponent>();
 		if (!name.empty())
 		{
 			entity.AddComponent<TagComponent>(name);
@@ -90,7 +90,7 @@ namespace Neon
 		auto& idComponent = entity.AddComponent<IDComponent>();
 		idComponent.ID = uuid;
 
-		entity.AddComponent<TransformComponent>(glm::mat4(1.0f));
+		entity.AddComponent<TransformComponent>();
 		if (!name.empty())
 		{
 			entity.AddComponent<TagComponent>(name);
