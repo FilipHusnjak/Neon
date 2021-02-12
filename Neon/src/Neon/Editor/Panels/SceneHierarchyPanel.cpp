@@ -193,14 +193,38 @@ namespace Neon
 			}
 
 			DrawComponent<TransformComponent>("Transform Component", m_SelectedEntity, [](TransformComponent& component) {
-				glm::vec3 originalEulerAngles = glm::degrees(glm::eulerAngles(component.Rotation));
+				glm::vec3 originalEulerAngles = glm::degrees(component.Rotation);
 				DrawVec3Control("Translation", component.Translation);
 
-				glm::vec3 newEulerAngles = originalEulerAngles;
-				if (DrawVec3Control("Rotation", newEulerAngles))
+				if (DrawVec3Control("Rotation", originalEulerAngles))
 				{
-					glm::vec3 deltaEulerAngles = newEulerAngles - originalEulerAngles;
-					component.Rotation = glm::quat(glm::radians(deltaEulerAngles)) * component.Rotation;
+					if (originalEulerAngles.x >= 180.f)
+					{
+						originalEulerAngles.x -= 360.f;
+					}
+					if (originalEulerAngles.y >= 180.f)
+					{
+						originalEulerAngles.y -= 360.f;
+					}
+					if (originalEulerAngles.z >= 180.f)
+					{
+						originalEulerAngles.z -= 360.f;
+					}
+
+					if (originalEulerAngles.x <= -180.f)
+					{
+						originalEulerAngles.x += 360.f;
+					}
+					if (originalEulerAngles.y <= -180.f)
+					{
+						originalEulerAngles.y += 360.f;
+					}
+					if (originalEulerAngles.z <= -180.f)
+					{
+						originalEulerAngles.z += 360.f;
+					}
+
+					component.Rotation = glm::radians(originalEulerAngles);
 				}
 
 				DrawVec3Control("Scale", component.Scale);
@@ -227,7 +251,9 @@ namespace Neon
 
 				ImGui::Columns(1);
 			});
-			//	DrawComponent<LightComponent>("Light Component", m_SelectedEntity);
+			DrawComponent<LightComponent>("Light Component", m_SelectedEntity, [](LightComponent& component) {
+				
+			});
 		}
 
 		ImGui::End();

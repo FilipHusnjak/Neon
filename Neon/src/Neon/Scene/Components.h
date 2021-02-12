@@ -39,10 +39,10 @@ namespace Neon
 	struct TransformComponent
 	{
 		glm::vec3 Translation;
-		glm::quat Rotation;
+		glm::vec3 Rotation;
 		glm::vec3 Scale;
 
-		TransformComponent(const glm::vec3& translation = {}, glm::quat rotation = glm::quat(glm::vec3(0.f)),
+		TransformComponent(const glm::vec3& translation = {}, glm::vec3 rotation = glm::vec3(0.f),
 						   const glm::vec3 scale = {1.f, 1.f, 1.f})
 			: Translation(translation)
 			, Rotation(rotation)
@@ -53,7 +53,9 @@ namespace Neon
 
 		operator glm::mat4()
 		{
-			return glm::translate(glm::mat4(1.f), Translation) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.f), glm::abs(Scale));
+			return glm::translate(glm::mat4(1.f), Translation) * glm::rotate(glm::mat4(1.f), Rotation.x, {1, 0, 0}) *
+				   glm::rotate(glm::mat4(1.f), Rotation.y, {0, 1, 0}) * glm::rotate(glm::mat4(1.f), Rotation.z, {0, 0, 1}) *
+				   glm::scale(glm::mat4(1.f), glm::abs(Scale));
 		}
 	};
 
