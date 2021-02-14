@@ -5,8 +5,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace Neon
 {
@@ -54,8 +53,7 @@ namespace Neon
 		operator glm::mat4()
 		{
 			return glm::translate(glm::mat4(1.f), Translation) * glm::rotate(glm::mat4(1.f), Rotation.x, {1, 0, 0}) *
-				   glm::rotate(glm::mat4(1.f), Rotation.y, {0, 1, 0}) * glm::rotate(glm::mat4(1.f), Rotation.z, {0, 0, 1}) *
-				   glm::scale(glm::mat4(1.f), glm::abs(Scale));
+				   glm::eulerAngleXYZ(Rotation.x, Rotation.y, Rotation.z) * glm::scale(glm::mat4(1.f), glm::abs(Scale));
 		}
 	};
 
