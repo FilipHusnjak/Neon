@@ -211,10 +211,10 @@ namespace Neon
 		s_Data.EnvFilteredTextureCube->RegenerateMipMaps();
 
 		s_Data.EnvFilteredComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvUnfilteredTextureCube, 0);
-		for (int level = 1, size = faceSize; level < s_Data.EnvUnfilteredTextureCube->GetMipLevelCount(); level++, size /= 2)
+		for (uint32 level = 1, size = faceSize; level < s_Data.EnvUnfilteredTextureCube->GetMipLevelCount(); level++, size /= 2)
 		{
 			uint32 test = s_Data.EnvFilteredTextureCube->GetMipLevelCount();
-			const uint32 numGroups = glm::max(1, size / 32);
+			const uint32 numGroups = glm::max(1u, size / 32);
 			struct
 			{
 				float MipCount;
