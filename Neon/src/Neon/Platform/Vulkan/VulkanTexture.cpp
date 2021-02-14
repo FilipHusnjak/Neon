@@ -279,9 +279,6 @@ namespace Neon
 			samplerCreateInfo.maxAnisotropy = 1.0;
 			samplerCreateInfo.anisotropyEnable = VK_FALSE;
 		}
-		// TODO: why anisotropy filtering brightens reflection??
-		samplerCreateInfo.maxAnisotropy = 1.0;
-		samplerCreateInfo.anisotropyEnable = VK_FALSE;
 		m_Sampler = deviceHandle.createSamplerUnique(samplerCreateInfo);
 
 		// Create image view
@@ -742,9 +739,6 @@ namespace Neon
 			samplerCreateInfo.maxAnisotropy = 1.0;
 			samplerCreateInfo.anisotropyEnable = VK_FALSE;
 		}
-		// TODO: why anisotropy filtering brightens reflection??
-		samplerCreateInfo.maxAnisotropy = 1.0;
-		samplerCreateInfo.anisotropyEnable = VK_FALSE;
 		m_Sampler = deviceHandle.createSamplerUnique(samplerCreateInfo);
 
 		// Create image view
