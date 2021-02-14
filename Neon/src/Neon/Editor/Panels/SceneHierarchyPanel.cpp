@@ -193,7 +193,7 @@ namespace Neon
 			}
 
 			DrawComponent<TransformComponent>("Transform Component", m_SelectedEntity, [](TransformComponent& component) {
-				glm::vec3 originalEulerAngles = glm::degrees(component.Rotation);
+				glm::vec3 originalEulerAngles = glm::degrees(component.Rotation) * 2.f;
 				DrawVec3Control("Translation", component.Translation);
 
 				if (DrawVec3Control("Rotation", originalEulerAngles))
@@ -224,7 +224,7 @@ namespace Neon
 						originalEulerAngles.z += 360.f;
 					}
 
-					component.Rotation = glm::radians(originalEulerAngles);
+					component.Rotation = glm::radians(originalEulerAngles / 2.f);
 				}
 
 				DrawVec3Control("Scale", component.Scale);
