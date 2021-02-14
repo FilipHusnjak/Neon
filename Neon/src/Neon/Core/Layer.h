@@ -13,25 +13,15 @@ namespace Neon
 		}
 		virtual ~Layer() = default;
 
-		virtual void OnAttach()
-		{
-		}
+		virtual void OnAttach() = 0;
 
-		virtual void OnDetach()
-		{
-		}
+		virtual void OnDetach() = 0;
 
-		virtual void OnUpdate(float deltaSeconds)
-		{
-		}
+		virtual void OnUpdate(float deltaSeconds) = 0;
 
-		virtual void OnImGuiRender()
-		{
-		}
+		virtual void OnRenderGui() = 0;
 
-		virtual void OnEvent(Event& event)
-		{
-		}
+		virtual void OnEvent(Event& event) = 0;
 
 		inline const std::string& GetName() const
 		{

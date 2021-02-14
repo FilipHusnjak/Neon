@@ -67,7 +67,7 @@ namespace Neon
 		m_EditorScene->OnRenderEditor(deltaSeconds, m_EditorCamera);
 	}
 
-	void EditorLayer::OnImGuiRender()
+	void EditorLayer::OnRenderGui()
 	{
 		static bool dockSpaceOpen = true;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -102,7 +102,7 @@ namespace Neon
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
-		m_SceneHierarchyPanel.OnImGuiRender();
+		m_SceneHierarchyPanel.Render();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");

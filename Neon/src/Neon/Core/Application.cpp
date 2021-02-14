@@ -1,7 +1,6 @@
 #include "neopch.h"
 
 #include "Application.h"
-#include "Neon/ImGui/ImGuiLayer.h"
 #include "Neon/Renderer/Framebuffer.h"
 #include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
@@ -24,14 +23,16 @@ namespace Neon
 		m_Window->SetVSync(false);
 		m_Window->Maximize();
 
-		m_ImGuiLayer = ImGuiLayer::Create();
-		PushOverlay(m_ImGuiLayer);
+		m_GuiContext = GuiContext::Create();
+		m_GuiContext->Init();
 
 		Renderer::Init();
 	}
 
 	Application::~Application()
 	{
+		m_GuiContext->Shutdown();
+
 		Renderer::Shutdown();
 	}
 
@@ -86,7 +87,7 @@ namespace Neon
 					layer->OnUpdate(deltaSeconds);
 				}
 
-				m_ImGuiLayer->Begin();
+				m_GuiContext->Begin();
 
 				RendererAPI::RenderAPICapabilities& caps = RendererAPI::GetCapabilities();
 				ImGui::Begin("Renderer");
@@ -100,10 +101,10 @@ namespace Neon
 
 				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnImGuiRender();
+					layer->OnRenderGui();
 				}
 
-				m_ImGuiLayer->End();
+				m_GuiContext->End();
 
 				m_Window->SwapBuffers();
 			}

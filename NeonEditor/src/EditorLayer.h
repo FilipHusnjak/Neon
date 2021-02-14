@@ -20,7 +20,7 @@ namespace Neon
 		void OnDetach() override;
 
 		void OnUpdate(float deltaSeconds) override;
-		void OnImGuiRender() override;
+		void OnRenderGui() override;
 		void OnEvent(Event& e) override;
 
 	private:

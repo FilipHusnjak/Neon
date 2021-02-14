@@ -1,8 +1,8 @@
 #include "neopch.h"
 
-#include "Core/Application.h"
-#include "VulkanContext.h"
-#include "VulkanImGuiLayer.h"
+#include "Neon/Core/Application.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
+#include "VulkanGuiContext.h"
 
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -23,73 +23,7 @@ namespace Neon
 		}
 	}
 
-	void VulkanImGuiLayer::Begin()
-	{
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-	}
-
-	void VulkanImGuiLayer::End()
-	{
-		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
-		uint32 width = swapChain.GetWidth();
-		uint32 height = swapChain.GetHeight();
-
-		vk::CommandBuffer renderCommandBuffer = (VkCommandBuffer)VulkanContext::Get()->GetPrimaryRenderCommandBuffer()->GetHandle();
-
-		// Update viewport state
-		vk::Viewport viewport = {};
-		viewport.x = 0.f;
-		viewport.y = 0.f;
-		viewport.width = (float)width;
-		viewport.height = (float)height;
-		viewport.minDepth = 0.f;
-		viewport.maxDepth = 1.f;
-
-		// Update scissor state
-		vk::Rect2D scissor = {};
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		scissor.extent.width = width;
-		scissor.extent.height = height;
-
-		vk::ClearValue clearValues[2];
-		std::array<float, 4> clearColor = {0.2f, 0.2f, 0.2f, 1.0f};
-		clearValues[0].color = vk::ClearColorValue(clearColor);
-		clearValues[1].depthStencil = {1.0f, 0};
-
-		vk::RenderPassBeginInfo renderPassBeginInfo = {};
-		renderPassBeginInfo.renderPass = swapChain.GetRenderPass();
-		renderPassBeginInfo.renderArea.offset.x = 0;
-		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = width;
-		renderPassBeginInfo.renderArea.extent.height = height;
-		renderPassBeginInfo.clearValueCount = 2;
-		renderPassBeginInfo.pClearValues = clearValues;
-		renderPassBeginInfo.framebuffer = swapChain.GetCurrentFramebuffer();
-
-		renderCommandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-		renderCommandBuffer.setViewport(0, 1, &viewport);
-
-		renderCommandBuffer.setScissor(0, 1, &scissor);
-
-		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), renderCommandBuffer);
-
-		renderCommandBuffer.endRenderPass();
-
-		ImGuiIO& io = ImGui::GetIO();
-		// Update and Render additional Platform Windows
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-		}
-	}
-
-	void VulkanImGuiLayer::OnAttach()
+	void VulkanGuiContext::Init()
 	{
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
@@ -99,7 +33,7 @@ namespace Neon
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 
-		ImFont* pFont = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\segoeui.ttf)", 25.f);
+		ImFont* pFont = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\segoeui.ttf)", 20.f);
 		io.FontDefault = io.Fonts->Fonts.back();
 
 		// Setup Dear ImGui style
@@ -161,7 +95,6 @@ namespace Neon
 		colors[ImGuiCol_SliderGrab] = ImVec4(0.51f, 0.51f, 0.51f, 0.7f);
 		colors[ImGuiCol_SliderGrabActive] = ImVec4(0.66f, 0.66f, 0.66f, 1.0f);
 
-		VulkanImGuiLayer* instance = this;
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetHandle());
 
@@ -228,7 +161,7 @@ namespace Neon
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
 	}
 
-	void VulkanImGuiLayer::OnDetach()
+	void VulkanGuiContext::Shutdown()
 	{
 		auto device = VulkanContext::GetDevice()->GetHandle();
 
@@ -236,10 +169,73 @@ namespace Neon
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+		m_ImGuiDescPool.reset();
 	}
 
-	void VulkanImGuiLayer::OnImGuiRender()
+	void VulkanGuiContext::Begin()
 	{
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void VulkanGuiContext::End()
+	{
+		const VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
+		uint32 width = swapChain.GetWidth();
+		uint32 height = swapChain.GetHeight();
+
+		vk::CommandBuffer renderCommandBuffer = (VkCommandBuffer)VulkanContext::Get()->GetPrimaryRenderCommandBuffer()->GetHandle();
+
+		// Update viewport state
+		vk::Viewport viewport = {};
+		viewport.x = 0.f;
+		viewport.y = 0.f;
+		viewport.width = (float)width;
+		viewport.height = (float)height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+
+		// Update scissor state
+		vk::Rect2D scissor = {};
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		scissor.extent.width = width;
+		scissor.extent.height = height;
+
+		vk::ClearValue clearValues[2];
+		std::array<float, 4> clearColor = {0.2f, 0.2f, 0.2f, 1.0f};
+		clearValues[0].color = vk::ClearColorValue(clearColor);
+		clearValues[1].depthStencil = {1.0f, 0};
+
+		vk::RenderPassBeginInfo renderPassBeginInfo = {};
+		renderPassBeginInfo.renderPass = swapChain.GetRenderPass();
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = width;
+		renderPassBeginInfo.renderArea.extent.height = height;
+		renderPassBeginInfo.clearValueCount = 2;
+		renderPassBeginInfo.pClearValues = clearValues;
+		renderPassBeginInfo.framebuffer = swapChain.GetCurrentFramebuffer();
+
+		renderCommandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+		renderCommandBuffer.setViewport(0, 1, &viewport);
+
+		renderCommandBuffer.setScissor(0, 1, &scissor);
+
+		ImGui::Render();
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), renderCommandBuffer);
+
+		renderCommandBuffer.endRenderPass();
+
+		ImGuiIO& io = ImGui::GetIO();
+		// Update and Render additional Platform Windows
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
 	}
 
 } // namespace Neon

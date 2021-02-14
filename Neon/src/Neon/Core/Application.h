@@ -1,17 +1,15 @@
 #pragma once
 
-#include "Event/ApplicationEvent.h"
-#include "Event/Event.h"
-#include "Layer.h"
+#include "Neon/Core/Event/ApplicationEvent.h"
+#include "Neon/Core/Layer.h"
 #include "Neon/Core/LayerStack.h"
 #include "Neon/Core/Window.h"
+#include "Neon/Gui/GuiContext.h"
 
 #include <chrono>
 
 namespace Neon
 {
-	class ImGuiLayer;
-
 	struct ApplicationProps
 	{
 		std::string Name;
@@ -62,7 +60,7 @@ namespace Neon
 		bool m_Minimized = false;
 
 		LayerStack m_LayerStack;
-		ImGuiLayer* m_ImGuiLayer;
+		SharedRef<GuiContext> m_GuiContext;
 
 		std::chrono::time_point<std::chrono::steady_clock> m_LastFrameTime = std::chrono::high_resolution_clock::now();
 
