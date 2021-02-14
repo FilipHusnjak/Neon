@@ -107,7 +107,9 @@ namespace Neon
 			maxSampleCount = std::max(maxSampleCount, ConvertSampleCountToVulkan(attachment.Samples));
 		}
 		vk::PipelineMultisampleStateCreateInfo multisampleState = {};
+		multisampleState.sampleShadingEnable = VK_TRUE; 
 		multisampleState.rasterizationSamples = maxSampleCount;
+		multisampleState.minSampleShading = 0.25f;
 
 		// Vertex input descriptor
 		const VertexBufferLayout& layout = shader->GetVertexBufferLayout();
