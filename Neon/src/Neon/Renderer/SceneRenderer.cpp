@@ -17,6 +17,10 @@ namespace Neon
 		} SceneData;
 
 		SharedRef<RenderPass> GeoPass;
+		SharedRef<RenderPass> PostProcessingPass;
+
+		SharedRef<Shader> PostProcessingShader;
+		SharedRef<GraphicsPipeline> PostProcessingPipeline;
 
 		SharedRef<TextureCube> EnvUnfilteredTextureCube;
 		SharedRef<TextureCube> EnvFilteredTextureCube;
@@ -51,21 +55,44 @@ namespace Neon
 
 	void SceneRenderer::Init()
 	{
+		uint32 width = Application::Get().GetWindow().GetWidth();
+		uint32 height = Application::Get().GetWindow().GetWidth();
 		RenderPassSpecification geoRenderPassSpec;
 		geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
 		geoRenderPassSpec.Attachments.push_back(
-			{8, AttachmentFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
+			{8, TextureFormat::RGBA16F, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
 		geoRenderPassSpec.Attachments.push_back(
-			{1, AttachmentFormat::RGBA8, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
+			{1, TextureFormat::RGBA16F, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
 		geoRenderPassSpec.Attachments.push_back(
-			{8, AttachmentFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
+			{8, TextureFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
 		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
 		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
-
 		FramebufferSpecification geoFramebufferSpec;
+		geoFramebufferSpec.Width = width;
+		geoFramebufferSpec.Height = height;
 		geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
-
 		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
+
+		RenderPassSpecification postProcessingPassSpec;
+		postProcessingPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
+		postProcessingPassSpec.Attachments.push_back(
+			{1, TextureFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, true});
+		postProcessingPassSpec.Subpasses.push_back({false, {}, {0}, {}});
+		s_Data.PostProcessingPass = RenderPass::Create(postProcessingPassSpec);
+		FramebufferSpecification postProcessingFramebufferSpec;
+		postProcessingFramebufferSpec.Width = width;
+		postProcessingFramebufferSpec.Height = height;
+		postProcessingFramebufferSpec.Pass = s_Data.PostProcessingPass.Ptr();
+		s_Data.PostProcessingPass->SetTargetFramebuffer(Framebuffer::Create(postProcessingFramebufferSpec));
+
+		ShaderSpecification postProcessingShaderSpecification;
+		postProcessingShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PostProcess_Vert.glsl";
+		postProcessingShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/PostProcess_Frag.glsl";
+		postProcessingShaderSpecification.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+		s_Data.PostProcessingShader = Shader::Create(postProcessingShaderSpecification);
+		GraphicsPipelineSpecification postProcessingPipelineSpecification;
+		postProcessingPipelineSpecification.Pass = s_Data.PostProcessingPass;
+		s_Data.PostProcessingPipeline = GraphicsPipeline::Create(s_Data.PostProcessingShader, postProcessingPipelineSpecification);
 
 		ShaderSpecification envUnfilteredComputeShaderSpecification;
 		envUnfilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
@@ -156,7 +183,7 @@ namespace Neon
 
 	void* SceneRenderer::GetFinalImageId()
 	{
-		return s_Data.GeoPass->GetTargetFramebuffer()->GetSampledImageId();
+		return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -169,11 +196,11 @@ namespace Neon
 		const uint32 irradianceMapSize = 32;
 
 		SharedRef<Texture2D> envMap = Texture2D::Create(filepath, {TextureType::HDR});
-		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBAFloat16, "Image has to be HDR!");
+		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBA16F, "Image has to be HDR!");
 		s_Data.EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap, 0);
 
-		s_Data.EnvUnfilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR, 6});
-		s_Data.EnvFilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR, 6});
+		s_Data.EnvUnfilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR});
+		s_Data.EnvFilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR});
 
 		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvUnfilteredTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
@@ -181,10 +208,12 @@ namespace Neon
 
 		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvFilteredTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
+		s_Data.EnvFilteredTextureCube->RegenerateMipMaps();
 
 		s_Data.EnvFilteredComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvUnfilteredTextureCube, 0);
-		for (int level = 1, size = faceSize; level < 6; level++, size /= 2)
+		for (int level = 1, size = faceSize; level < s_Data.EnvUnfilteredTextureCube->GetMipLevelCount(); level++, size /= 2)
 		{
+			uint32 test = s_Data.EnvFilteredTextureCube->GetMipLevelCount();
 			const uint32 numGroups = glm::max(1, size / 32);
 			struct
 			{
@@ -196,10 +225,11 @@ namespace Neon
 			Renderer::DispatchCompute(s_Data.EnvFilteredComputePipeline, numGroups, numGroups, 6);
 		}
 
-		s_Data.IrradianceTextureCube = TextureCube::Create(irradianceMapSize, {TextureType::HDR, 1});
+		s_Data.IrradianceTextureCube = TextureCube::Create(irradianceMapSize, {TextureType::HDR});
 		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvFilteredTextureCube, 0);
 		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
+		s_Data.IrradianceTextureCube->RegenerateMipMaps();
 
 		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga", {});
 	}
@@ -212,6 +242,7 @@ namespace Neon
 	void SceneRenderer::FlushDrawList()
 	{
 		GeometryPass();
+		PostProcessingPass();
 		s_Data.MeshDrawList.clear();
 	}
 
@@ -278,6 +309,14 @@ namespace Neon
 		s_Data.SkyboxMaterial->GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
 		Renderer::SubmitFullscreenQuad(s_Data.SkyboxGraphicsPipeline);
 
+		Renderer::EndRenderPass();
+	}
+
+	void SceneRenderer::PostProcessingPass()
+	{
+		Renderer::BeginRenderPass(s_Data.PostProcessingPass);
+		s_Data.PostProcessingShader->SetTexture2D("u_Texture", 0, s_Data.GeoPass->GetTargetFramebuffer()->GetSampledImage(), 0);
+		Renderer::SubmitFullscreenQuad(s_Data.PostProcessingPipeline);
 		Renderer::EndRenderPass();
 	}
 

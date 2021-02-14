@@ -89,7 +89,7 @@ float GeometrySchlickGGX(float cosTheta, float k)
 // Take both view and light direction into account using Smith's method
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
-    float r = (roughness + 1.0);
+    float r = roughness + 1.0;
     float k = (r * r) / 8.0;
     return GeometrySchlickGGX(max(dot(N, L), 0.0), k) *
            GeometrySchlickGGX(max(dot(N, V), 0.0), k);
@@ -105,23 +105,32 @@ vec3 FresnelSchlickRoughness(vec3 F0, float cosTheta, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 Lighting(vec3 L, vec3 V)
+vec3 Lighting(vec3 V)
 {
-    vec3 H = normalize(V + L);
+    uint lightCount = clamp(u_Count, 0, MAX_LIGHT_COUNT - 1);
+    vec3 result = vec3(0.0);
+    for (int i = 0; i < lightCount; i++)
+	{
+        vec3 L = normalize(u_Lights[i].Direction.xyz);      
+        vec3 H = normalize(V + L);
 
-    // Cook-Torrance BRDF
-    vec3 F0 = mix(FDielectric, PBRProperties.Albedo.rgb, PBRProperties.Metalness);
-    float NDF = NDFTrowbridgeReitzGGX(PBRProperties.Normal, H, PBRProperties.Roughness);
-    float geometry = GeometrySmith(PBRProperties.Normal, V, L, PBRProperties.Roughness);
-    vec3 fresnel = FresnelSchlick(max(dot(H, V), 0.0), F0);
-    vec3 kD = (vec3(1.0) - fresnel) * (1.0 - PBRProperties.Metalness);
+        // Cook-Torrance BRDF
+        vec3 F0 = mix(FDielectric, PBRProperties.Albedo.rgb, PBRProperties.Metalness);
+        float NDF = NDFTrowbridgeReitzGGX(PBRProperties.Normal, H, PBRProperties.Roughness);
+        float geometry = GeometrySmith(PBRProperties.Normal, V, L, PBRProperties.Roughness);
+        vec3 fresnel = FresnelSchlick(max(dot(H, V), 0.0), F0);
+        vec3 kD = (vec3(1.0) - fresnel) * (1.0 - PBRProperties.Metalness);
+        vec3 diffuse = kD * PBRProperties.Albedo.rgb;
                 
-    vec3 numerator = NDF * geometry * fresnel;
-    float NdotL = max(dot(PBRProperties.Normal, L), 0.0);
-    float denominator = 4.0 * max(dot(PBRProperties.Normal, V), 0.0) * NdotL;
-    vec3 specular = numerator / max(denominator, Epsilon);
+        vec3 numerator = NDF * geometry * fresnel;
+        float NdotL = max(dot(PBRProperties.Normal, L), 0.0);
+        float denominator = 4.0 * max(dot(PBRProperties.Normal, V), 0.0) * NdotL;
+        vec3 specular = numerator / max(denominator, Epsilon);
 
-    return (kD * PBRProperties.Albedo.rgb / PI + specular) * NdotL;
+        result += u_Lights[i].Strength * u_Lights[i].Radiance.rgb * (diffuse + specular) * NdotL;
+	}
+
+    return result;
 }
 
 vec3 IBL(vec3 V)
@@ -136,7 +145,7 @@ vec3 IBL(vec3 V)
 
 	int envRadianceTexLevels = textureQueryLevels(u_EnvRadianceTex);
 	vec3 R = 2.0 * NdotV * PBRProperties.Normal - V;
-	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, R, (PBRProperties.Roughness) * envRadianceTexLevels).rgb;
+	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, R, PBRProperties.Roughness * envRadianceTexLevels).rgb;
 
 	// Sample BRDF Lut, 1.0 - roughness for y-coord because texture was generated (in Sparky) for gloss model
 	vec2 specularBRDF = texture(u_BRDFLUTTexture, vec2(NdotV, 1.0 - PBRProperties.Roughness)).rg;
@@ -151,6 +160,7 @@ void main()
     PBRProperties.Normal = v_Normal;
     PBRProperties.Metalness = u_Materials[v_MaterialIndex].HasMetalnessTex < 0.5 ? u_Materials[v_MaterialIndex].Metalness : texture(u_MetalnessTextures[v_MaterialIndex], v_TexCoord).r;
     PBRProperties.Roughness = u_Materials[v_MaterialIndex].HasRoughnessTex < 0.5 ? u_Materials[v_MaterialIndex].Roughness : texture(u_RoughnessTextures[v_MaterialIndex], v_TexCoord).r;
+    PBRProperties.Roughness = max(PBRProperties.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
 
     if (u_Materials[v_MaterialIndex].HasNormalTex >= 0.5)
     {
@@ -160,26 +170,10 @@ void main()
 
     PBRProperties.Normal = normalize(PBRProperties.Normal);
 
-    vec3 totalColor = vec3(0, 0, 0);
-    uint lightCount = clamp(u_Count, 0, MAX_LIGHT_COUNT - 1);
-
+    vec3 totalColor = vec3(0.0);
     vec3 V = normalize(u_CameraPosition.xyz - v_WorldPosition);
-	for (int i = 0; i < lightCount; i++)
-	{
-        vec3 L = -normalize(u_Lights[i].Direction.xyz);      
-        vec3 color = u_Lights[i].Radiance.rgb * Lighting(L, V);
-        totalColor += u_Lights[i].Strength * color;
-	}
+	totalColor += Lighting(V);
     totalColor += IBL(V);
 
-    const float pureWhite = 1.0;
-    // Reinhard tonemapping operator.
-	// see: "Photographic Tone Reproduction for Digital Images", eq. 4
-	float luminance = dot(totalColor, vec3(0.2126, 0.7152, 0.0722));
-	float mappedLuminance = (luminance * (1.0 + luminance / (pureWhite * pureWhite))) / (1.0 + luminance);
-
-	// Scale color by ratio of average luminances.
-	vec3 mappedColor = (mappedLuminance / luminance) * totalColor;
-
-	o_Color = vec4(pow(mappedColor, vec3(1.0 / Gamma)), PBRProperties.Albedo.a);
+	o_Color = vec4(totalColor, PBRProperties.Albedo.a);
 }

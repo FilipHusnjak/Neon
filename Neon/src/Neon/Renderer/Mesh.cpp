@@ -343,9 +343,9 @@ namespace Neon
 				}
 				else
 				{
+					NEO_MESH_LOG("    No normal map!");
 					m_Materials[i]->LoadDefaultTexture2D("u_NormalTextures", i, 0);
 					materialProperties.HasNormalTex = 0.f;
-					NEO_MESH_LOG("    No normal map!");
 				}
 
 				if (true || aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)

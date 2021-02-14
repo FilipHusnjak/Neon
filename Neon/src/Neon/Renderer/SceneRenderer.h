@@ -44,5 +44,6 @@ namespace Neon
 	private:
 		static void FlushDrawList();
 		static void GeometryPass();
+		static void PostProcessingPass();
 	};
 } // namespace Neon
