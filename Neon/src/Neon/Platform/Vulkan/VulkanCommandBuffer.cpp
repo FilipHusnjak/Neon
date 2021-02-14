@@ -75,7 +75,7 @@ namespace Neon
 		for (const auto& attachment : renderPass->GetSpecification().Attachments)
 		{
 			vk::ClearValue& clearValue = clearValues.emplace_back();
-			if (attachment.Format == AttachmentFormat::Depth)
+			if (attachment.Format == TextureFormat::Depth)
 			{
 				clearValue.depthStencil = {1.0f, 0};
 			}

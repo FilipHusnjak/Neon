@@ -1,22 +1,10 @@
 #pragma once
 
 #include "Neon/Renderer/Framebuffer.h"
+#include "Neon/Renderer/Texture.h"
 
 namespace Neon
 {
-	enum class AttachmentFormat
-	{
-		None = 0,
-
-		RGBA8 = 1,
-		SRGBA8 = 2,
-		RGBA16F = 3,
-		RGBA32F = 4,
-		RG32F = 5,
-
-		Depth = 6
-	};
-
 	enum class AttachmentLoadOp
 	{
 		DontCare,
@@ -33,7 +21,7 @@ namespace Neon
 	struct AttachmentSpecification
 	{
 		uint32 Samples = 1;
-		AttachmentFormat Format = AttachmentFormat::None;
+		TextureFormat Format = TextureFormat::None;
 		AttachmentLoadOp LoadOp = AttachmentLoadOp::DontCare;
 		AttachmentStoreOp StoreOp = AttachmentStoreOp::DontCare;
 		bool Sampled = false;

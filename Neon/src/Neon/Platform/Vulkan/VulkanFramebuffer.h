@@ -16,13 +16,16 @@ namespace Neon
 		{
 			return m_ColorImageDescSet.get();
 		}
+		const SharedRef<Texture2D>& GetSampledImage() const override
+		{
+			NEO_CORE_ASSERT(m_SampledImageIndex > -1);
+			return m_Textures[m_SampledImageIndex];
+		}
 
 		void* GetHandle() const override
 		{
 			return m_Handle.get();
 		}
-
-		vk::ImageView GetSampledImageView(uint32 index);
 
 	private:
 		void Create(uint32 width, uint32 height);
@@ -30,14 +33,7 @@ namespace Neon
 	private:
 		vk::UniqueFramebuffer m_Handle;
 
-		struct FrameBufferAttachment
-		{
-			vk::UniqueImage Image;
-			vk::UniqueDeviceMemory Memory;
-			vk::UniqueImageView View;
-		};
-
-		std::vector<FrameBufferAttachment> m_Attachments;
+		std::vector<SharedRef<Texture2D>> m_Textures;
 
 		vk::UniqueDescriptorPool m_ImGuiDescPool;
 
@@ -45,7 +41,6 @@ namespace Neon
 		vk::UniqueDescriptorSetLayout m_ColorImageDescSetLayout;
 		vk::UniqueDescriptorSet m_ColorImageDescSet;
 
-		vk::UniqueSampler m_AttachmentSampler;
-		vk::DescriptorImageInfo m_AttachmentDescriptorInfo;
+		int32 m_SampledImageIndex = -1;
 	};
 } // namespace Neon

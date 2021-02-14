@@ -86,7 +86,7 @@ namespace Neon
 		m_SwapChain.Init(s_Instance.get(), m_Device);
 		m_SwapChain.InitSurface(m_WindowHandle);
 		// This window size should be ignored
-		uint32_t width = 1920, height = 1080;
+		uint32 width = 1920, height = 1080;
 		m_SwapChain.Create(&width, &height);
 
 		m_GraphicsCommandPool = CommandPool::Create(CommandBufferType::Graphics);

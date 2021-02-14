@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Neon/Platform/Vulkan/VulkanAllocator.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
 #include "Neon/Renderer/Texture.h"
 
 namespace Neon
@@ -11,21 +12,29 @@ namespace Neon
 		{
 			case TextureFormat::None:
 				return vk::Format::eUndefined;
-			case TextureFormat::RGBA:
+			case TextureFormat::RGBA8:
 				return vk::Format::eR8G8B8A8Unorm;
-			case TextureFormat::SRGBA:
+			case TextureFormat::SRGBA8:
 				return vk::Format::eR8G8B8A8Srgb;
-			case TextureFormat::RGBAFloat16:
+			case TextureFormat::RGBA16F:
 				return vk::Format::eR16G16B16A16Sfloat;
-			default:
-				NEO_CORE_ERROR("Unknown texture format!");
-				return vk::Format::eUndefined;
+			case TextureFormat::RGBA32F:
+				return vk::Format::eR32G32B32A32Sfloat;
+			case TextureFormat::RG32F:
+				return vk::Format::eR32G32Sfloat;
+			case TextureFormat::Depth:
+				const auto& device = VulkanContext::GetDevice();
+				return device->GetPhysicalDevice()->GetDepthFormat();
 		}
+		NEO_CORE_ASSERT(false, "Uknown texture format!");
+		return vk::Format::eUndefined;
 	}
 
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
+		VulkanTexture2D() = default;
+		VulkanTexture2D(TextureFormat format, uint32 width, uint32 height, uint32 sampleCount, vk::ImageUsageFlags usage);
 		VulkanTexture2D(const TextureSpecification& specification);
 		VulkanTexture2D(const std::string& path, const TextureSpecification& specification);
 
@@ -34,11 +43,6 @@ namespace Neon
 		bool Loaded() const override
 		{
 			return m_Data.Data != nullptr;
-		}
-
-		uint32 GetMipLevelCount() const override
-		{
-			return Texture::CalculateMipMapCount(m_Image.Width, m_Image.Height);
 		}
 
 		uint32 GetWidth() const override
@@ -55,9 +59,15 @@ namespace Neon
 			return m_Data;
 		}
 
+		vk::ImageView GetView(uint32 mip)
+		{
+			NEO_CORE_ASSERT(mip < m_Views.size());
+			return m_Views[mip].get();
+		}
+
 		vk::DescriptorImageInfo GetTextureDescription(uint32 mipLevel) const
 		{
-			NEO_CORE_ASSERT(mipLevel < m_Specification.MipLevelCount);
+			NEO_CORE_ASSERT(mipLevel < m_MipLevelCount);
 			return {m_Sampler.get(), m_Views[mipLevel].get(), m_Layout};
 		}
 
@@ -69,7 +79,8 @@ namespace Neon
 		void RegenerateMipMaps() override;
 
 	private:
-		void Invalidate();
+		void CreateResources(vk::ImageUsageFlags usage);
+		void Update();
 		void CreateDefaultTexture();
 
 	private:
@@ -98,11 +109,6 @@ namespace Neon
 			return m_Data.Data != nullptr;
 		}
 
-		uint32 GetMipLevelCount() const override
-		{
-			return Texture::CalculateMipMapCount(m_Image.Width, m_Image.Height);
-		}
-
 		uint32 GetFaceSize() const override
 		{
 			return m_FaceSize;
@@ -115,7 +121,7 @@ namespace Neon
 
 		vk::DescriptorImageInfo GetTextureDescription(uint32 mipLevel) const
 		{
-			NEO_CORE_ASSERT(mipLevel < m_Specification.MipLevelCount);
+			NEO_CORE_ASSERT(mipLevel < m_MipLevelCount);
 			return {m_Sampler.get(), m_Views[mipLevel].get(), m_Layout};
 		}
 

@@ -5,9 +5,14 @@ namespace Neon
 	enum class TextureFormat
 	{
 		None = 0,
-		SRGBA = 1,
-		RGBA = 2,
-		RGBAFloat16 = 3
+
+		RGBA8 = 1,
+		SRGBA8 = 2,
+		RGBA16F = 3,
+		RGBA32F = 4,
+		RG32F = 5,
+
+		Depth = 6
 	};
 
 	enum class TextureWrap
@@ -27,7 +32,7 @@ namespace Neon
 	struct TextureSpecification
 	{
 		TextureType Type = TextureType::RGB;
-		uint32 MipLevelCount = 1;
+		uint32 SampleCount = 1;
 		TextureWrap Wrap = TextureWrap::Repeat;
 	};
 
@@ -35,12 +40,16 @@ namespace Neon
 	{
 	public:
 		static uint32 GetBytesPerPixel(TextureFormat format);
-		static uint32 CalculateMipMapCount(uint32 width, uint32 height);
+		static uint32 CalculateMaxMipMapCount(uint32 width, uint32 height);
 
+		Texture() = default;
 		Texture(const TextureSpecification& specification);
 		virtual ~Texture() = default;
 
-		virtual uint32 GetMipLevelCount() const = 0;
+		virtual uint32 GetMipLevelCount() const
+		{
+			return m_MipLevelCount;
+		}
 
 		TextureFormat GetFormat() const
 		{
@@ -54,14 +63,17 @@ namespace Neon
 	protected:
 		TextureSpecification m_Specification;
 		TextureFormat m_Format = TextureFormat::None;
+		uint32 m_MipLevelCount;
 	};
 
 	class Texture2D : public Texture
 	{
 	public:
+		static SharedRef<Texture2D> Create();
 		static SharedRef<Texture2D> Create(const TextureSpecification& specification);
 		static SharedRef<Texture2D> Create(const std::string& path, const TextureSpecification& specification);
 
+		Texture2D() = default;
 		Texture2D(const TextureSpecification& specification);
 		Texture2D(const std::string& path, const TextureSpecification& specification);
 		virtual ~Texture2D() = default;

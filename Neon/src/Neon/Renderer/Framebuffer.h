@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Neon/Renderer/Texture.h"
+
 #include <glm/glm.hpp>
 
 namespace Neon
@@ -30,6 +32,7 @@ namespace Neon
 		virtual void Resize(uint32 width, uint32 height, bool forceRecreate = false) = 0;
 
 		virtual void* GetSampledImageId() const = 0;
+		virtual const SharedRef<Texture2D>& GetSampledImage() const = 0;
 
 		const FramebufferSpecification& GetSpecification() const
 		{

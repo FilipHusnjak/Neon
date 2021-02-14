@@ -10,17 +10,17 @@ namespace Neon
 	{
 		switch (format)
 		{
-			case TextureFormat::RGBA:
+			case TextureFormat::RGBA8:
 				return 4;
-			case TextureFormat::SRGBA:
+			case TextureFormat::SRGBA8:
 				return 4;
-			case TextureFormat::RGBAFloat16:
+			case TextureFormat::RGBA16F:
 				return 8;
 		}
 		return 0;
 	}
 
-	uint32 Texture::CalculateMipMapCount(uint32 width, uint32 height)
+	uint32 Texture::CalculateMaxMipMapCount(uint32 width, uint32 height)
 	{
 		uint32_t levels = 1;
 		while ((width | height) >> levels)
@@ -34,6 +34,19 @@ namespace Neon
 	Texture::Texture(const TextureSpecification& specification)
 		: m_Specification(specification)
 	{
+	}
+
+	SharedRef<Texture2D> Texture2D::Create()
+	{
+		switch (RendererAPI::Current())
+		{
+			case RendererAPI::API::None:
+				return nullptr;
+			case RendererAPI::API::Vulkan:
+				return SharedRef<VulkanTexture2D>::Create();
+		}
+		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
 	}
 
 	SharedRef<Texture2D> Texture2D::Create(const TextureSpecification& specification)

@@ -1,6 +1,7 @@
 #include "neopch.h"
 
-#include "VulkanContext.h"
+#include "Neon/Platform/Vulkan/VulkanContext.h"
+#include "Neon/Platform/Vulkan/VulkanTexture.h"
 #include "VulkanRenderPass.h"
 
 namespace Neon
@@ -24,7 +25,7 @@ namespace Neon
 			// Fill color attachment references
 			for (auto colorAttachment : subpass.ColorAttachments)
 			{
-				if (specification.Attachments[colorAttachment].Format != AttachmentFormat::Depth)
+				if (specification.Attachments[colorAttachment].Format != TextureFormat::Depth)
 				{
 					colorAttachmentReferences[i].emplace_back(colorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
 				}
@@ -33,7 +34,7 @@ namespace Neon
 			// Fill input attachment references
 			for (auto inputAttachment : subpass.InputAttachments)
 			{
-				vk::ImageLayout layout = specification.Attachments[inputAttachment].Format == AttachmentFormat::Depth
+				vk::ImageLayout layout = specification.Attachments[inputAttachment].Format == TextureFormat::Depth
 											 ? vk::ImageLayout::eDepthStencilReadOnlyOptimal
 											 : vk::ImageLayout::eShaderReadOnlyOptimal;
 				inputAttachmentReferences[i].emplace_back(inputAttachment, layout);
@@ -49,7 +50,7 @@ namespace Neon
 			{
 				for (uint32 j = 0; j < specification.Attachments.size(); j++)
 				{
-					if (specification.Attachments[j].Format == AttachmentFormat::Depth)
+					if (specification.Attachments[j].Format == TextureFormat::Depth)
 					{
 						depthStencilAttachmentReferences[i].emplace_back(j, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 						break;
@@ -80,7 +81,7 @@ namespace Neon
 
 			for (uint32 i = 0; i < specification.Attachments.size(); i++)
 			{
-				if (specification.Attachments[i].Format != AttachmentFormat::Depth)
+				if (specification.Attachments[i].Format != TextureFormat::Depth)
 				{
 					colorAttachmentReferences[0].emplace_back(i, vk::ImageLayout::eColorAttachmentOptimal);
 				}
@@ -121,9 +122,9 @@ namespace Neon
 		for (const auto& attachment : specification.Attachments)
 		{
 			auto& attachmentDescription = attachmentDescriptions.emplace_back();
-			attachmentDescription.format = attachment.Format == AttachmentFormat::Depth
+			attachmentDescription.format = attachment.Format == TextureFormat::Depth
 											   ? device->GetPhysicalDevice()->GetDepthFormat()
-											   : ConvertAttachmentFormatToVulkan(attachment.Format);
+											   : ConvertTextureFormatToVulkanFormat(attachment.Format);
 			attachmentDescription.samples = ConvertSampleCountToVulkan(attachment.Samples);
 			attachmentDescription.loadOp = ConvertLoadOpToVulkan(attachment.LoadOp);
 			attachmentDescription.storeOp = ConvertStoreOpToVulkan(attachment.StoreOp);
@@ -197,7 +198,7 @@ namespace Neon
 				attachmentDescriptions[reference.attachment].finalLayout = reference.layout;
 
 				// Do not use depth attachment if used as input
-				if (specification.Attachments[reference.attachment].Format == AttachmentFormat::Depth)
+				if (specification.Attachments[reference.attachment].Format == TextureFormat::Depth)
 				{
 					subpass.pDepthStencilAttachment = nullptr;
 				}

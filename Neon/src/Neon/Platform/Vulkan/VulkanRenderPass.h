@@ -1,31 +1,10 @@
 #pragma once
 
+#include "Neon/Platform/Vulkan/Vulkan.h"
 #include "Renderer/RenderPass.h"
-#include "Vulkan.h"
 
 namespace Neon
 {
-	static vk::Format ConvertAttachmentFormatToVulkan(AttachmentFormat format)
-	{
-		switch (format)
-		{
-			case AttachmentFormat::None:
-				return vk::Format::eUndefined;
-			case AttachmentFormat::RGBA8:
-				return vk::Format::eR8G8B8A8Unorm;
-			case AttachmentFormat::SRGBA8:
-				return vk::Format::eR8G8B8A8Srgb;
-			case AttachmentFormat::RGBA16F:
-				return vk::Format::eR16G16B16A16Sfloat;
-			case AttachmentFormat::RGBA32F:
-				return vk::Format::eR32G32B32A32Sfloat;
-			case AttachmentFormat::RG32F:
-				return vk::Format::eR32G32Sfloat;
-		}
-		NEO_CORE_ASSERT(false, "Uknown framebuffer format!");
-		return vk::Format::eUndefined;
-	}
-
 	static vk::SampleCountFlagBits ConvertSampleCountToVulkan(uint32 samples)
 	{
 		switch (samples)
