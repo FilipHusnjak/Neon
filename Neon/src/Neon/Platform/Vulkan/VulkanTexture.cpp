@@ -255,9 +255,9 @@ namespace Neon
 		samplerCreateInfo.magFilter = vk::Filter::eLinear;
 		samplerCreateInfo.minFilter = vk::Filter::eLinear;
 		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
-		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.mipLodBias = 0.0f;
 		samplerCreateInfo.minLod = 0.0f;
 		// Set max level-of-detail to mip level count of the texture
@@ -719,9 +719,9 @@ namespace Neon
 		samplerCreateInfo.magFilter = vk::Filter::eLinear;
 		samplerCreateInfo.minFilter = vk::Filter::eLinear;
 		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
-		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
 		samplerCreateInfo.mipLodBias = 0.f;
 		samplerCreateInfo.minLod = 0.f;
 		samplerCreateInfo.maxLod = static_cast<float>(m_MipLevelCount);
