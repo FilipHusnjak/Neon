@@ -4,7 +4,7 @@
 
 namespace Neon
 {
-	class SceneHierarchyPanel : public Panel
+	class InspectorPanel : public Panel
 	{
 	public:
 		void Render() const override;

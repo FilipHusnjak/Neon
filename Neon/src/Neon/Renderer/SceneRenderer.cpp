@@ -9,7 +9,9 @@ namespace Neon
 {
 	struct SceneRendererData
 	{
-		Scene* ActiveScene = nullptr;
+		SharedRef<Scene> ActiveScene = nullptr;
+		Entity SelectedEntity = {};
+
 		struct SceneInfo
 		{
 			SceneRendererCamera SceneCamera;
@@ -60,11 +62,11 @@ namespace Neon
 		RenderPassSpecification geoRenderPassSpec;
 		geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
 		geoRenderPassSpec.Attachments.push_back(
-			{8, TextureFormat::RGBA16F, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
+			{4, TextureFormat::RGBA16F, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
 		geoRenderPassSpec.Attachments.push_back(
 			{1, TextureFormat::RGBA16F, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
 		geoRenderPassSpec.Attachments.push_back(
-			{8, TextureFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
+			{4, TextureFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
 		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
 		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
 		FramebufferSpecification geoFramebufferSpec;
@@ -117,7 +119,7 @@ namespace Neon
 			ComputePipeline::Create(s_Data.IrradianceComputeShader, irradianceComputePipelineSpecification);
 	}
 
-	void SceneRenderer::InitializeScene(Scene* scene)
+	void SceneRenderer::InitializeScene(SharedRef<Scene> scene)
 	{
 		NEO_CORE_ASSERT(scene);
 
@@ -137,6 +139,21 @@ namespace Neon
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
 		s_Data.SkyboxGraphicsPipeline = GraphicsPipeline::Create(s_Data.SkyboxMaterial->GetShader(), skyboxGraphicsPipelineSpec);
+	}
+
+	const SharedRef<Scene>& SceneRenderer::GetActiveScene()
+	{
+		return s_Data.ActiveScene;
+	}
+
+	void SceneRenderer::SetSelectedEntity(Entity entity)
+	{
+		s_Data.SelectedEntity = entity;
+	}
+
+	Entity SceneRenderer::GetSelectedEntity()
+	{
+		return s_Data.SelectedEntity;
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)

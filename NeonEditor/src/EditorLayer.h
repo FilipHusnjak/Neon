@@ -2,7 +2,7 @@
 
 #include <Neon/Core/Event/Event.h>
 #include <Neon/Core/Layer.h>
-#include <Neon/Editor/Panels/SceneHierarchyPanel.h>
+#include <Neon/Editor/Panels/Panel.h>
 #include <Neon/Scene/Scene.h>
 
 #include <glm/glm.hpp>
@@ -28,7 +28,7 @@ namespace Neon
 
 		EditorCamera m_EditorCamera;
 
-		SceneHierarchyPanel m_SceneHierarchyPanel;
+		std::vector<SharedRef<Panel>> m_Panels;
 
 		std::queue<float> m_Times;
 		float m_TimePassed = 0.0f;

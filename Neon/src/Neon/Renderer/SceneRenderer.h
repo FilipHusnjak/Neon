@@ -2,7 +2,7 @@
 
 #include "Neon/Renderer/Camera.h"
 #include "Neon/Renderer/Mesh.h"
-#include "Neon/Scene/Scene.h"
+#include "Neon/Scene/Entity.h"
 
 namespace Neon
 {
@@ -19,7 +19,11 @@ namespace Neon
 	public:
 		static void Init();
 
-		static void InitializeScene(Scene* scene);
+		static void InitializeScene(SharedRef<Scene> scene);
+		const static SharedRef<Scene>& GetActiveScene();
+
+		static void SetSelectedEntity(Entity entity);
+		static Entity GetSelectedEntity();
 
 		static void SetViewportSize(uint32 width, uint32 height);
 

@@ -2,6 +2,8 @@
 
 #include "EditorLayer.h"
 
+#include <Neon/Editor/Panels/SceneHierarchyPanel.h>
+#include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Scene/Components.h>
 #include <Neon/Scene/Entity.h>
@@ -21,8 +23,7 @@ namespace Neon
 		: Layer("EditorLayer")
 	{
 		m_EditorScene = SharedRef<Scene>::Create();
-
-		m_SceneHierarchyPanel.SetScene(m_EditorScene);
+		m_EditorScene->Init();
 
 		auto& mesh = m_EditorScene->CreateMesh("assets/models/cerberus/Cerberus_LP.FBX", "Gun");
 		auto& transformComponent = mesh.GetComponent<TransformComponent>();
@@ -30,6 +31,9 @@ namespace Neon
 
 		auto lightEntity1 = m_EditorScene->CreateEntity("DirectionalLight");
 		lightEntity1.AddComponent<LightComponent>(glm::vec4{-0.68418f, 0.55581f, -0.4722f, 0.f});
+
+		m_Panels.push_back(SharedRef<SceneHierarchyPanel>::Create());
+		m_Panels.push_back(SharedRef<InspectorPanel>::Create());
 
 		//auto lightEntity2 = m_EditorScene->CreateEntity("DirectionalLight");
 		//lightEntity2.AddComponent<LightComponent>(glm::vec4{1, -1, -1, 0});
@@ -102,7 +106,10 @@ namespace Neon
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
-		m_SceneHierarchyPanel.Render();
+		for (const auto& panel : m_Panels)
+		{
+			panel->Render();
+		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");

@@ -22,7 +22,7 @@ namespace Neon
 
 		s_ActiveScenes[m_SceneID] = this;
 
-		Init();
+		m_EnvironmentPath = "assets/textures/environment/birchwood_4k.hdr";
 	}
 
 	Scene::~Scene()
@@ -33,7 +33,6 @@ namespace Neon
 
 	void Scene::Init()
 	{
-		m_EnvironmentPath = "assets/textures/environment/birchwood_4k.hdr";
 		SceneRenderer::InitializeScene(this);
 	}
 

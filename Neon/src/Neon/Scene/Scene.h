@@ -58,11 +58,6 @@ namespace Neon
 
 		static SharedRef<Scene> GetScene(UUID uuid);
 
-		void SetSelectedEntity(entt::entity entity)
-		{
-			m_SelectedEntity = entity;
-		}
-
 		const std::string& GetName() const
 		{
 			return m_Name;
@@ -79,8 +74,6 @@ namespace Neon
 		EntityMap m_EntityIDMap;
 
 		std::string m_EnvironmentPath;
-
-		entt::entity m_SelectedEntity;
 
 		float m_SkyboxLod = 1.0f;
 
