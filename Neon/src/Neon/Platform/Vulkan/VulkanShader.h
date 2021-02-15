@@ -34,7 +34,7 @@ namespace Neon
 			uint32 BindingPoint = 0;
 			uint32 Count = 0;
 			vk::ShaderStageFlags ShaderStage;
-			SharedRef<Texture> Texture;
+			std::vector<SharedRef<Texture>> Textures;
 		};
 
 		struct StorageImage
@@ -43,7 +43,7 @@ namespace Neon
 			uint32 BindingPoint = 0;
 			uint32 Count = 0;
 			vk::ShaderStageFlags ShaderStage;
-			SharedRef<Texture> Texture;
+			std::vector<SharedRef<Texture>> Textures;
 		};
 
 		struct PushConstant

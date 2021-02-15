@@ -79,6 +79,8 @@ namespace Neon
 
 	void VulkanShader::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture, uint32 mipLevel)
 	{
+		NEO_CORE_ASSERT(index < m_ImageSamplers[name].Count);
+
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
 		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
 		vk::WriteDescriptorSet descWrite{
@@ -87,12 +89,13 @@ namespace Neon
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
 
-		m_ImageSamplers[name].Texture = texture;
+		m_ImageSamplers[name].Textures[index] = texture;
 	}
 
-	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
-									  uint32 mipLevel)
+	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture, uint32 mipLevel)
 	{
+		NEO_CORE_ASSERT(index < m_ImageSamplers[name].Count);
+
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
 		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
 		vk::WriteDescriptorSet descWrite{
@@ -101,12 +104,14 @@ namespace Neon
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
 
-		m_ImageSamplers[name].Texture = texture;
+		m_ImageSamplers[name].Textures[index] = texture;
 	}
 
 	void VulkanShader::SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
 											 uint32 mipLevel)
 	{
+		NEO_CORE_ASSERT(index < m_StorageImages[name].Count);
+
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
 		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
 		vk::WriteDescriptorSet descWrite{
@@ -114,8 +119,7 @@ namespace Neon
 
 		vk::Device device = VulkanContext::GetDevice()->GetHandle();
 		device.updateDescriptorSets({descWrite}, nullptr);
-
-		m_StorageImages[name].Texture = texture;
+		m_StorageImages[name].Textures[index] = texture;
 	}
 
 	void VulkanShader::GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile)
@@ -264,6 +268,7 @@ namespace Neon
 			imageSampler.Name = name;
 			imageSampler.Count = count;
 			imageSampler.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
+			imageSampler.Textures.resize(count);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Count: {0}", count);
@@ -290,6 +295,7 @@ namespace Neon
 			storageImage.Name = name;
 			storageImage.Count = count;
 			storageImage.ShaderStage |= ShaderTypeToVulkanShaderType(shaderType);
+			storageImage.Textures.resize(count);
 
 			NEO_CORE_TRACE("  Name: {0}", name);
 			NEO_CORE_TRACE("  Count: {0}", count);
