@@ -1,6 +1,8 @@
 #include "neopch.h"
 
 #include "InspectorPanel.h"
+#include "Neon/Renderer/Mesh.h"
+#include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
 #include "Neon/Scene/Entity.h"
@@ -161,7 +163,6 @@ namespace Neon
 				DrawVec3Control("Translation", component.Translation);
 
 				glm::vec3 originalEulerAngles = glm::degrees(component.Rotation);
-				originalEulerAngles.x *= 2.f;
 				if (DrawVec3Control("Rotation", originalEulerAngles))
 				{
 					if (originalEulerAngles.x >= 180.f)
@@ -190,20 +191,22 @@ namespace Neon
 						originalEulerAngles.z += 360.f;
 					}
 
-					originalEulerAngles.x /= 2.f;
 					component.Rotation = glm::radians(originalEulerAngles);
 				}
 
 				DrawVec3Control("Scale", component.Scale);
 			});
 			DrawComponent<MeshComponent>("Mesh Component", selectedEntity, [](MeshComponent& component) {
-				ImGui::Columns(3);
-				ImGui::SetColumnWidth(0, 100);
-				ImGui::SetColumnWidth(1, 300);
-				ImGui::SetColumnWidth(2, 40);
+				ImGui::BeginTable("##meshfiletable", 3);
+
+				ImGui::TableSetupColumn("##meshfileTitle", 0, 100);
+				ImGui::TableSetupColumn("##meshfile", 0, 700);
+				ImGui::TableSetupColumn("##meshfileButton", 0, 40);
+
+				ImGui::TableNextColumn();
 				ImGui::Text("File Path");
-				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1);
+
+				ImGui::TableNextColumn();
 				if (component.Mesh)
 				{
 					ImGui::InputText("##meshfilepath", (char*)component.Mesh->GetFilePath().c_str(), 256,
@@ -213,10 +216,48 @@ namespace Neon
 				{
 					ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
 				}
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
 
-				ImGui::Columns(1);
+				ImGui::TableNextColumn();
+				if (ImGui::Button("...##openmesh"))
+				{
+					std::string file = Application::Get().OpenFile();
+					if (!file.empty())
+					{
+						RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(component.Mesh));
+						component.Mesh = SharedRef<Mesh>::Create(file);
+					}
+				}
+
+				ImGui::EndTable();
+
+				if (ImGui::TreeNodeEx("Materials"))
+				{
+					ImGui::BeginTable("##meshmaterialssizetable", 2);
+
+					ImGui::TableNextColumn();
+					ImGui::Text("Size");
+
+					ImGui::TableNextColumn();
+					ImGui::InputText("##meshmaterialssize", (char*)std::to_string(component.Mesh->GetMaterials().size()).c_str(),
+									 10);
+
+					ImGui::EndTable();
+
+					for (uint32 i = 0; i < component.Mesh->GetMaterials().size(); i++)
+					{
+						ImGui::BeginTable("##meshmaterialsindextable", 2);
+
+						std::string name = "Element " + std::to_string(i);
+						ImGui::TableNextColumn();
+						ImGui::Text(name.c_str());
+
+						ImGui::TableNextColumn();
+
+						ImGui::EndTable();
+					}
+
+					ImGui::TreePop();
+				}
 			});
 			DrawComponent<LightComponent>("Light Component", selectedEntity, [](LightComponent& component) {
 
