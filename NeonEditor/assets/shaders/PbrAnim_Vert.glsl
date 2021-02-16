@@ -41,7 +41,7 @@ void main()
 
     vec4 worldPosition = worldTransform * vec4(a_Position, 1.0);
     v_WorldPosition = worldPosition.xyz;
-	v_Normal = normalize((worldTransform * vec4(a_Normal, 0.0)).xyz);
+	v_Normal = mat3(worldTransform) * a_Normal;
     v_TexCoord = a_TexCoord;
     v_MaterialIndex = a_MaterialIndex;
     v_WorldNormals = mat3(worldTransform) * mat3(a_Tangent, a_Binormal, a_Normal);

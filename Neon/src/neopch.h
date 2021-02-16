@@ -5,6 +5,10 @@
 	#define NOMINMAX
 #endif
 
+#ifdef NEO_PLATFORM_WINDOWS
+	#include <windows.h>
+#endif
+
 #include <algorithm>
 #include <functional>
 #include <iostream>

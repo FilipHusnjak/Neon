@@ -175,14 +175,6 @@ namespace Neon
 		FlushDrawList();
 	}
 
-	void SceneRenderer::RegisterMesh(const SharedRef<Mesh>& mesh)
-	{
-		SharedRef<Shader> meshShader = mesh->GetShader();
-		meshShader->SetTextureCube("u_EnvRadianceTex", 0, s_Data.EnvFilteredTextureCube, 0);
-		meshShader->SetTextureCube("u_EnvIrradianceTex", 0, s_Data.IrradianceTextureCube, 0);
-		meshShader->SetTexture2D("u_BRDFLUTTexture", 0, s_Data.BRDFLUT, 0);
-	}
-
 	void SceneRenderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/)
 	{
 		s_Data.MeshDrawList.push_back({mesh, transform});
@@ -191,6 +183,21 @@ namespace Neon
 	const SharedRef<RenderPass>& SceneRenderer::GetGeoPass()
 	{
 		return s_Data.GeoPass;
+	}
+
+	const SharedRef<TextureCube>& SceneRenderer::GetRadianceTex()
+	{
+		return s_Data.EnvFilteredTextureCube;
+	}
+
+	const SharedRef<TextureCube>& SceneRenderer::GetIrradianceTex()
+	{
+		return s_Data.IrradianceTextureCube;
+	}
+
+	const SharedRef<Texture2D>& SceneRenderer::GetBRDFLUTTex()
+	{
+		return s_Data.BRDFLUT;
 	}
 
 	void SceneRenderer::SetFocusPoint(const glm::vec2& point)

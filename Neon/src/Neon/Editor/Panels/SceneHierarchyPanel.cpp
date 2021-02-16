@@ -23,7 +23,7 @@ namespace Neon
 			(entity == SceneRenderer::GetSelectedEntity() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Leaf;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-		bool opened = ImGui::TreeNodeEx((void*)(uint32)entity.GetHandle(), flags, name);
+		bool opened = ImGui::TreeNodeEx((void*)(uint32)entity, flags, name);
 		if (ImGui::IsItemClicked())
 		{
 			SceneRenderer::SetSelectedEntity(entity);

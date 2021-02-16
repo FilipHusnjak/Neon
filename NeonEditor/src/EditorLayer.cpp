@@ -2,8 +2,8 @@
 
 #include "EditorLayer.h"
 
-#include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Editor/Panels/InspectorPanel.h>
+#include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Scene/Components.h>
 #include <Neon/Scene/Entity.h>
@@ -25,24 +25,15 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		auto& mesh = m_EditorScene->CreateMesh("assets/models/cerberus/Cerberus_LP.FBX", "Gun");
+		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Gun");
 		auto& transformComponent = mesh.GetComponent<TransformComponent>();
-		//transformComponent.Transform = glm::rotate(glm::mat4(1.f), -3.14f / 2.f, {1, 0, 0});
+		transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
-		auto lightEntity1 = m_EditorScene->CreateEntity("DirectionalLight");
-		lightEntity1.AddComponent<LightComponent>(glm::vec4{-0.68418f, 0.55581f, -0.4722f, 0.f});
+		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
+		lightEntity.AddComponent<LightComponent>(glm::vec4{-0.68418f, 0.55581f, -0.4722f, 0.f});
 
-		m_Panels.push_back(SharedRef<SceneHierarchyPanel>::Create());
-		m_Panels.push_back(SharedRef<InspectorPanel>::Create());
-
-		//auto lightEntity2 = m_EditorScene->CreateEntity("DirectionalLight");
-		//lightEntity2.AddComponent<LightComponent>(glm::vec4{1, -1, -1, 0});
-
-		//auto lightEntity3 = m_EditorScene->CreateEntity("DirectionalLight");
-		//lightEntity3.AddComponent<LightComponent>(glm::vec4{-1, -1, 1, 0});
-
-		//auto lightEntity4 = m_EditorScene->CreateEntity("DirectionalLight");
-		//lightEntity4.AddComponent<LightComponent>(glm::vec4{-1, -1, -1, 0});
+		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
+		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
 	}
 
 	void EditorLayer::OnAttach()

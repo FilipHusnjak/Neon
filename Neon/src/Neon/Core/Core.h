@@ -31,6 +31,8 @@ using byte = uint8;
 
 namespace Neon
 {
+	constexpr auto PI = 3.14159265358979323846264338327950288f;
+
 	void InitializeCore();
 	void ShutdownCore();
 

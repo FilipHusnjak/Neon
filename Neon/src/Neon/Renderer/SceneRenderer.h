@@ -30,10 +30,13 @@ namespace Neon
 		static void BeginScene(const SceneRendererCamera& camera);
 		static void EndScene();
 
-		static void RegisterMesh(const SharedRef<Mesh>& mesh);
 		static void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform = glm::mat4(1.0f));
 
 		static const SharedRef<RenderPass>& GetGeoPass();
+
+		static const SharedRef<TextureCube>& GetRadianceTex();
+		static const SharedRef<TextureCube>& GetIrradianceTex();
+		static const SharedRef<Texture2D>& GetBRDFLUTTex();
 
 		static void SetFocusPoint(const glm::vec2& point);
 

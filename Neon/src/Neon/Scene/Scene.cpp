@@ -104,10 +104,8 @@ namespace Neon
 	{
 		auto entity = CreateEntity(name);
 
-		SharedRef<Mesh> mesh = SharedRef<Mesh>::Create(path, SceneRenderer::GetGeoPass());
+		SharedRef<Mesh> mesh = SharedRef<Mesh>::Create(path);
 		entity.AddComponent<MeshComponent>(mesh);
-
-		SceneRenderer::RegisterMesh(mesh);
 
 		return entity;
 	}

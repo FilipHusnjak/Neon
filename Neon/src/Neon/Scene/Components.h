@@ -52,8 +52,8 @@ namespace Neon
 
 		operator glm::mat4()
 		{
-			return glm::translate(glm::mat4(1.f), Translation) * glm::rotate(glm::mat4(1.f), Rotation.x, {1, 0, 0}) *
-				   glm::eulerAngleXYZ(Rotation.x, Rotation.y, Rotation.z) * glm::scale(glm::mat4(1.f), glm::abs(Scale));
+			return glm::translate(glm::mat4(1.f), Translation) * glm::eulerAngleXYZ(Rotation.x, Rotation.y, Rotation.z) *
+				   glm::scale(glm::mat4(1.f), glm::abs(Scale));
 		}
 	};
 

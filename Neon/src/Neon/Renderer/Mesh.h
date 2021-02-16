@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Neon/Renderer/IndexBuffer.h"
+#include "Neon/Renderer/Material.h"
 #include "Neon/Renderer/Pipeline.h"
 #include "Neon/Renderer/Texture.h"
 #include "Neon/Renderer/VertexBuffer.h"
-#include "Neon/Renderer/Material.h"
 
 #include <glm/glm.hpp>
 
@@ -130,7 +130,7 @@ namespace Neon
 	class Mesh : public RefCounted
 	{
 	public:
-		Mesh(const std::string& filename, const SharedRef<RenderPass>& renderPass);
+		Mesh(const std::string& filename);
 		~Mesh();
 
 		void OnUpdate(float deltaSeconds);
@@ -157,6 +157,11 @@ namespace Neon
 		const std::vector<Submesh>& GetSubmeshes() const
 		{
 			return m_Submeshes;
+		}
+
+		const std::vector<SharedRef<Material>>& GetMaterials() const
+		{
+			return m_Materials;
 		}
 
 		const std::string& GetFilePath() const

@@ -1,6 +1,7 @@
 #include "neopch.h"
 
 #include "Mesh.h"
+#include "Neon/Renderer/SceneRenderer.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
@@ -71,7 +72,7 @@ namespace Neon
 		}
 	};
 
-	Mesh::Mesh(const std::string& filename, const SharedRef<RenderPass>& renderPass)
+	Mesh::Mesh(const std::string& filename)
 		: m_FilePath(filename)
 	{
 		LogStream::Initialize();
@@ -260,7 +261,7 @@ namespace Neon
 		m_MeshShader = Shader::Create(shaderSpecification);
 
 		GraphicsPipelineSpecification graphicsPipelineSpecification;
-		graphicsPipelineSpecification.Pass = renderPass;
+		graphicsPipelineSpecification.Pass = SceneRenderer::GetGeoPass();
 		m_MeshGraphicsPipeline = GraphicsPipeline::Create(m_MeshShader, graphicsPipelineSpecification);
 
 		// Materials
@@ -329,14 +330,12 @@ namespace Neon
 					materialProperties.HasAlbedoTexture = 0.f;
 				}
 
-				if (true || aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
+				if (aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS)
 				{
 					std::filesystem::path path = filename;
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
-					//std::string texturePath = parentPath.string();
-					std::string texturePath = "assets/models/cerberus/textures/Cerberus_N.tga";
-					//std::string texturePath = "assets/models/m1911/m1911_normal.png";
+					std::string texturePath = parentPath.string();
 					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath, {}, 0);
 					materialProperties.HasNormalTex = 1.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
@@ -348,14 +347,12 @@ namespace Neon
 					materialProperties.HasNormalTex = 0.f;
 				}
 
-				if (true || aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
+				if (aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiTexPath) == AI_SUCCESS)
 				{
 					std::filesystem::path path = filename;
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
-					//std::string texturePath = parentPath.string();
-					std::string texturePath = "assets/models/cerberus/textures/Cerberus_R.tga";
-					//std::string texturePath = "assets/models/m1911/m1911_roughness.png";
+					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
 					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath, {}, 0);
 					materialProperties.HasRoughnessTex = 1.f;
@@ -373,22 +370,20 @@ namespace Neon
 				{
 					auto prop = aiMaterial->mProperties[j];
 
-					if (true || prop->mType == aiPTI_String)
+					if (prop->mType == aiPTI_String)
 					{
-						//uint32 strLength = *(uint32*)prop->mData;
-						//std::string str(prop->mData + 4, strLength);
+						uint32 strLength = *(uint32*)prop->mData;
+						std::string str(prop->mData + 4, strLength);
 
 						std::string key = prop->mKey.data;
-						if (true || key == "$raw.ReflectionFactor|file")
+						if (key == "$raw.ReflectionFactor|file")
 						{
 							metalnessTextureFound = true;
 
 							std::filesystem::path path = filename;
 							auto parentPath = path.parent_path();
-							//parentPath /= str;
-							//std::string texturePath = parentPath.string();
-							std::string texturePath = "assets/models/cerberus/textures/Cerberus_M.tga";
-							//std::string texturePath = "assets/models/m1911/m1911_metalness.png";
+							parentPath /= str;
+							std::string texturePath = parentPath.string();
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
 							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath, {}, 0);
 							materialProperties.HasMetalnessTex = 1.f;
@@ -409,6 +404,10 @@ namespace Neon
 				m_Materials[i]->SetProperties(i, &materialProperties);
 			}
 		}
+
+		m_MeshShader->SetTextureCube("u_EnvRadianceTex", 0, SceneRenderer::GetRadianceTex(), 0);
+		m_MeshShader->SetTextureCube("u_EnvIrradianceTex", 0, SceneRenderer::GetIrradianceTex(), 0);
+		m_MeshShader->SetTexture2D("u_BRDFLUTTexture", 0, SceneRenderer::GetBRDFLUTTex(), 0);
 	}
 
 	Mesh::~Mesh()
