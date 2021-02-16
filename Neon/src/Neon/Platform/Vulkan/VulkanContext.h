@@ -42,7 +42,7 @@ namespace Neon
 			return Get()->m_Device;
 		}
 
-		const SharedRef<CommandBuffer>& GetPrimaryRenderCommandBuffer() const override
+		SharedRef<CommandBuffer>& GetPrimaryRenderCommandBuffer() override
 		{
 			return m_RenderCommandBuffers[m_SwapChain.GetCurrentFrameIndex()];
 		}

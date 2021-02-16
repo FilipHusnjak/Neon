@@ -32,6 +32,45 @@ namespace Neon
 		CommandBufferType m_Type;
 	};
 
+	class StaleResourceWrapper
+	{
+	public:
+		template<typename ResourceType>
+		static StaleResourceWrapper Create(const ResourceType& resource)
+		{
+			class SpecificStaleResource final : public StaleResourceBase
+			{
+			public:
+				SpecificStaleResource(const ResourceType& resource)
+					: m_Resource(resource)
+				{
+				}
+
+			private:
+				ResourceType m_Resource;
+			};
+
+			return StaleResourceWrapper{SharedRef<StaleResourceBase>(new SpecificStaleResource{resource})};
+		}
+
+	public:
+		~StaleResourceWrapper() = default;
+
+	private:
+		class StaleResourceBase : public RefCounted
+		{
+		public:
+			virtual ~StaleResourceBase() = default;
+		};
+
+		StaleResourceWrapper(const SharedRef<StaleResourceBase>& staleResource)
+			: m_StaleResource(staleResource)
+		{
+		}
+
+		SharedRef<StaleResourceBase> m_StaleResource;
+	};
+
 	class CommandBuffer : public RefCounted
 	{
 	public:
@@ -61,7 +100,19 @@ namespace Neon
 
 		virtual void* GetHandle() const = 0;
 
+		void SafeDestroyResource(const StaleResourceWrapper& staleResourceWrapper)
+		{
+			m_ReleaseQueue.push_back(staleResourceWrapper);
+		}
+
+		void Flush()
+		{
+			m_ReleaseQueue.clear();
+		}
+
 	protected:
 		SharedRef<CommandPool> m_Pool;
+
+		std::vector<StaleResourceWrapper> m_ReleaseQueue;
 	};
 } // namespace Neon

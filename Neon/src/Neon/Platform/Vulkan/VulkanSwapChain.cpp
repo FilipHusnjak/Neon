@@ -306,7 +306,6 @@ namespace Neon
 
 		device.waitIdle();
 		Create(&width, &height);
-		device.waitIdle();
 	}
 
 	void VulkanSwapChain::BeginFrame()
@@ -359,6 +358,8 @@ namespace Neon
 			}
 		}
 		VK_CHECK_RESULT(m_Device->GetHandle().waitForFences(m_WaitFences[m_CurrentFrameIndex].get(), VK_TRUE, UINT64_MAX));
+
+		vulkanGraphicsCommandBuffer->Flush();
 	}
 
 	vk::Result VulkanSwapChain::AcquireNextImage(vk::Semaphore imageAcquiredSemaphore, uint32& imageIndex)

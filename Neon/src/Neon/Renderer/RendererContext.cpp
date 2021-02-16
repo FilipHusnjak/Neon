@@ -25,6 +25,11 @@ namespace Neon
 		return nullptr;
 	}
 
+	void RendererContext::SafeDeleteResource(const StaleResourceWrapper& staleResourceWrapper)
+	{
+		GetPrimaryRenderCommandBuffer()->SafeDestroyResource(staleResourceWrapper);
+	}
+
 	SharedRef<RendererContext> RendererContext::Get()
 	{
 		return Application::Get().GetWindow().GetRenderContext();

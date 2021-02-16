@@ -23,12 +23,14 @@ namespace Neon
 
 		virtual uint32 GetTargetMaxFramesInFlight() const = 0;
 
-		virtual const SharedRef<CommandBuffer>& GetPrimaryRenderCommandBuffer() const = 0;
+		virtual SharedRef<CommandBuffer>& GetPrimaryRenderCommandBuffer() = 0;
 
 		virtual void WaitIdle() const = 0;
 
 		virtual SharedRef<CommandBuffer> GetCommandBuffer(CommandBufferType type, bool begin) const = 0;
 		virtual void SubmitCommandBuffer(SharedRef<CommandBuffer>& commandBuffer) const = 0;
+
+		void SafeDeleteResource(const StaleResourceWrapper& staleResourceWrapper);
 
 		static SharedRef<RendererContext> Get();
 	};
