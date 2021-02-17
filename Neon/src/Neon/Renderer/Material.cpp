@@ -9,9 +9,15 @@ namespace Neon
 	{
 	}
 
-	void Material::SetProperties(uint32 index, void* data)
+	void Material::SetProperties(uint32 index, const MaterialProperties& properties)
 	{
-		m_Shader->SetUniformBuffer("MaterialUBO", index, data);
+		m_Properties = properties;
+		m_Shader->SetUniformBuffer("MaterialUBO", index, &properties);
+	}
+
+	MaterialProperties& Material::GetProperties()
+	{
+		return m_Properties;
 	}
 
 	void Material::SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture2D, uint32 mipLevel)
@@ -53,6 +59,16 @@ namespace Neon
 		SharedRef<TextureCube> textureCube = TextureCube::Create(paths, textureSpecification);
 		NEO_CORE_ASSERT(textureCube->Loaded(), "Could not load texture!");
 		SetTextureCube(name, index, textureCube, mipLevel);
+	}
+
+	SharedRef<Texture2D> Material::GetTexture2D(const std::string& name, uint32 index) const
+	{
+		return m_Shader->GetTexture2D(name, index);
+	}
+
+	SharedRef<TextureCube> Material::GetTextureCube(const std::string& name, uint32 index) const
+	{
+		return m_Shader->GetTextureCube(name, index);
 	}
 
 } // namespace Neon

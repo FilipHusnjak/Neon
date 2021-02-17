@@ -76,12 +76,15 @@ namespace Neon
 			throw std::logic_error("The method or operation is not implemented.");
 		}
 
+		void* GetRendererId() const override;
+
 		void RegenerateMipMaps() override;
 
 	private:
 		void CreateResources(vk::ImageUsageFlags usage);
 		void Update();
 		void CreateDefaultTexture();
+		void CreateRendererId();
 
 	private:
 		Buffer m_Data{};
@@ -92,6 +95,10 @@ namespace Neon
 		std::vector<vk::UniqueImageView> m_Views;
 
 		VulkanAllocator m_Allocator{};
+
+		vk::UniqueDescriptorPool m_DescPool;
+		vk::UniqueDescriptorSetLayout m_DescSetLayout;
+		vk::UniqueDescriptorSet m_DescSet;
 	};
 
 	class VulkanTextureCube : public TextureCube

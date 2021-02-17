@@ -86,6 +86,8 @@ namespace Neon
 		m_Allocator = VulkanAllocator(VulkanContext::GetDevice(), "Texture2D");
 
 		CreateDefaultTexture();
+
+		CreateRendererId();
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const std::string& path, const TextureSpecification& specification)
@@ -162,6 +164,8 @@ namespace Neon
 							vk::ImageUsageFlagBits::eSampled);
 			Update();
 		}
+
+		CreateRendererId();
 	}
 
 	VulkanTexture2D::VulkanTexture2D(TextureFormat format, uint32 width, uint32 height, uint32 sampleCount,
@@ -175,7 +179,13 @@ namespace Neon
 		m_Specification.SampleCount = sampleCount;
 		m_Layout = vk::ImageLayout::eShaderReadOnlyOptimal;
 		m_MipLevelCount = 1;
+
 		CreateResources(usage);
+
+		if (usage & vk::ImageUsageFlagBits::eSampled)
+		{
+			CreateRendererId();
+		}
 	}
 
 	VulkanTexture2D::~VulkanTexture2D()
@@ -184,6 +194,11 @@ namespace Neon
 		{
 			delete[] m_Data.Data;
 		}
+	}
+
+	void* VulkanTexture2D::GetRendererId() const
+	{
+		return m_DescSet.get();
 	}
 
 	void VulkanTexture2D::RegenerateMipMaps()
@@ -404,6 +419,49 @@ namespace Neon
 		CreateResources(vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc |
 						vk::ImageUsageFlagBits::eSampled);
 		Update();
+	}
+
+	void VulkanTexture2D::CreateRendererId()
+	{
+		if (m_Format == TextureFormat::Depth)
+		{
+			return;
+		}
+
+		const auto device = VulkanContext::GetDevice();
+
+		vk::DescriptorPoolSize poolSize = {vk::DescriptorType::eCombinedImageSampler, 1};
+		vk::DescriptorPoolCreateInfo descPoolCreateInfo = {};
+		descPoolCreateInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+		descPoolCreateInfo.maxSets = 1;
+		descPoolCreateInfo.poolSizeCount = 1;
+		descPoolCreateInfo.pPoolSizes = &poolSize;
+		m_DescPool = device->GetHandle().createDescriptorPoolUnique(descPoolCreateInfo);
+
+		vk::DescriptorSetLayoutBinding binding = {};
+		binding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		binding.descriptorCount = 1;
+		binding.stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+		descriptorSetLayoutCreateInfo.bindingCount = 1;
+		descriptorSetLayoutCreateInfo.pBindings = &binding;
+		m_DescSetLayout = device->GetHandle().createDescriptorSetLayoutUnique(descriptorSetLayoutCreateInfo);
+
+		vk::DescriptorSetAllocateInfo descAllocInfo = {};
+		descAllocInfo.descriptorPool = m_DescPool.get();
+		descAllocInfo.descriptorSetCount = 1;
+		descAllocInfo.pSetLayouts = &m_DescSetLayout.get();
+		m_DescSet = std::move(device->GetHandle().allocateDescriptorSetsUnique(descAllocInfo)[0]);
+
+		vk::DescriptorImageInfo imageInfo = GetTextureDescription(0);
+		vk::WriteDescriptorSet descWrite = {};
+		descWrite.dstSet = m_DescSet.get();
+		descWrite.descriptorCount = 1;
+		descWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		descWrite.pImageInfo = &imageInfo;
+
+		device->GetHandle().updateDescriptorSets({descWrite}, nullptr);
 	}
 
 	VulkanTextureCube::VulkanTextureCube(const TextureSpecification& specification)

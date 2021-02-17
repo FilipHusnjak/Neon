@@ -38,7 +38,7 @@ namespace Neon
 
 		std::vector<MeshDrawCommand> MeshDrawList;
 
-		SharedRef<Material> SkyboxMaterial;
+		Material SkyboxMaterial;
 		SharedRef<GraphicsPipeline> SkyboxGraphicsPipeline;
 
 		SharedRef<Shader> EnvUnfilteredComputeShader;
@@ -133,12 +133,12 @@ namespace Neon
 		skyboxShaderSpec.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Skybox_Vert.glsl";
 		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
 		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-		s_Data.SkyboxMaterial = SharedRef<Material>::Create(Shader::Create(skyboxShaderSpec));
-		s_Data.SkyboxMaterial->SetTextureCube("u_Cubemap", 0, s_Data.EnvFilteredTextureCube, 0);
+		s_Data.SkyboxMaterial = Material(Shader::Create(skyboxShaderSpec));
+		s_Data.SkyboxMaterial.SetTextureCube("u_Cubemap", 0, s_Data.EnvFilteredTextureCube, 0);
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
-		s_Data.SkyboxGraphicsPipeline = GraphicsPipeline::Create(s_Data.SkyboxMaterial->GetShader(), skyboxGraphicsPipelineSpec);
+		s_Data.SkyboxGraphicsPipeline = GraphicsPipeline::Create(s_Data.SkyboxMaterial.GetShader(), skyboxGraphicsPipelineSpec);
 	}
 
 	const SharedRef<Scene>& SceneRenderer::GetActiveScene()
@@ -330,7 +330,7 @@ namespace Neon
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;
 		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
-		s_Data.SkyboxMaterial->GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
+		s_Data.SkyboxMaterial.GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
 		Renderer::SubmitFullscreenQuad(s_Data.SkyboxGraphicsPipeline);
 
 		Renderer::EndRenderPass();

@@ -159,7 +159,7 @@ namespace Neon
 			return m_Submeshes;
 		}
 
-		const std::vector<SharedRef<Material>>& GetMaterials() const
+		const std::vector<Material>& GetMaterials() const
 		{
 			return m_Materials;
 		}
@@ -205,7 +205,7 @@ namespace Neon
 		SharedRef<Shader> m_MeshShader;
 		SharedRef<GraphicsPipeline> m_MeshGraphicsPipeline;
 
-		std::vector<SharedRef<Material>> m_Materials;
+		std::vector<Material> m_Materials;
 
 		// Animation
 		bool m_IsAnimated = false;

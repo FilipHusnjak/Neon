@@ -71,6 +71,9 @@ namespace Neon
 		virtual void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
 										   uint32 mipLevel) = 0;
 
+		virtual SharedRef<Texture2D> GetTexture2D(const std::string& name, uint32 index) const = 0;
+		virtual SharedRef<TextureCube> GetTextureCube(const std::string& name, uint32 index) const = 0;
+
 		const VertexBufferLayout& GetVertexBufferLayout() const
 		{
 			return m_Specification.VBLayout;

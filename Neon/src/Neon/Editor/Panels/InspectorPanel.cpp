@@ -145,6 +145,11 @@ namespace Neon
 		return modified;
 	}
 
+	InspectorPanel::InspectorPanel()
+	{
+		m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga", {});
+	}
+
 	void InspectorPanel::Render() const
 	{
 		Entity selectedEntity = SceneRenderer::GetSelectedEntity();
@@ -196,7 +201,7 @@ namespace Neon
 
 				DrawVec3Control("Scale", component.Scale);
 			});
-			DrawComponent<MeshComponent>("Mesh Component", selectedEntity, [](MeshComponent& component) {
+			DrawComponent<MeshComponent>("Mesh Component", selectedEntity, [this](MeshComponent& component) {
 				ImGui::BeginTable("##meshfiletable", 3);
 
 				ImGui::TableSetupColumn("##meshfileTitle", 0, 100);
@@ -245,6 +250,9 @@ namespace Neon
 
 					for (uint32 i = 0; i < component.Mesh->GetMaterials().size(); i++)
 					{
+						Material material = component.Mesh->GetMaterials()[i];
+						MaterialProperties& materialProperties = material.GetProperties();
+
 						ImGui::BeginTable("##meshmaterialsindextable", 2);
 
 						std::string name = "Element " + std::to_string(i);
@@ -254,6 +262,13 @@ namespace Neon
 						ImGui::TableNextColumn();
 
 						ImGui::EndTable();
+
+						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+						ImGui::Image(materialProperties.HasAlbedoTexture > 0.5
+										 ? material.GetTexture2D("u_AlbedoTextures", 0)->GetRendererId()
+										 : m_CheckerboardTex->GetRendererId(),
+									 ImVec2(64, 64));
+						ImGui::PopStyleVar();
 					}
 
 					ImGui::TreePop();

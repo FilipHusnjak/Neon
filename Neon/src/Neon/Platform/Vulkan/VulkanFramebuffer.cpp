@@ -15,32 +15,6 @@ namespace Neon
 	{
 		NEO_CORE_ASSERT(m_Specification.Pass);
 
-		const auto device = VulkanContext::GetDevice();
-
-		vk::DescriptorPoolSize poolSize = {vk::DescriptorType::eCombinedImageSampler, 1};
-		vk::DescriptorPoolCreateInfo descPoolCreateInfo = {};
-		descPoolCreateInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-		descPoolCreateInfo.maxSets = 1;
-		descPoolCreateInfo.poolSizeCount = 1;
-		descPoolCreateInfo.pPoolSizes = &poolSize;
-		m_DescPool = device->GetHandle().createDescriptorPoolUnique(descPoolCreateInfo);
-
-		vk::DescriptorSetLayoutBinding binding = {};
-		binding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-		binding.descriptorCount = 1;
-		binding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
-		descriptorSetLayoutCreateInfo.bindingCount = 1;
-		descriptorSetLayoutCreateInfo.pBindings = &binding;
-		m_ColorImageDescSetLayout = device->GetHandle().createDescriptorSetLayoutUnique(descriptorSetLayoutCreateInfo);
-
-		vk::DescriptorSetAllocateInfo descAllocInfo = {};
-		descAllocInfo.descriptorPool = m_DescPool.get();
-		descAllocInfo.descriptorSetCount = 1;
-		descAllocInfo.pSetLayouts = &m_ColorImageDescSetLayout.get();
-		m_ColorImageDescSet = std::move(device->GetHandle().allocateDescriptorSetsUnique(descAllocInfo)[0]);
-
 		Create(spec.Width, spec.Height);
 	}
 
@@ -112,18 +86,6 @@ namespace Neon
 		framebufferCreateInfo.layers = 1;
 
 		m_Handle = device->GetHandle().createFramebufferUnique(framebufferCreateInfo);
-
-		if (m_SampledImageIndex > -1)
-		{
-			vk::DescriptorImageInfo imageInfo = m_Textures[m_SampledImageIndex].As<VulkanTexture2D>()->GetTextureDescription(0);
-			vk::WriteDescriptorSet descWrite = {};
-			descWrite.dstSet = m_ColorImageDescSet.get();
-			descWrite.descriptorCount = 1;
-			descWrite.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-			descWrite.pImageInfo = &imageInfo;
-
-			device->GetHandle().updateDescriptorSets({descWrite}, nullptr);
-		}
 	}
 
 } // namespace Neon

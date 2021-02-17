@@ -269,19 +269,10 @@ namespace Neon
 		{
 			NEO_MESH_LOG("---- Materials - {0} ----", filename);
 
-			m_Materials.resize(m_Scene->mNumMaterials, SharedRef<Material>::Create(m_MeshShader));
+			m_Materials.resize(m_Scene->mNumMaterials, Material(m_MeshShader));
 			for (uint32 i = 0; i < m_Scene->mNumMaterials; i++)
 			{
-				struct
-				{
-					glm::vec4 AlbedoColor;
-					float HasAlbedoTexture;
-					float HasNormalTex;
-					float Metalness;
-					float HasMetalnessTex;
-					float Roughness;
-					float HasRoughnessTex;
-				} materialProperties;
+				MaterialProperties materialProperties;
 
 				auto aiMaterial = m_Scene->mMaterials[i];
 				auto aiMaterialName = aiMaterial->GetName();
@@ -318,14 +309,14 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
-					m_Materials[i]->LoadTexture2D("u_AlbedoTextures", i, texturePath, {TextureType::SRGB}, 0);
+					m_Materials[i].LoadTexture2D("u_AlbedoTextures", i, texturePath, {TextureType::SRGB}, 0);
 					materialProperties.HasAlbedoTexture = 1.f;
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
 				else
 				{
 					NEO_MESH_LOG("    No albedo map!");
-					m_Materials[i]->LoadDefaultTexture2D("u_AlbedoTextures", i, 0);
+					m_Materials[i].LoadDefaultTexture2D("u_AlbedoTextures", i, 0);
 					materialProperties.AlbedoColor = glm::vec4{aiColor.r, aiColor.g, aiColor.b, 1.f};
 					materialProperties.HasAlbedoTexture = 0.f;
 				}
@@ -336,14 +327,14 @@ namespace Neon
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
-					m_Materials[i]->LoadTexture2D("u_NormalTextures", i, texturePath, {}, 0);
+					m_Materials[i].LoadTexture2D("u_NormalTextures", i, texturePath, {}, 0);
 					materialProperties.HasNormalTex = 1.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
 				}
 				else
 				{
 					NEO_MESH_LOG("    No normal map!");
-					m_Materials[i]->LoadDefaultTexture2D("u_NormalTextures", i, 0);
+					m_Materials[i].LoadDefaultTexture2D("u_NormalTextures", i, 0);
 					materialProperties.HasNormalTex = 0.f;
 				}
 
@@ -354,13 +345,13 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
-					m_Materials[i]->LoadTexture2D("u_RoughnessTextures", i, texturePath, {}, 0);
+					m_Materials[i].LoadTexture2D("u_RoughnessTextures", i, texturePath, {}, 0);
 					materialProperties.HasRoughnessTex = 1.f;
 				}
 				else
 				{
 					NEO_MESH_LOG("    No roughness map");
-					m_Materials[i]->LoadDefaultTexture2D("u_RoughnessTextures", i, 0);
+					m_Materials[i].LoadDefaultTexture2D("u_RoughnessTextures", i, 0);
 					materialProperties.Roughness = roughness;
 					materialProperties.HasRoughnessTex = 0.f;
 				}
@@ -385,7 +376,7 @@ namespace Neon
 							parentPath /= str;
 							std::string texturePath = parentPath.string();
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
-							m_Materials[i]->LoadTexture2D("u_MetalnessTextures", i, texturePath, {}, 0);
+							m_Materials[i].LoadTexture2D("u_MetalnessTextures", i, texturePath, {}, 0);
 							materialProperties.HasMetalnessTex = 1.f;
 							break;
 						}
@@ -395,13 +386,13 @@ namespace Neon
 				if (!metalnessTextureFound)
 				{
 					NEO_MESH_LOG("    No metalness map");
-					m_Materials[i]->LoadDefaultTexture2D("u_MetalnessTextures", i, 0);
+					m_Materials[i].LoadDefaultTexture2D("u_MetalnessTextures", i, 0);
 					materialProperties.Metalness = metalness;
 					materialProperties.HasMetalnessTex = 0.f;
 				}
 				NEO_MESH_LOG("------------------------");
 
-				m_Materials[i]->SetProperties(i, &materialProperties);
+				m_Materials[i].SetProperties(i, materialProperties);
 			}
 		}
 

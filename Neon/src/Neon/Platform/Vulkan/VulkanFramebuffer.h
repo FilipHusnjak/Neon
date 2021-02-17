@@ -14,11 +14,12 @@ namespace Neon
 
 		void* GetSampledImageId() const override
 		{
-			return m_ColorImageDescSet.get();
+			NEO_CORE_ASSERT(m_SampledImageIndex > -1 && m_SampledImageIndex < m_Textures.size());
+			return m_Textures[m_SampledImageIndex]->GetRendererId();
 		}
 		const SharedRef<Texture2D>& GetSampledImage() const override
 		{
-			NEO_CORE_ASSERT(m_SampledImageIndex > -1);
+			NEO_CORE_ASSERT(m_SampledImageIndex > -1 && m_SampledImageIndex < m_Textures.size());
 			return m_Textures[m_SampledImageIndex];
 		}
 
@@ -36,10 +37,6 @@ namespace Neon
 		std::vector<SharedRef<Texture2D>> m_Textures;
 
 		vk::UniqueDescriptorPool m_ImGuiDescPool;
-
-		vk::UniqueDescriptorPool m_DescPool;
-		vk::UniqueDescriptorSetLayout m_ColorImageDescSetLayout;
-		vk::UniqueDescriptorSet m_ColorImageDescSet;
 
 		int32 m_SampledImageIndex = -1;
 	};

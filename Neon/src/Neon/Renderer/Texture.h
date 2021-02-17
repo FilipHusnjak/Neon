@@ -85,6 +85,8 @@ namespace Neon
 		virtual uint32 GetWidth() const = 0;
 		virtual uint32 GetHeight() const = 0;
 
+		virtual void* GetRendererId() const = 0;
+
 		const std::string& GetPath() const
 		{
 			return m_Path;

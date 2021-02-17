@@ -67,6 +67,9 @@ namespace Neon
 		void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
 								   uint32 mipLevel) override;
 
+		SharedRef<Texture2D> GetTexture2D(const std::string& name, uint32 index) const override;
+		SharedRef<TextureCube> GetTextureCube(const std::string& name, uint32 index) const override;
+
 		vk::DescriptorSetLayout GetDescriptorSetLayout() const
 		{
 			return m_DescriptorSetLayout.get();

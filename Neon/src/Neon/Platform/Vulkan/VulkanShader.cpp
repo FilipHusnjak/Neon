@@ -122,6 +122,20 @@ namespace Neon
 		m_StorageImages[name].Textures[index] = texture;
 	}
 
+	SharedRef<Texture2D> VulkanShader::GetTexture2D(const std::string& name, uint32 index) const
+	{
+		NEO_CORE_ASSERT(m_ImageSamplers.find(name) != m_ImageSamplers.end());
+		NEO_CORE_ASSERT(index >= 0 && index < m_ImageSamplers.at(name).Textures.size());
+		return m_ImageSamplers.at(name).Textures[index].As<Texture2D>();
+	}
+
+	SharedRef<TextureCube> VulkanShader::GetTextureCube(const std::string& name, uint32 index) const
+	{
+		NEO_CORE_ASSERT(m_ImageSamplers.find(name) != m_ImageSamplers.end());
+		NEO_CORE_ASSERT(index >= 0 && index < m_ImageSamplers.at(name).Textures.size());
+		return m_ImageSamplers.at(name).Textures[index].As<TextureCube>();
+	}
+
 	void VulkanShader::GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile)
 	{
 		std::string shaderPath = m_Specification.ShaderPaths.at(shaderType);
