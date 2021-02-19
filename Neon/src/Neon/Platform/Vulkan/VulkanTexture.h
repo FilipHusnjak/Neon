@@ -30,6 +30,20 @@ namespace Neon
 		return vk::Format::eUndefined;
 	}
 
+	static vk::SamplerAddressMode ConvertTextureWrapToVulkanTextureWrap(TextureWrap wrap)
+	{
+		switch (wrap)
+		{
+			case TextureWrap::None:
+			case TextureWrap::Repeat:
+				return vk::SamplerAddressMode::eRepeat;
+			case TextureWrap::Clamp:
+				return vk::SamplerAddressMode::eClampToEdge;
+		}
+		NEO_CORE_ASSERT(false, "Uknown texture wrap!");
+		return vk::SamplerAddressMode::eRepeat;
+	}
+
 	class VulkanTexture2D : public Texture2D
 	{
 	public:

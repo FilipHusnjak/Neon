@@ -270,9 +270,9 @@ namespace Neon
 		samplerCreateInfo.magFilter = vk::Filter::eLinear;
 		samplerCreateInfo.minFilter = vk::Filter::eLinear;
 		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+		samplerCreateInfo.addressModeU = ConvertTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
+		samplerCreateInfo.addressModeV = ConvertTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
+		samplerCreateInfo.addressModeW = ConvertTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
 		samplerCreateInfo.mipLodBias = 0.0f;
 		samplerCreateInfo.minLod = 0.0f;
 		// Set max level-of-detail to mip level count of the texture
@@ -774,9 +774,9 @@ namespace Neon
 		samplerCreateInfo.magFilter = vk::Filter::eLinear;
 		samplerCreateInfo.minFilter = vk::Filter::eLinear;
 		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-		samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-		samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-		samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+		samplerCreateInfo.addressModeU = ConvertTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
+		samplerCreateInfo.addressModeV = ConvertTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
+		samplerCreateInfo.addressModeW = ConvertTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
 		samplerCreateInfo.mipLodBias = 0.f;
 		samplerCreateInfo.minLod = 0.f;
 		samplerCreateInfo.maxLod = static_cast<float>(m_MipLevelCount);
