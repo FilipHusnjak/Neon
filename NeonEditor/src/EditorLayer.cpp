@@ -2,6 +2,7 @@
 
 #include "EditorLayer.h"
 
+#include <Neon/Editor/Panels/ContentBrowserPanel.h>
 #include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Renderer/Renderer.h>
@@ -34,6 +35,7 @@ namespace Neon
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
+		m_Panels.emplace_back(SharedRef<ContentBrowserPanel>::Create());
 	}
 
 	void EditorLayer::OnAttach()
