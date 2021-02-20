@@ -159,6 +159,10 @@ namespace Neon
 			return m_Submeshes;
 		}
 
+		std::vector<Material>& GetMaterials()
+		{
+			return m_Materials;
+		}
 		const std::vector<Material>& GetMaterials() const
 		{
 			return m_Materials;

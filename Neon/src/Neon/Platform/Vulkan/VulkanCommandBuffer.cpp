@@ -139,9 +139,11 @@ namespace Neon
 	{
 		SharedRef<VulkanShader> vulkanShader = pipeline->GetShader().As<VulkanShader>();
 
+		vulkanShader->PrepareDescriptorSet();
+
 		m_Handle.get().bindPipeline(NeonToVulkanPipelineBindPoint(pipeline->GetBindPoint()), (VkPipeline)pipeline->GetHandle());
 		m_Handle.get().bindDescriptorSets(NeonToVulkanPipelineBindPoint(pipeline->GetBindPoint()),
-										  (VkPipelineLayout)pipeline->GetLayout(), 0, 1, &vulkanShader->m_DescriptorSet.get(), 0,
+										  (VkPipelineLayout)pipeline->GetLayout(), 0, 1, &vulkanShader->GetDescriptorSet(), 0,
 										  nullptr);
 
 		for (const auto& [name, pushConstant] : vulkanShader->m_PushConstants)

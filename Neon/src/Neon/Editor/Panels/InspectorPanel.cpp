@@ -250,7 +250,7 @@ namespace Neon
 
 					for (uint32 i = 0; i < component.Mesh->GetMaterials().size(); i++)
 					{
-						Material material = component.Mesh->GetMaterials()[i];
+						Material& material = component.Mesh->GetMaterials()[i];
 						MaterialProperties& materialProperties = material.GetProperties();
 
 						ImGui::BeginTable("##meshmaterialsindextable", 2);
@@ -265,10 +265,22 @@ namespace Neon
 
 						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
 						ImGui::Image(materialProperties.HasAlbedoTexture > 0.5
-										 ? material.GetTexture2D("u_AlbedoTextures", 0)->GetRendererId()
+										 ? material.GetTexture2D("u_AlbedoTextures")->GetRendererId()
 										 : m_CheckerboardTex->GetRendererId(),
 									 ImVec2(64, 64));
 						ImGui::PopStyleVar();
+
+						if (ImGui::IsItemClicked())
+						{
+							std::string filename = Application::Get().OpenFile("");
+							if (!filename.empty())
+							{
+								SharedRef<Texture2D> albedoMap = Texture2D::Create(filename, {TextureType::SRGB});
+								material.SetTexture2D("u_AlbedoTextures", albedoMap, 0);
+								materialProperties.HasAlbedoTexture = 1.f;
+								material.SetProperties(materialProperties);
+							}
+						}
 					}
 
 					ImGui::TreePop();

@@ -40,6 +40,9 @@ namespace Neon
 		std::vector<vk::Semaphore> m_SignalSemaphores;
 		vk::PipelineStageFlags m_WaitStage;
 		vk::Fence m_Fence;
+
+		vk::UniqueDescriptorPool m_DescPool;
+		vk::UniqueDescriptorSet m_DescSet;
 	};
 
 	class VulkanCommandPool : public CommandPool

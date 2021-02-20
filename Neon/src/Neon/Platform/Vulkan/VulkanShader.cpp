@@ -82,13 +82,13 @@ namespace Neon
 		NEO_CORE_ASSERT(index < m_ImageSamplers[name].Count);
 
 		const auto vulkanTexture = texture.As<VulkanTexture2D>();
-		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+		auto& imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
+		m_PendingWrites.emplace_back(nullptr, imageInfo, descWrite);
 
-		vk::Device device = VulkanContext::GetDevice()->GetHandle();
-		device.updateDescriptorSets({descWrite}, nullptr);
-
+		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_ImageSamplers[name].Textures[index]));
 		m_ImageSamplers[name].Textures[index] = texture;
 	}
 
@@ -97,13 +97,13 @@ namespace Neon
 		NEO_CORE_ASSERT(index < m_ImageSamplers[name].Count);
 
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
-		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+		auto& imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo};
+		m_PendingWrites.emplace_back(nullptr, imageInfo, descWrite);
 
-		vk::Device device = VulkanContext::GetDevice()->GetHandle();
-		device.updateDescriptorSets({descWrite}, nullptr);
-
+		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_ImageSamplers[name].Textures[index]));
 		m_ImageSamplers[name].Textures[index] = texture;
 	}
 
@@ -113,12 +113,13 @@ namespace Neon
 		NEO_CORE_ASSERT(index < m_StorageImages[name].Count);
 
 		const auto vulkanTexture = texture.As<VulkanTextureCube>();
-		vk::DescriptorImageInfo imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+		auto& imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+
 		vk::WriteDescriptorSet descWrite{
 			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eStorageImage, &imageInfo};
+		m_PendingWrites.emplace_back(nullptr, imageInfo, descWrite);
 
-		vk::Device device = VulkanContext::GetDevice()->GetHandle();
-		device.updateDescriptorSets({descWrite}, nullptr);
+		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_StorageImages[name].Textures[index]));
 		m_StorageImages[name].Textures[index] = texture;
 	}
 
@@ -134,6 +135,27 @@ namespace Neon
 		NEO_CORE_ASSERT(m_ImageSamplers.find(name) != m_ImageSamplers.end());
 		NEO_CORE_ASSERT(index >= 0 && index < m_ImageSamplers.at(name).Textures.size());
 		return m_ImageSamplers.at(name).Textures[index].As<TextureCube>();
+	}
+
+	void VulkanShader::PrepareDescriptorSet()
+	{
+		if (!m_PendingWrites.empty())
+		{
+			vk::Device device = VulkanContext::GetDevice()->GetHandle();
+
+			std::vector<vk::WriteDescriptorSet> writes;
+
+			for (auto& [bufferInfo, imageInfo, descWrite] : m_PendingWrites)
+			{
+				descWrite.pBufferInfo = &bufferInfo;
+				descWrite.pImageInfo = &imageInfo;
+				writes.push_back(descWrite);
+			}
+
+			device.updateDescriptorSets(writes, {});
+
+			m_PendingWrites.clear();
+		}
 	}
 
 	void VulkanShader::GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile)
@@ -442,17 +464,17 @@ namespace Neon
 
 		for (const auto& [name, uniformBuffer] : m_UniformBuffers)
 		{
-			std::vector<vk::DescriptorBufferInfo> bufferInfos(uniformBuffer.Count);
-			for (uint32 i = 0; i < bufferInfos.size(); i++)
+			for (uint32 i = 0; i < uniformBuffer.Count; i++)
 			{
-				bufferInfos[i].buffer = m_UniformBuffers[name].Buffers[i].Handle.get();
-				bufferInfos[i].offset = 0;
-				bufferInfos[i].range = m_UniformBuffers[name].Buffers[i].Size;
+				vk::DescriptorBufferInfo bufferInfo;
+				bufferInfo.buffer = m_UniformBuffers[name].Buffers[i].Handle.get();
+				bufferInfo.offset = 0;
+				bufferInfo.range = m_UniformBuffers[name].Buffers[i].Size;
+
+				vk::WriteDescriptorSet descWrite = {
+					m_DescriptorSet.get(), m_NameBindingMap[name], i, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo};
+				m_PendingWrites.emplace_back(bufferInfo, nullptr, descWrite);
 			}
-			vk::WriteDescriptorSet descWrite = {
-				m_DescriptorSet.get(), m_NameBindingMap[name], 0, uniformBuffer.Count, vk::DescriptorType::eUniformBuffer, nullptr,
-				bufferInfos.data()};
-			device.updateDescriptorSets({descWrite}, nullptr);
 		}
 
 		for (const auto& [name, storageBuffer] : m_StorageBuffers)
@@ -461,9 +483,10 @@ namespace Neon
 			bufferInfo.buffer = m_StorageBuffers[name].BufferData.Handle.get();
 			bufferInfo.offset = 0;
 			bufferInfo.range = m_StorageBuffers[name].BufferData.Size;
+
 			vk::WriteDescriptorSet descWrite = {
 				m_DescriptorSet.get(), m_NameBindingMap[name], 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &bufferInfo};
-			device.updateDescriptorSets({descWrite}, nullptr);
+			m_PendingWrites.emplace_back(bufferInfo, nullptr, descWrite);
 		}
 	}
 

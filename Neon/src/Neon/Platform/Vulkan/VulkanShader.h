@@ -70,6 +70,11 @@ namespace Neon
 		SharedRef<Texture2D> GetTexture2D(const std::string& name, uint32 index) const override;
 		SharedRef<TextureCube> GetTextureCube(const std::string& name, uint32 index) const override;
 
+		vk::DescriptorSet GetDescriptorSet() const
+		{
+			return m_DescriptorSet.get();
+		}
+
 		vk::DescriptorSetLayout GetDescriptorSetLayout() const
 		{
 			return m_DescriptorSetLayout.get();
@@ -78,6 +83,8 @@ namespace Neon
 		{
 			return m_ShaderStages;
 		}
+
+		void PrepareDescriptorSet();
 
 	private:
 		void GetVulkanShaderBinary(ShaderType shaderType, std::vector<uint32>& outShaderBinary, bool forceCompile);
@@ -104,6 +111,8 @@ namespace Neon
 		std::unordered_map<std::string, PushConstant> m_PushConstants;
 
 		std::unordered_map<std::string, uint32> m_NameBindingMap;
+
+		std::vector<std::tuple<vk::DescriptorBufferInfo, vk::DescriptorImageInfo, vk::WriteDescriptorSet>> m_PendingWrites;
 
 		friend class VulkanCommandBuffer;
 		friend class VulkanGraphicsPipeline;
