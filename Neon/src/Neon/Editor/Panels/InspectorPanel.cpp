@@ -214,7 +214,7 @@ namespace Neon
 
 				ImGui::EndTable();
 
-				if (ImGui::TreeNodeEx("Materials"))
+				if (component.Mesh && ImGui::TreeNodeEx("Materials"))
 				{
 					ImGui::BeginTable("##meshmaterialssizetable", 2);
 
@@ -227,153 +227,150 @@ namespace Neon
 
 					ImGui::EndTable();
 
-					if (component.Mesh)
+					for (uint32 i = 0; i < component.Mesh->GetMaterials().size(); i++)
 					{
-						for (uint32 i = 0; i < component.Mesh->GetMaterials().size(); i++)
+						Material& material = component.Mesh->GetMaterials()[i];
+						MaterialProperties materialProperties = material.GetProperties();
+
+						std::string name = "Element " + std::to_string(i);
+						if (ImGui::TreeNodeEx(name.c_str()))
 						{
-							Material& material = component.Mesh->GetMaterials()[i];
-							MaterialProperties materialProperties = material.GetProperties();
-
-							std::string name = "Element " + std::to_string(i);
-							if (ImGui::TreeNodeEx(name.c_str()))
+							if (ImGui::CollapsingHeader("Albedo", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
 							{
-								if (ImGui::CollapsingHeader("Albedo", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+								ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+								ImGui::Image(materialProperties.UseAlbedoMap > 0.5
+												 ? material.GetTexture2D("u_AlbedoTextures")->GetRendererId()
+												 : m_CheckerboardTex->GetRendererId(),
+											 ImVec2(64, 64));
+								ImGui::PopStyleVar();
+
+								if (ImGui::IsItemClicked())
 								{
-									ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-									ImGui::Image(materialProperties.UseAlbedoMap > 0.5
-													 ? material.GetTexture2D("u_AlbedoTextures")->GetRendererId()
-													 : m_CheckerboardTex->GetRendererId(),
-												 ImVec2(64, 64));
-									ImGui::PopStyleVar();
-
-									if (ImGui::IsItemClicked())
+									std::string filename = Application::Get().OpenFile("");
+									if (!filename.empty())
 									{
-										std::string filename = Application::Get().OpenFile("");
-										if (!filename.empty())
-										{
-											SharedRef<Texture2D> albedoMap = Texture2D::Create(filename, {TextureType::SRGB});
-											material.SetTexture2D("u_AlbedoTextures", albedoMap, 0);
-										}
+										SharedRef<Texture2D> albedoMap = Texture2D::Create(filename, {TextureType::SRGB});
+										material.SetTexture2D("u_AlbedoTextures", albedoMap, 0);
 									}
-
-									ImGui::SameLine();
-									ImGui::BeginGroup();
-									bool useAlbedoMap = materialProperties.UseAlbedoMap > 0.5f;
-									if (ImGui::Checkbox("Use##AlbedoMap", &useAlbedoMap))
-									{
-										materialProperties.UseAlbedoMap = useAlbedoMap ? 1.f : 0.f;
-									}
-									ImGui::EndGroup();
-
-									ImGui::SameLine();
-									ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(materialProperties.AlbedoColor),
-													  ImGuiColorEditFlags_NoInputs);
 								}
 
-								if (ImGui::CollapsingHeader("Normals", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+								ImGui::SameLine();
+								ImGui::BeginGroup();
+								bool useAlbedoMap = materialProperties.UseAlbedoMap > 0.5f;
+								if (ImGui::Checkbox("Use##AlbedoMap", &useAlbedoMap))
 								{
-									ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-									ImGui::Image(materialProperties.UseNormalMap > 0.5
-													 ? material.GetTexture2D("u_NormalTextures")->GetRendererId()
-													 : m_CheckerboardTex->GetRendererId(),
-												 ImVec2(64, 64));
-									ImGui::PopStyleVar();
-
-									if (ImGui::IsItemClicked())
-									{
-										std::string filename = Application::Get().OpenFile("");
-										if (!filename.empty())
-										{
-											SharedRef<Texture2D> normalMap = Texture2D::Create(filename, {TextureType::RGB});
-											material.SetTexture2D("u_NormalTextures", normalMap, 0);
-											materialProperties.UseNormalMap = 1.f;
-										}
-									}
-
-									ImGui::SameLine();
-									ImGui::BeginGroup();
-									bool useNormalMap = materialProperties.UseNormalMap > 0.5f;
-									if (ImGui::Checkbox("Use##NormalMap", &useNormalMap))
-									{
-										materialProperties.UseNormalMap = useNormalMap ? 1.f : 0.f;
-									}
-									ImGui::EndGroup();
+									materialProperties.UseAlbedoMap = useAlbedoMap ? 1.f : 0.f;
 								}
+								ImGui::EndGroup();
 
-								if (ImGui::CollapsingHeader("Metalness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-								{
-									ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-									ImGui::Image(materialProperties.UseMetalnessMap > 0.5
-													 ? material.GetTexture2D("u_MetalnessTextures")->GetRendererId()
-													 : m_CheckerboardTex->GetRendererId(),
-												 ImVec2(64, 64));
-									ImGui::PopStyleVar();
-
-									if (ImGui::IsItemClicked())
-									{
-										std::string filename = Application::Get().OpenFile("");
-										if (!filename.empty())
-										{
-											SharedRef<Texture2D> metalnessMap = Texture2D::Create(filename, {TextureType::SRGB});
-											material.SetTexture2D("u_MetalnessTextures", metalnessMap, 0);
-											materialProperties.UseMetalnessMap = 1.f;
-										}
-									}
-
-									ImGui::SameLine();
-									ImGui::BeginGroup();
-									bool useMetalnessMap = materialProperties.UseMetalnessMap > 0.5f;
-									if (ImGui::Checkbox("Use##MetalnessMap", &useMetalnessMap))
-									{
-										materialProperties.UseMetalnessMap = useMetalnessMap ? 1.f : 0.f;
-									}
-									ImGui::EndGroup();
-
-									ImGui::SameLine();
-									ImGui::SliderFloat("##MetalnessInput", &materialProperties.Metalness, 0.0f, 1.0f);
-								}
-
-								if (ImGui::CollapsingHeader("Roughness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-								{
-									ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-									ImGui::Image(materialProperties.UseRoughnessMap > 0.5
-													 ? material.GetTexture2D("u_RoughnessTextures")->GetRendererId()
-													 : m_CheckerboardTex->GetRendererId(),
-												 ImVec2(64, 64));
-									ImGui::PopStyleVar();
-
-									if (ImGui::IsItemClicked())
-									{
-										std::string filename = Application::Get().OpenFile("");
-										if (!filename.empty())
-										{
-											SharedRef<Texture2D> roughnessMap = Texture2D::Create(filename, {TextureType::SRGB});
-											material.SetTexture2D("u_RoughnessTextures", roughnessMap, 0);
-											materialProperties.UseRoughnessMap = 1.f;
-										}
-									}
-
-									ImGui::SameLine();
-									ImGui::BeginGroup();
-									bool useRoughnessMap = materialProperties.UseRoughnessMap > 0.5f;
-									if (ImGui::Checkbox("Use##RoughnessMap", &useRoughnessMap))
-									{
-										materialProperties.UseRoughnessMap = useRoughnessMap ? 1.f : 0.f;
-									}
-									ImGui::EndGroup();
-
-									ImGui::SameLine();
-									ImGui::SliderFloat("##RoughnessInput", &materialProperties.Roughness, 0.0f, 1.0f);
-								}
-
-								ImGui::TreePop();
-
-								material.SetProperties(materialProperties);
+								ImGui::SameLine();
+								ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(materialProperties.AlbedoColor),
+												  ImGuiColorEditFlags_NoInputs);
 							}
 
-							ImGui::Spacing();
-							ImGui::Spacing();
+							if (ImGui::CollapsingHeader("Normals", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+							{
+								ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+								ImGui::Image(materialProperties.UseNormalMap > 0.5
+												 ? material.GetTexture2D("u_NormalTextures")->GetRendererId()
+												 : m_CheckerboardTex->GetRendererId(),
+											 ImVec2(64, 64));
+								ImGui::PopStyleVar();
+
+								if (ImGui::IsItemClicked())
+								{
+									std::string filename = Application::Get().OpenFile("");
+									if (!filename.empty())
+									{
+										SharedRef<Texture2D> normalMap = Texture2D::Create(filename, {TextureType::RGB});
+										material.SetTexture2D("u_NormalTextures", normalMap, 0);
+										materialProperties.UseNormalMap = 1.f;
+									}
+								}
+
+								ImGui::SameLine();
+								ImGui::BeginGroup();
+								bool useNormalMap = materialProperties.UseNormalMap > 0.5f;
+								if (ImGui::Checkbox("Use##NormalMap", &useNormalMap))
+								{
+									materialProperties.UseNormalMap = useNormalMap ? 1.f : 0.f;
+								}
+								ImGui::EndGroup();
+							}
+
+							if (ImGui::CollapsingHeader("Metalness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+							{
+								ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+								ImGui::Image(materialProperties.UseMetalnessMap > 0.5
+												 ? material.GetTexture2D("u_MetalnessTextures")->GetRendererId()
+												 : m_CheckerboardTex->GetRendererId(),
+											 ImVec2(64, 64));
+								ImGui::PopStyleVar();
+
+								if (ImGui::IsItemClicked())
+								{
+									std::string filename = Application::Get().OpenFile("");
+									if (!filename.empty())
+									{
+										SharedRef<Texture2D> metalnessMap = Texture2D::Create(filename, {TextureType::SRGB});
+										material.SetTexture2D("u_MetalnessTextures", metalnessMap, 0);
+										materialProperties.UseMetalnessMap = 1.f;
+									}
+								}
+
+								ImGui::SameLine();
+								ImGui::BeginGroup();
+								bool useMetalnessMap = materialProperties.UseMetalnessMap > 0.5f;
+								if (ImGui::Checkbox("Use##MetalnessMap", &useMetalnessMap))
+								{
+									materialProperties.UseMetalnessMap = useMetalnessMap ? 1.f : 0.f;
+								}
+								ImGui::EndGroup();
+
+								ImGui::SameLine();
+								ImGui::SliderFloat("##MetalnessInput", &materialProperties.Metalness, 0.0f, 1.0f);
+							}
+
+							if (ImGui::CollapsingHeader("Roughness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+							{
+								ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+								ImGui::Image(materialProperties.UseRoughnessMap > 0.5
+												 ? material.GetTexture2D("u_RoughnessTextures")->GetRendererId()
+												 : m_CheckerboardTex->GetRendererId(),
+											 ImVec2(64, 64));
+								ImGui::PopStyleVar();
+
+								if (ImGui::IsItemClicked())
+								{
+									std::string filename = Application::Get().OpenFile("");
+									if (!filename.empty())
+									{
+										SharedRef<Texture2D> roughnessMap = Texture2D::Create(filename, {TextureType::SRGB});
+										material.SetTexture2D("u_RoughnessTextures", roughnessMap, 0);
+										materialProperties.UseRoughnessMap = 1.f;
+									}
+								}
+
+								ImGui::SameLine();
+								ImGui::BeginGroup();
+								bool useRoughnessMap = materialProperties.UseRoughnessMap > 0.5f;
+								if (ImGui::Checkbox("Use##RoughnessMap", &useRoughnessMap))
+								{
+									materialProperties.UseRoughnessMap = useRoughnessMap ? 1.f : 0.f;
+								}
+								ImGui::EndGroup();
+
+								ImGui::SameLine();
+								ImGui::SliderFloat("##RoughnessInput", &materialProperties.Roughness, 0.0f, 1.0f);
+							}
+
+							ImGui::TreePop();
+
+							material.SetProperties(materialProperties);
 						}
+
+						ImGui::Spacing();
+						ImGui::Spacing();
 					}
 
 					ImGui::TreePop();
