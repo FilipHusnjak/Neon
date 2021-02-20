@@ -156,6 +156,13 @@ namespace Neon
 		return s_Data.SelectedEntity;
 	}
 
+	Entity SceneRenderer::CreateEntity(const std::string& name /*= "Entity"*/)
+	{
+		NEO_CORE_ASSERT(s_Data.ActiveScene);
+
+		return s_Data.ActiveScene->CreateEntity(name);
+	}
+
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
 	{
 		// TODO: Implement

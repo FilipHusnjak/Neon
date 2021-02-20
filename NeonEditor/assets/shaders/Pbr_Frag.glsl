@@ -35,12 +35,12 @@ layout (std140, binding = 2) uniform LightUBO
 layout (std140, binding = 3) uniform MaterialUBO
 {
     vec4 AlbedoColor;
-	float HasAlbedoTexture;
-	float HasNormalTex;
+	float UseAlbedoMap;
+	float UseNormalMap;
 	float Metalness;
-	float HasMetalnessTex;
+	float UseMetalnessMap;
 	float Roughness;
-	float HasRoughnessTex;
+	float UseRoughnessMap;
 } u_Materials[];
 
 // Material textures
@@ -120,7 +120,7 @@ vec3 Lighting(vec3 V)
         float geometry = GeometrySmith(PBRProperties.Normal, V, L, PBRProperties.Roughness);
         vec3 fresnel = FresnelSchlick(max(dot(H, V), 0.0), F0);
         vec3 kD = (vec3(1.0) - fresnel) * (1.0 - PBRProperties.Metalness);
-        vec3 diffuse = kD * PBRProperties.Albedo.rgb;
+        vec3 diffuse = kD * PBRProperties.Albedo.rgb / PI;
                 
         vec3 numerator = NDF * geometry * fresnel;
         float NdotL = max(dot(PBRProperties.Normal, L), 0.0);
@@ -155,13 +155,13 @@ vec3 IBL(vec3 V)
 
 void main()
 {
-    PBRProperties.Albedo =  u_Materials[v_MaterialIndex].HasAlbedoTexture < 0.5 ? u_Materials[v_MaterialIndex].AlbedoColor : texture(u_AlbedoTextures[v_MaterialIndex], v_TexCoord);
+    PBRProperties.Albedo =  u_Materials[v_MaterialIndex].UseAlbedoMap < 0.5 ? u_Materials[v_MaterialIndex].AlbedoColor : texture(u_AlbedoTextures[v_MaterialIndex], v_TexCoord);
     PBRProperties.Normal = v_Normal;
-    PBRProperties.Metalness = u_Materials[v_MaterialIndex].HasMetalnessTex < 0.5 ? u_Materials[v_MaterialIndex].Metalness : texture(u_MetalnessTextures[v_MaterialIndex], v_TexCoord).r;
-    PBRProperties.Roughness = u_Materials[v_MaterialIndex].HasRoughnessTex < 0.5 ? u_Materials[v_MaterialIndex].Roughness : texture(u_RoughnessTextures[v_MaterialIndex], v_TexCoord).r;
+    PBRProperties.Metalness = u_Materials[v_MaterialIndex].UseMetalnessMap < 0.5 ? u_Materials[v_MaterialIndex].Metalness : texture(u_MetalnessTextures[v_MaterialIndex], v_TexCoord).r;
+    PBRProperties.Roughness = u_Materials[v_MaterialIndex].UseRoughnessMap < 0.5 ? u_Materials[v_MaterialIndex].Roughness : texture(u_RoughnessTextures[v_MaterialIndex], v_TexCoord).r;
     PBRProperties.Roughness = max(PBRProperties.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
 
-    if (u_Materials[v_MaterialIndex].HasNormalTex >= 0.5)
+    if (u_Materials[v_MaterialIndex].UseNormalMap >= 0.5)
     {
         PBRProperties.Normal = 2.0 * texture(u_NormalTextures[v_MaterialIndex], v_TexCoord).rgb - 1.0;
         PBRProperties.Normal = v_WorldNormals * PBRProperties.Normal;

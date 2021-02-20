@@ -25,6 +25,8 @@ namespace Neon
 		static void SetSelectedEntity(Entity entity);
 		static Entity GetSelectedEntity();
 
+		static Entity CreateEntity(const std::string& name = "Entity");
+
 		static void SetViewportSize(uint32 width, uint32 height);
 
 		static void BeginScene(const SceneRendererCamera& camera);

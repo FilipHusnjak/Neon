@@ -81,6 +81,31 @@ namespace Neon
 			ImGui::TreePop();
 		}
 
+		if (ImGui::BeginPopupContextWindow(0, 1, false))
+		{
+			if (ImGui::BeginMenu("Create"))
+			{
+				if (ImGui::MenuItem("Empty Entity"))
+				{
+					auto newEntity = SceneRenderer::CreateEntity("Empty Entity");
+					SceneRenderer::SetSelectedEntity(newEntity);
+				}
+				if (ImGui::MenuItem("Mesh"))
+				{
+					auto newEntity = SceneRenderer::CreateEntity("Mesh Entity");
+					newEntity.AddComponent<MeshComponent>();
+				}
+				ImGui::Separator();
+				if (ImGui::MenuItem("Directional Light"))
+				{
+					auto newEntity = SceneRenderer::CreateEntity("Directional Light Entity");
+					newEntity.AddComponent<LightComponent>();
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndPopup();
+		}
+
 		ImGui::End();
 	}
 

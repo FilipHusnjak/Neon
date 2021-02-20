@@ -7,12 +7,12 @@ namespace Neon
 	struct MaterialProperties
 	{
 		glm::vec4 AlbedoColor;
-		float HasAlbedoTexture;
-		float HasNormalTex;
+		float UseAlbedoMap;
+		float UseNormalMap;
 		float Metalness;
-		float HasMetalnessTex;
+		float UseMetalnessMap;
 		float Roughness;
-		float HasRoughnessTex;
+		float UseRoughnessMap;
 	};
 
 	class Material
