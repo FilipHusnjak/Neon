@@ -135,11 +135,12 @@ vec3 Lighting(vec3 V)
 
 vec3 IBL(vec3 V)
 {
-    float NdotV = max(dot(PBRProperties.Normal, V), 0.0);
+    float NdotV = dot(PBRProperties.Normal, V);
+    float NdotVPositive = max(NdotV, 0.0);
 
 	vec3 irradiance = texture(u_EnvIrradianceTex, PBRProperties.Normal).rgb;
     vec3 F0 = mix(FDielectric, PBRProperties.Albedo.rgb, PBRProperties.Metalness);
-	vec3 F = FresnelSchlickRoughness(F0, NdotV, PBRProperties.Roughness);
+	vec3 F = FresnelSchlickRoughness(F0, NdotVPositive, PBRProperties.Roughness);
 	vec3 kd = (1.0 - F) * (1.0 - PBRProperties.Metalness);
 	vec3 diffuseIBL = PBRProperties.Albedo.rgb * irradiance;
 
@@ -147,7 +148,7 @@ vec3 IBL(vec3 V)
 	vec3 R = 2.0 * NdotV * PBRProperties.Normal - V;
 	vec3 specularIrradiance = textureLod(u_EnvRadianceTex, R, PBRProperties.Roughness * envRadianceTexLevels).rgb;
 
-	vec2 specularBRDF = texture(u_BRDFLUTTexture, vec2(NdotV, PBRProperties.Roughness)).rg;
+	vec2 specularBRDF = texture(u_BRDFLUTTexture, vec2(NdotVPositive, PBRProperties.Roughness)).rg;
 	vec3 specularIBL = specularIrradiance * (F * specularBRDF.x + specularBRDF.y);
 
 	return kd * diffuseIBL + specularIBL;
@@ -159,7 +160,7 @@ void main()
     PBRProperties.Normal = v_Normal;
     PBRProperties.Metalness = u_Materials[v_MaterialIndex].UseMetalnessMap < 0.5 ? u_Materials[v_MaterialIndex].Metalness : texture(u_MetalnessTextures[v_MaterialIndex], v_TexCoord).r;
     PBRProperties.Roughness = u_Materials[v_MaterialIndex].UseRoughnessMap < 0.5 ? u_Materials[v_MaterialIndex].Roughness : texture(u_RoughnessTextures[v_MaterialIndex], v_TexCoord).r;
-    PBRProperties.Roughness = max(PBRProperties.Roughness, 0.05); // Minimum roughness of 0.05 to keep specular highlight
+    PBRProperties.Roughness = max(PBRProperties.Roughness, 0.01); // Minimum roughness of 0.01 to keep specular highlight
 
     if (u_Materials[v_MaterialIndex].UseNormalMap >= 0.5)
     {
