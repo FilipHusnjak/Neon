@@ -2,6 +2,7 @@
 
 #include "Neon/Core/UUID.h"
 #include "Neon/Renderer/Mesh.h"
+#include "Neon/Renderer/RendererContext.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/type_ptr.hpp>
@@ -67,12 +68,16 @@ namespace Neon
 			: Mesh(mesh)
 		{
 		}
+		~MeshComponent()
+		{
+			RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(Mesh));
+		}
 
 		operator SharedRef<Neon::Mesh>()
 		{
 			return Mesh;
 		}
-	};
+	};	
 
 	struct LightComponent
 	{

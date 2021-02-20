@@ -48,6 +48,11 @@ namespace Neon
 		// Defer deletion until end of node UI
 		if (entityDeleted)
 		{
+			if (SceneRenderer::GetSelectedEntity() == entity)
+			{
+				SceneRenderer::SetSelectedEntity({});
+			}
+			SceneRenderer::DestroyEntity(entity);
 		}
 	}
 
@@ -81,7 +86,7 @@ namespace Neon
 			ImGui::TreePop();
 		}
 
-		if (ImGui::BeginPopupContextWindow(0, 1, false))
+		if (ImGui::BeginPopupContextWindow(nullptr, 1, false))
 		{
 			if (ImGui::BeginMenu("Create"))
 			{

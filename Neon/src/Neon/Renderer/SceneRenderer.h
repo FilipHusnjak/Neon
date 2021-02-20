@@ -26,6 +26,7 @@ namespace Neon
 		static Entity GetSelectedEntity();
 
 		static Entity CreateEntity(const std::string& name = "Entity");
+		static void DestroyEntity(Entity entity);
 
 		static void SetViewportSize(uint32 width, uint32 height);
 

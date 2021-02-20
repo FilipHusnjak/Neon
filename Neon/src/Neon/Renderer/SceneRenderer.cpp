@@ -163,6 +163,13 @@ namespace Neon
 		return s_Data.ActiveScene->CreateEntity(name);
 	}
 
+	void SceneRenderer::DestroyEntity(Entity entity)
+	{
+		NEO_CORE_ASSERT(s_Data.ActiveScene);
+
+		s_Data.ActiveScene->DestroyEntity(entity);
+	}
+
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
 	{
 		// TODO: Implement

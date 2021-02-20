@@ -284,7 +284,6 @@ namespace Neon
 		// This feature is optional, so we must check if it's supported on the device
 		if (device->GetPhysicalDevice()->GetSupportedFeatures().samplerAnisotropy)
 		{
-			// Use max. level of anisotropy for this example
 			samplerCreateInfo.maxAnisotropy = device->GetPhysicalDevice()->GetProperties().limits.maxSamplerAnisotropy;
 			samplerCreateInfo.anisotropyEnable = VK_TRUE;
 		}
@@ -787,7 +786,6 @@ namespace Neon
 		// This feature is optional, so we must check if it's supported on the device
 		if (device->GetPhysicalDevice()->GetSupportedFeatures().samplerAnisotropy)
 		{
-			// Use max. level of anisotropy for this example
 			samplerCreateInfo.maxAnisotropy = device->GetPhysicalDevice()->GetProperties().limits.maxSamplerAnisotropy;
 			samplerCreateInfo.anisotropyEnable = VK_TRUE;
 		}
