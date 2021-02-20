@@ -170,32 +170,8 @@ namespace Neon
 				glm::vec3 originalEulerAngles = glm::degrees(component.Rotation);
 				if (DrawVec3Control("Rotation", originalEulerAngles))
 				{
-					if (originalEulerAngles.x >= 180.f)
-					{
-						originalEulerAngles.x -= 360.f;
-					}
-					if (originalEulerAngles.y >= 180.f)
-					{
-						originalEulerAngles.y -= 360.f;
-					}
-					if (originalEulerAngles.z >= 180.f)
-					{
-						originalEulerAngles.z -= 360.f;
-					}
-
-					if (originalEulerAngles.x <= -180.f)
-					{
-						originalEulerAngles.x += 360.f;
-					}
-					if (originalEulerAngles.y <= -180.f)
-					{
-						originalEulerAngles.y += 360.f;
-					}
-					if (originalEulerAngles.z <= -180.f)
-					{
-						originalEulerAngles.z += 360.f;
-					}
-
+					// Wrap euler angles between -180 and 180 degrees
+					originalEulerAngles -= 360.f * glm::floor((originalEulerAngles + glm::vec3(180.f)) / 360.f);
 					component.Rotation = glm::radians(originalEulerAngles);
 				}
 
