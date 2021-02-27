@@ -1,6 +1,6 @@
 #include "neopch.h"
 
-#include "Material.h"
+#include "Neon/Renderer/Material.h"
 
 namespace Neon
 {

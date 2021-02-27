@@ -124,7 +124,7 @@ namespace Neon
 			auto& attachmentDescription = attachmentDescriptions.emplace_back();
 			attachmentDescription.format = attachment.Format == TextureFormat::Depth
 											   ? device->GetPhysicalDevice()->GetDepthFormat()
-											   : ConvertTextureFormatToVulkanFormat(attachment.Format);
+											   : ConvertNeonTextureFormatToVulkanFormat(attachment.Format);
 			attachmentDescription.samples = ConvertSampleCountToVulkan(attachment.Samples);
 			attachmentDescription.loadOp = ConvertLoadOpToVulkan(attachment.LoadOp);
 			attachmentDescription.storeOp = ConvertStoreOpToVulkan(attachment.StoreOp);

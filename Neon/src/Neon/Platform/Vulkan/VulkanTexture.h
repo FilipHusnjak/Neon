@@ -6,7 +6,7 @@
 
 namespace Neon
 {
-	static vk::Format ConvertTextureFormatToVulkanFormat(TextureFormat format)
+	static vk::Format ConvertNeonTextureFormatToVulkanFormat(TextureFormat format)
 	{
 		switch (format)
 		{
@@ -20,8 +20,6 @@ namespace Neon
 				return vk::Format::eR16G16B16A16Sfloat;
 			case TextureFormat::RGBA32F:
 				return vk::Format::eR32G32B32A32Sfloat;
-			case TextureFormat::RG32F:
-				return vk::Format::eR32G32Sfloat;
 			case TextureFormat::Depth:
 				const auto& device = VulkanContext::GetDevice();
 				return device->GetPhysicalDevice()->GetDepthFormat();
@@ -30,7 +28,7 @@ namespace Neon
 		return vk::Format::eUndefined;
 	}
 
-	static vk::SamplerAddressMode ConvertTextureWrapToVulkanTextureWrap(TextureWrap wrap)
+	static vk::SamplerAddressMode ConvertNeonTextureWrapToVulkanTextureWrap(TextureWrap wrap)
 	{
 		switch (wrap)
 		{
@@ -47,8 +45,6 @@ namespace Neon
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
-		VulkanTexture2D() = default;
-		VulkanTexture2D(TextureFormat format, uint32 width, uint32 height, uint32 sampleCount, vk::ImageUsageFlags usage);
 		VulkanTexture2D(const TextureSpecification& specification);
 		VulkanTexture2D(const std::string& path, const TextureSpecification& specification);
 
@@ -85,19 +81,14 @@ namespace Neon
 			return {m_Sampler.get(), m_Views[mipLevel].get(), m_Layout};
 		}
 
-		bool operator==(const Texture& other) const override
-		{
-			throw std::logic_error("The method or operation is not implemented.");
-		}
-
 		void* GetRendererId() const override;
 
 		void RegenerateMipMaps() override;
 
 	private:
-		void CreateResources(vk::ImageUsageFlags usage);
+		void CreateDefault();
+		void Invalidate();
 		void Update();
-		void CreateDefaultTexture();
 		void CreateRendererId();
 
 	private:
@@ -119,7 +110,6 @@ namespace Neon
 	{
 	public:
 		VulkanTextureCube(const TextureSpecification& specification);
-		VulkanTextureCube(uint32 faceSize, const TextureSpecification& specification);
 		VulkanTextureCube(const std::string& path, const TextureSpecification& specification);
 		VulkanTextureCube(const std::array<std::string, 6>& paths, const TextureSpecification& specification);
 
@@ -146,16 +136,11 @@ namespace Neon
 			return {m_Sampler.get(), m_Views[mipLevel].get(), m_Layout};
 		}
 
-		bool operator==(const Texture& other) const override
-		{
-			throw std::logic_error("The method or operation is not implemented.");
-		}
-
 		void RegenerateMipMaps() override;
 
 	private:
 		void Invalidate();
-		void CreateDefaultTexture();
+		void CreateDefault();
 
 		void GetFace(const byte* sourceData, byte* destData, uint32 xOffset, uint32 yOffset);
 		void RotateFaceClockwise(byte* data);

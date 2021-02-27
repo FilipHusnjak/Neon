@@ -51,6 +51,10 @@ namespace Neon
 		SharedRef<ComputePipeline> IrradianceComputePipeline;
 
 		SharedRef<Texture2D> BRDFLUT;
+
+		SharedRef<Shader> InitialSpectrumShader;
+		SharedRef<ComputePipeline> InitialSpectrumPipeline;
+		SharedRef<Texture2D> InitialSpectrumTexture2D;
 	};
 
 	static SceneRendererData s_Data;
@@ -233,12 +237,17 @@ namespace Neon
 		const uint32 faceSize = 2048;
 		const uint32 irradianceMapSize = 32;
 
-		SharedRef<Texture2D> envMap = Texture2D::Create(filepath, {TextureType::HDR, 1, TextureWrap::Clamp});
+		SharedRef<Texture2D> envMap =
+			Texture2D::Create(filepath, {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F, TextureWrap::Clamp});
 		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBA16F, "Image has to be HDR!");
 		s_Data.EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap, 0);
 
-		s_Data.EnvUnfilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR, 1, TextureWrap::Clamp});
-		s_Data.EnvFilteredTextureCube = TextureCube::Create(faceSize, {TextureType::HDR, 1, TextureWrap::Clamp});
+		s_Data.EnvUnfilteredTextureCube =
+			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
+								 TextureWrap::Clamp, true, 1, true, faceSize, faceSize});
+		s_Data.EnvFilteredTextureCube =
+			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
+								 TextureWrap::Clamp, true, 1, true, faceSize, faceSize});
 
 		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvUnfilteredTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
@@ -263,13 +272,16 @@ namespace Neon
 			Renderer::DispatchCompute(s_Data.EnvFilteredComputePipeline, numGroups, numGroups, 6);
 		}
 
-		s_Data.IrradianceTextureCube = TextureCube::Create(irradianceMapSize, {TextureType::HDR, 1, TextureWrap::Clamp});
+		s_Data.IrradianceTextureCube =
+			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
+								 TextureWrap::Clamp, true, 1, true, irradianceMapSize, irradianceMapSize});
 		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvFilteredTextureCube, 0);
 		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
 		s_Data.IrradianceTextureCube->RegenerateMipMaps();
 
-		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga", {TextureType::RGB, 1, TextureWrap::Clamp});
+		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga",
+										   {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8, TextureWrap::Clamp});
 	}
 
 	void SceneRenderer::Shutdown()

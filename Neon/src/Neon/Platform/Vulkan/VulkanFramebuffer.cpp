@@ -58,21 +58,27 @@ namespace Neon
 		for (uint32 i = 0; i < attachmentDescriptions.size(); i++)
 		{
 			const auto& attachment = attachmentDescriptions[i];
-			vk::ImageUsageFlags usage = attachment.Format == TextureFormat::Depth ? vk::ImageUsageFlagBits::eDepthStencilAttachment
-																				  : vk::ImageUsageFlagBits::eColorAttachment;
+			TextureSpecification textureSpec;
+			textureSpec.Width = width;
+			textureSpec.Height = height;
+			textureSpec.UseMipmap = false;
+			textureSpec.SampleCount = attachment.Samples;
+			textureSpec.Update = false;
+			textureSpec.Format = attachment.Format;
+			textureSpec.UsageFlags = attachment.Format == TextureFormat::Depth ? TextureUsageFlagBits::DepthAttachment
+																			   : TextureUsageFlagBits::ColorAttachment;
 
 			if (isInputAttachment[i])
 			{
-				usage |= vk::ImageUsageFlagBits::eInputAttachment;
+				textureSpec.UsageFlags |= TextureUsageFlagBits::InputAttachment;
 			}
 			if (attachment.Sampled)
 			{
-				usage |= vk::ImageUsageFlagBits::eSampled;
+				textureSpec.UsageFlags |= TextureUsageFlagBits::ShaderRead;
 				m_SampledImageIndex = i;
 			}
 
-			SharedRef<VulkanTexture2D> vulkanTexture2D =
-				SharedRef<VulkanTexture2D>::Create(attachment.Format, width, height, attachment.Samples, usage);
+			SharedRef<VulkanTexture2D> vulkanTexture2D = SharedRef<VulkanTexture2D>::Create(textureSpec);
 			m_Textures.emplace_back(vulkanTexture2D);
 			attachments.push_back(vulkanTexture2D->GetView(0));
 		}

@@ -147,7 +147,7 @@ namespace Neon
 
 	InspectorPanel::InspectorPanel()
 	{
-		m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga", {});
+		m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga", {TextureUsageFlagBits::ShaderRead});
 	}
 
 	void InspectorPanel::Render() const
@@ -249,7 +249,8 @@ namespace Neon
 									std::string filename = Application::Get().OpenFile("");
 									if (!filename.empty())
 									{
-										SharedRef<Texture2D> albedoMap = Texture2D::Create(filename, {TextureType::SRGB});
+										SharedRef<Texture2D> albedoMap =
+											Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8});
 										material.SetTexture2D("u_AlbedoTextures", albedoMap, 0);
 									}
 								}
@@ -282,7 +283,8 @@ namespace Neon
 									std::string filename = Application::Get().OpenFile("");
 									if (!filename.empty())
 									{
-										SharedRef<Texture2D> normalMap = Texture2D::Create(filename, {TextureType::RGB});
+										SharedRef<Texture2D> normalMap =
+											Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8});
 										material.SetTexture2D("u_NormalTextures", normalMap, 0);
 										materialProperties.UseNormalMap = 1.f;
 									}
@@ -312,7 +314,8 @@ namespace Neon
 									std::string filename = Application::Get().OpenFile("");
 									if (!filename.empty())
 									{
-										SharedRef<Texture2D> metalnessMap = Texture2D::Create(filename, {TextureType::SRGB});
+										SharedRef<Texture2D> metalnessMap =
+											Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8});
 										material.SetTexture2D("u_MetalnessTextures", metalnessMap, 0);
 										materialProperties.UseMetalnessMap = 1.f;
 									}
@@ -345,7 +348,8 @@ namespace Neon
 									std::string filename = Application::Get().OpenFile("");
 									if (!filename.empty())
 									{
-										SharedRef<Texture2D> roughnessMap = Texture2D::Create(filename, {TextureType::SRGB});
+										SharedRef<Texture2D> roughnessMap =
+											Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8});
 										material.SetTexture2D("u_RoughnessTextures", roughnessMap, 0);
 										materialProperties.UseRoughnessMap = 1.f;
 									}

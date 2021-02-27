@@ -48,9 +48,9 @@ namespace Neon
 		SharedRef<TextureCube> GetTextureCube(const std::string& name) const;
 
 	private:
-		uint32 m_MaterialIndex;
-		SharedRef<Shader> m_Shader;
+		uint32 m_MaterialIndex{};
+		SharedRef<Shader> m_Shader{};
 
-		MaterialProperties m_Properties;
+		MaterialProperties m_Properties{};
 	};
 } // namespace Neon

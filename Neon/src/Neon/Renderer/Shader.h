@@ -10,6 +10,7 @@ namespace Neon
 {
 	enum class ShaderType
 	{
+		Geometry,
 		Vertex,
 		Fragment,
 		Compute
@@ -19,6 +20,8 @@ namespace Neon
 	{
 		switch (shaderType)
 		{
+			case ShaderType::Geometry:
+				return shaderc_geometry_shader;
 			case ShaderType::Vertex:
 				return shaderc_vertex_shader;
 			case ShaderType::Fragment:

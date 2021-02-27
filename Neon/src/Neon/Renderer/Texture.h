@@ -10,9 +10,8 @@ namespace Neon
 		SRGBA8 = 2,
 		RGBA16F = 3,
 		RGBA32F = 4,
-		RG32F = 5,
 
-		Depth = 6
+		Depth = 5
 	};
 
 	enum class TextureWrap
@@ -22,18 +21,25 @@ namespace Neon
 		Repeat = 2
 	};
 
-	enum class TextureType
+	enum TextureUsageFlagBits
 	{
-		RGB = 0,
-		SRGB = 1,
-		HDR = 2
+		ShaderRead = 1 << 0,
+		ShaderWrite = 1 << 1,
+		InputAttachment = 1 << 2,
+		DepthAttachment = 1 << 3,
+		ColorAttachment = 1 << 4
 	};
 
 	struct TextureSpecification
 	{
-		TextureType Type = TextureType::RGB;
-		uint32 SampleCount = 1;
+		uint32 UsageFlags;
+		TextureFormat Format = TextureFormat::RGBA8;
 		TextureWrap Wrap = TextureWrap::Repeat;
+		bool Update = true;
+		uint32 SampleCount = 1;
+		bool UseMipmap = true;
+		uint32 Width = 1; // Ignored if path is specified
+		uint32 Height = 1; // Ignored if path is specified
 	};
 
 	class Texture : public RefCounted
@@ -42,7 +48,6 @@ namespace Neon
 		static uint32 GetBytesPerPixel(TextureFormat format);
 		static uint32 CalculateMaxMipMapCount(uint32 width, uint32 height);
 
-		Texture() = default;
 		Texture(const TextureSpecification& specification);
 		virtual ~Texture() = default;
 
@@ -53,27 +58,22 @@ namespace Neon
 
 		TextureFormat GetFormat() const
 		{
-			return m_Format;
+			return m_Specification.Format;
 		}
 
 		virtual void RegenerateMipMaps() = 0;
 
-		virtual bool operator==(const Texture& other) const = 0;
-
 	protected:
-		TextureSpecification m_Specification;
-		TextureFormat m_Format = TextureFormat::None;
-		uint32 m_MipLevelCount;
+		TextureSpecification m_Specification{};
+		uint32 m_MipLevelCount = 1;
 	};
 
 	class Texture2D : public Texture
 	{
 	public:
-		static SharedRef<Texture2D> Create();
 		static SharedRef<Texture2D> Create(const TextureSpecification& specification);
 		static SharedRef<Texture2D> Create(const std::string& path, const TextureSpecification& specification);
 
-		Texture2D() = default;
 		Texture2D(const TextureSpecification& specification);
 		Texture2D(const std::string& path, const TextureSpecification& specification);
 		virtual ~Texture2D() = default;
@@ -93,13 +93,13 @@ namespace Neon
 		}
 
 	private:
-		std::string m_Path;
+		const std::string m_Path;
 	};
 
 	class TextureCube : public Texture
 	{
 	public:
-		static SharedRef<TextureCube> Create(const uint32 faceSize, const TextureSpecification& specification);
+		static SharedRef<TextureCube> Create(const TextureSpecification& specification);
 		static SharedRef<TextureCube> Create(const std::string& path, const TextureSpecification& specification);
 		static SharedRef<TextureCube> Create(const std::array<std::string, 6>& paths, const TextureSpecification& specification);
 

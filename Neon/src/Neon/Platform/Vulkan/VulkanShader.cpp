@@ -15,6 +15,8 @@ namespace Neon
 	{
 		switch (shaderType)
 		{
+			case ShaderType::Geometry:
+				return vk::ShaderStageFlagBits::eGeometry;
 			case ShaderType::Vertex:
 				return vk::ShaderStageFlagBits::eVertex;
 			case ShaderType::Fragment:

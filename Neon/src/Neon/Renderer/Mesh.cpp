@@ -312,7 +312,8 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
-					m_Materials[i].LoadTexture2D("u_AlbedoTextures", texturePath, {TextureType::SRGB}, 0);
+					m_Materials[i].LoadTexture2D(
+						"u_AlbedoTextures", texturePath, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8}, 0);
 					materialProperties.UseAlbedoMap = 1.f;
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
@@ -330,7 +331,7 @@ namespace Neon
 					auto parentPath = path.parent_path();
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
-					m_Materials[i].LoadTexture2D("u_NormalTextures", texturePath, {}, 0);
+					m_Materials[i].LoadTexture2D("u_NormalTextures", texturePath, {TextureUsageFlagBits::ShaderRead}, 0);
 					materialProperties.UseNormalMap = 1.f;
 					NEO_MESH_LOG("    Normal map path = {0}", texturePath);
 				}
@@ -348,7 +349,7 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Roughness map path = {0}", texturePath);
-					m_Materials[i].LoadTexture2D("u_RoughnessTextures", texturePath, {}, 0);
+					m_Materials[i].LoadTexture2D("u_RoughnessTextures", texturePath, {TextureUsageFlagBits::ShaderRead}, 0);
 					materialProperties.UseRoughnessMap = 1.f;
 				}
 				else
@@ -379,7 +380,7 @@ namespace Neon
 							parentPath /= str;
 							std::string texturePath = parentPath.string();
 							NEO_MESH_LOG("    Metalness map path = {0}", texturePath);
-							m_Materials[i].LoadTexture2D("u_MetalnessTextures", texturePath, {}, 0);
+							m_Materials[i].LoadTexture2D("u_MetalnessTextures", texturePath, {TextureUsageFlagBits::ShaderRead}, 0);
 							materialProperties.UseMetalnessMap = 1.f;
 							break;
 						}

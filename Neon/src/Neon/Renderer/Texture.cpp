@@ -1,8 +1,8 @@
 #include "neopch.h"
 
-#include "Platform/Vulkan/VulkanTexture.h"
-#include "RendererAPI.h"
-#include "Texture.h"
+#include "Neon/Platform/Vulkan/VulkanTexture.h"
+#include "Neon/Renderer/RendererAPI.h"
+#include "Neon/Renderer/Texture.h"
 
 namespace Neon
 {
@@ -16,37 +16,25 @@ namespace Neon
 				return 4;
 			case TextureFormat::RGBA16F:
 				return 8;
+			case TextureFormat::RGBA32F:
+				return 16;
 		}
 		return 0;
 	}
 
 	uint32 Texture::CalculateMaxMipMapCount(uint32 width, uint32 height)
 	{
-		uint32_t levels = 1;
+		uint32 levels = 1;
 		while ((width | height) >> levels)
 		{
 			levels++;
 		}
-
 		return levels;
 	}
 
 	Texture::Texture(const TextureSpecification& specification)
 		: m_Specification(specification)
 	{
-	}
-
-	SharedRef<Texture2D> Texture2D::Create()
-	{
-		switch (RendererAPI::Current())
-		{
-			case RendererAPI::API::None:
-				return nullptr;
-			case RendererAPI::API::Vulkan:
-				return SharedRef<VulkanTexture2D>::Create();
-		}
-		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
-		return nullptr;
 	}
 
 	SharedRef<Texture2D> Texture2D::Create(const TextureSpecification& specification)
@@ -86,14 +74,14 @@ namespace Neon
 	{
 	}
 
-	SharedRef<TextureCube> TextureCube::Create(const uint32 faceSize, const TextureSpecification& specification)
+	SharedRef<TextureCube> TextureCube::Create(const TextureSpecification& specification)
 	{
 		switch (RendererAPI::Current())
 		{
 			case RendererAPI::API::None:
 				return nullptr;
 			case RendererAPI::API::Vulkan:
-				return SharedRef<VulkanTextureCube>::Create(faceSize, specification);
+				return SharedRef<VulkanTextureCube>::Create(specification);
 		}
 		NEO_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
