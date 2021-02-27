@@ -94,6 +94,22 @@ namespace Neon
 		m_ImageSamplers[name].Textures[index] = texture;
 	}
 
+	void VulkanShader::SetStorageTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture,
+										   uint32 mipLevel)
+	{
+		NEO_CORE_ASSERT(index < m_StorageImages[name].Count);
+
+		const auto vulkanTexture = texture.As<VulkanTexture2D>();
+		auto& imageInfo = vulkanTexture->GetTextureDescription(mipLevel);
+
+		vk::WriteDescriptorSet descWrite{
+			m_DescriptorSet.get(), m_NameBindingMap[name], index, 1, vk::DescriptorType::eStorageImage, &imageInfo};
+		m_PendingWrites.emplace_back(nullptr, imageInfo, descWrite);
+
+		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_StorageImages[name].Textures[index]));
+		m_StorageImages[name].Textures[index] = texture;
+	}
+
 	void VulkanShader::SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture, uint32 mipLevel)
 	{
 		NEO_CORE_ASSERT(index < m_ImageSamplers[name].Count);

@@ -6,8 +6,6 @@ layout (binding = 1) uniform samplerCube u_Cubemap;
 
 layout (location = 0) in vec3 v_Position;
 
-const float GAMMA = 2.2;
-
 void main()
 {
     vec3 envColor = texture(u_Cubemap, v_Position).rgb;

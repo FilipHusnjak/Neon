@@ -54,7 +54,12 @@ namespace Neon
 
 		SharedRef<Shader> InitialSpectrumShader;
 		SharedRef<ComputePipeline> InitialSpectrumPipeline;
-		SharedRef<Texture2D> InitialSpectrumTexture2D;
+		SharedRef<Texture2D> H0k;
+		SharedRef<Texture2D> H0minusk;
+		SharedRef<Texture2D> Noise0;
+		SharedRef<Texture2D> Noise1;
+		SharedRef<Texture2D> Noise2;
+		SharedRef<Texture2D> Noise3;
 	};
 
 	static SceneRendererData s_Data;
@@ -121,6 +126,14 @@ namespace Neon
 		ComputePipelineSpecification irradianceComputePipelineSpecification;
 		s_Data.IrradianceComputePipeline =
 			ComputePipeline::Create(s_Data.IrradianceComputeShader, irradianceComputePipelineSpecification);
+
+		ShaderSpecification initialSpectrumComputeShaderSpecification;
+		initialSpectrumComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+			"assets/shaders/fft/InitialSpectrum_Compute.glsl";
+		s_Data.InitialSpectrumShader = Shader::Create(initialSpectrumComputeShaderSpecification);
+		ComputePipelineSpecification initialSpectrumComputePipelineSpecification;
+		s_Data.InitialSpectrumPipeline =
+			ComputePipeline::Create(s_Data.InitialSpectrumShader, initialSpectrumComputePipelineSpecification);
 	}
 
 	void SceneRenderer::InitializeScene(SharedRef<Scene> scene)
@@ -225,7 +238,8 @@ namespace Neon
 
 	void* SceneRenderer::GetFinalImageId()
 	{
-		return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
+		//return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
+		return s_Data.H0k->GetRendererId();
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -244,10 +258,10 @@ namespace Neon
 
 		s_Data.EnvUnfilteredTextureCube =
 			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
-								 TextureWrap::Clamp, true, 1, true, faceSize, faceSize});
+								 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, true, faceSize, faceSize});
 		s_Data.EnvFilteredTextureCube =
 			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
-								 TextureWrap::Clamp, true, 1, true, faceSize, faceSize});
+								 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, true, faceSize, faceSize});
 
 		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvUnfilteredTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
@@ -272,9 +286,9 @@ namespace Neon
 			Renderer::DispatchCompute(s_Data.EnvFilteredComputePipeline, numGroups, numGroups, 6);
 		}
 
-		s_Data.IrradianceTextureCube =
-			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
-								 TextureWrap::Clamp, true, 1, true, irradianceMapSize, irradianceMapSize});
+		s_Data.IrradianceTextureCube = TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead,
+															TextureFormat::RGBA16F, TextureWrap::Clamp, TextureMinMagFilter::Linear,
+															true, 1, true, irradianceMapSize, irradianceMapSize});
 		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvFilteredTextureCube, 0);
 		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube, 0);
 		Renderer::DispatchCompute(s_Data.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
@@ -282,6 +296,37 @@ namespace Neon
 
 		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga",
 										   {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8, TextureWrap::Clamp});
+
+		s_Data.H0k = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+		s_Data.H0minusk = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+		s_Data.Noise0 = Texture2D::Create(
+			"assets/textures/fft/Noise256_0.jpg",
+										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
+										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
+		s_Data.Noise1 = Texture2D::Create(
+			"assets/textures/fft/Noise256_1.jpg",
+										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
+										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
+		s_Data.Noise2 = Texture2D::Create(
+			"assets/textures/fft/Noise256_2.jpg",
+										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
+										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
+		s_Data.Noise3 = Texture2D::Create(
+			"assets/textures/fft/Noise256_3.jpg",
+										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
+										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
+
+		s_Data.InitialSpectrumShader->SetStorageTexture2D("u_H0k", 0, s_Data.H0k, 0);
+		s_Data.InitialSpectrumShader->SetStorageTexture2D("u_H0minusk", 0, s_Data.H0minusk, 0);
+
+		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise0", 0, s_Data.Noise0, 0);
+		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise1", 0, s_Data.Noise1, 0);
+		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise2", 0, s_Data.Noise2, 0);
+		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise3", 0, s_Data.Noise3, 0);
+
+		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, 256 / 16, 256 / 16, 1);
 	}
 
 	void SceneRenderer::Shutdown()
@@ -291,6 +336,8 @@ namespace Neon
 
 	void SceneRenderer::FlushDrawList()
 	{
+		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, 256 / 16, 256 / 16, 1);
+
 		GeometryPass();
 		PostProcessingPass();
 		s_Data.MeshDrawList.clear();

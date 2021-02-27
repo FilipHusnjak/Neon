@@ -96,7 +96,7 @@ vec3 TangentToWorld(const vec3 v, const vec3 N, const vec3 B, const vec3 T)
 	return B * v.x + T * v.y + N * v.z;
 }
 
-layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
 	// Make sure we won't write past output when computing higher mipmap levels.

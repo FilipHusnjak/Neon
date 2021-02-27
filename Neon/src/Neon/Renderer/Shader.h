@@ -69,6 +69,8 @@ namespace Neon
 		virtual void SetStorageBuffer(const std::string& name, const void* data, uint32 size = 0) = 0;
 		virtual void SetPushConstant(const std::string& name, const void* data, uint32 size = 0) = 0;
 		virtual void SetTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture, uint32 mipLevel) = 0;
+		virtual void SetStorageTexture2D(const std::string& name, uint32 index, const SharedRef<Texture2D>& texture,
+										 uint32 mipLevel) = 0;
 		virtual void SetTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,
 									uint32 mipLevel) = 0;
 		virtual void SetStorageTextureCube(const std::string& name, uint32 index, const SharedRef<TextureCube>& texture,

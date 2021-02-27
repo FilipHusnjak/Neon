@@ -75,7 +75,7 @@ vec3 TangentToWorld(const vec3 V, const vec3 N, const vec3 B, const vec3 T)
 	return B * V.x + T * V.y + N * V.z;
 }
 
-layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
 	vec3 N = GetCubeMapTexCoord();
