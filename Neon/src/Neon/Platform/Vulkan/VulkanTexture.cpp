@@ -265,7 +265,7 @@ namespace Neon
 		{
 			m_Layout = vk::ImageLayout::eGeneral;
 
-			imageCreateInfo.usage |= vk::ImageUsageFlagBits::eSampled;
+			imageCreateInfo.usage |= vk::ImageUsageFlagBits::eStorage;
 		}
 
 		m_Image.Handle = deviceHandle.createImageUnique(imageCreateInfo);
@@ -279,8 +279,8 @@ namespace Neon
 		// This separates all the sampling information from the texture data. This means you could have multiple sampler objects for the same texture with different settings
 		// Note: Similar to the samplers available with OpenGL 3.3
 		vk::SamplerCreateInfo samplerCreateInfo{};
-		samplerCreateInfo.magFilter = vk::Filter::eLinear;
-		samplerCreateInfo.minFilter = vk::Filter::eLinear;
+		samplerCreateInfo.magFilter = ConvertNeonTextureMinMagFilterToVulkanMinMagFilter(m_Specification.MinMagFilter);
+		samplerCreateInfo.minFilter = ConvertNeonTextureMinMagFilterToVulkanMinMagFilter(m_Specification.MinMagFilter);
 		samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
 		samplerCreateInfo.addressModeU = ConvertNeonTextureWrapToVulkanTextureWrap(m_Specification.Wrap);
 		samplerCreateInfo.addressModeV = ConvertNeonTextureWrapToVulkanTextureWrap(m_Specification.Wrap);

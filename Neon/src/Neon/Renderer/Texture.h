@@ -30,11 +30,18 @@ namespace Neon
 		ColorAttachment = 1 << 4
 	};
 
+	enum class TextureMinMagFilter
+	{
+		Linear,
+		Nearest
+	};
+
 	struct TextureSpecification
 	{
 		uint32 UsageFlags;
 		TextureFormat Format = TextureFormat::RGBA8;
 		TextureWrap Wrap = TextureWrap::Repeat;
+		TextureMinMagFilter MinMagFilter = TextureMinMagFilter::Linear;
 		bool Update = true;
 		uint32 SampleCount = 1;
 		bool UseMipmap = true;

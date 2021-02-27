@@ -42,6 +42,19 @@ namespace Neon
 		return vk::SamplerAddressMode::eRepeat;
 	}
 
+	static vk::Filter ConvertNeonTextureMinMagFilterToVulkanMinMagFilter(TextureMinMagFilter format)
+	{
+		switch (format)
+		{
+			case TextureMinMagFilter::Linear:
+				return vk::Filter::eLinear;
+			case TextureMinMagFilter::Nearest:
+				return vk::Filter::eNearest;
+		}
+		NEO_CORE_ASSERT(false, "Uknown texture min mag filter!");
+		return vk::Filter::eLinear;
+	}
+
 	class VulkanTexture2D : public Texture2D
 	{
 	public:
