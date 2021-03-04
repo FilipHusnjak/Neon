@@ -1,16 +1,13 @@
 #version 450 core
- 
-#define M_PI 3.1415926535897932384626433832795
 
 layout (binding = 0, rgba32f) readonly uniform image2D u_TwiddleIndices;
 
-layout (binding = 1, rgba32f) uniform image2D u_PingPong0;
-layout (binding = 2, rgba32f) uniform image2D u_PingPong1;
+layout (binding = 1, rgba32f) uniform image2D u_PingPong[2];
 
 layout (std140, binding = 3) uniform UBO
 {
 	int u_Stage;
-	int u_PingPong;
+	int u_PingPongIndex;
 	int u_Direction;
 };
 
@@ -36,82 +33,35 @@ Complex Add(Complex c0, Complex c1)
 	return c;
 }
 
-void HorizontalButterflies()
+Complex FromVec2(vec2 vec)
 {
-	Complex H;
-	ivec2 x = ivec2(gl_GlobalInvocationID.xy);
-	
-	if (u_PingPong == 0)
-	{
-		vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, x.x)).rgba;
-		vec2 p_ = imageLoad(u_PingPong0, ivec2(data.z, x.y)).rg;
-		vec2 q_ = imageLoad(u_PingPong0, ivec2(data.w, x.y)).rg;
-		vec2 w_ = vec2(data.x, data.y);
-		
-		Complex p = Complex(p_.x,p_.y);
-		Complex q = Complex(q_.x,q_.y);
-		Complex w = Complex(w_.x,w_.y);
-		
-		//Butterfly operation
-		H = Add(p, Mul(w, q));
-		
-		imageStore(u_PingPong1, x, vec4(H.Real, H.Im, 0, 1));
-	}
-	else if (u_PingPong == 1)
-	{
-		vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, x.x)).rgba;
-		vec2 p_ = imageLoad(u_PingPong1, ivec2(data.z, x.y)).rg;
-		vec2 q_ = imageLoad(u_PingPong1, ivec2(data.w, x.y)).rg;
-		vec2 w_ = vec2(data.x, data.y);
-		
-		Complex p = Complex(p_.x,p_.y);
-		Complex q = Complex(q_.x,q_.y);
-		Complex w = Complex(w_.x,w_.y);
-		
-		//Butterfly operation
-		H = Add(p, Mul(w, q));
-		
-		imageStore(u_PingPong0, x, vec4(H.Real, H.Im, 0, 1));
-	}
+	return Complex(vec.x, vec.y);
 }
 
-void VerticalButterflies()
+void Horizontal()
 {
-	Complex H;
-	ivec2 x = ivec2(gl_GlobalInvocationID.xy);
-	
-	if (u_PingPong == 0)
-	{
-		vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, x.y)).rgba;
-		vec2 p_ = imageLoad(u_PingPong0, ivec2(x.x, data.z)).rg;
-		vec2 q_ = imageLoad(u_PingPong0, ivec2(x.x, data.w)).rg;
-		vec2 w_ = vec2(data.x, data.y);
+	vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, gl_GlobalInvocationID.x)).rgba;
+	Complex p = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(data.z, gl_GlobalInvocationID.y)).rg);
+	Complex q = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(data.w, gl_GlobalInvocationID.y)).rg);
+	Complex w = Complex(data.x, data.y);
 		
-		Complex p = Complex(p_.x,p_.y);
-		Complex q = Complex(q_.x,q_.y);
-		Complex w = Complex(w_.x,w_.y);
+	// Butterfly operation
+	Complex result = Add(p, Mul(w, q));
 		
-		//Butterfly operation
-		H = Add(p, Mul(w, q));
+	imageStore(u_PingPong[int(mod(u_PingPongIndex + 1, 2))], ivec2(gl_GlobalInvocationID.xy), vec4(result.Real, result.Im, 0, 1));
+}
+
+void Vertical()
+{
+	vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, gl_GlobalInvocationID.y)).rgba;
+	Complex p = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(gl_GlobalInvocationID.x, data.z)).rg);
+	Complex q = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(gl_GlobalInvocationID.x, data.w)).rg);
+	Complex w = Complex(data.x, data.y);
 		
-		imageStore(u_PingPong1, x, vec4(H.Real, H.Im, 0, 1));
-	}
-	else if (u_PingPong == 1)
-	{
-		vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, x.y)).rgba;
-		vec2 p_ = imageLoad(u_PingPong1, ivec2(x.x, data.z)).rg;
-		vec2 q_ = imageLoad(u_PingPong1, ivec2(x.x, data.w)).rg;
-		vec2 w_ = vec2(data.x, data.y);
+	// Butterfly operation
+	Complex result = Add(p, Mul(w, q));
 		
-		Complex p = Complex(p_.x,p_.y);
-		Complex q = Complex(q_.x,q_.y);
-		Complex w = Complex(w_.x,w_.y);
-		
-		//Butterfly operation
-		H = Add(p, Mul(w, q));
-		
-		imageStore(u_PingPong0, x, vec4(H.Real, H.Im, 0, 1));
-	}
+	imageStore(u_PingPong[int(mod(u_PingPongIndex + 1, 2))], ivec2(gl_GlobalInvocationID.xy), vec4(result.Real, result.Im, 0, 1));
 }
 
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
@@ -119,10 +69,10 @@ void main()
 {
 	if (u_Direction == 0)
 	{
-		HorizontalButterflies();
+		Horizontal();
 	}
-	else if (u_Direction == 1)
+	else
 	{
-		VerticalButterflies();
+		Vertical();
 	}
 }

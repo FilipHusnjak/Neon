@@ -2,33 +2,22 @@
 
 layout (binding = 0, rgba32f) uniform writeonly image2D u_Displacement;
 
-layout (binding = 1, rgba32f) uniform readonly image2D u_PingPong0;
-layout (binding = 2, rgba32f) uniform readonly image2D u_PingPong1;
+layout (binding = 1, rgba32f) uniform readonly image2D u_PingPong[2];
 
 layout (std140, binding = 3) uniform UBO
 {
-	int u_PingPong;
+	int u_PingPongIndex;
 };
 
 int N = 256;
 
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
-{
-	ivec2 x = ivec2(gl_GlobalInvocationID.xy);
-	
-	float perms[] = {1.0, -1.0};
-	int index = int(mod((int(x.x + x.y)), 2));
-	float perm = perms[index];
-	
-	if (u_PingPong == 0)
+{	
+	float res = imageLoad(u_PingPong[u_PingPongIndex], ivec2(gl_GlobalInvocationID)).r / float(N * N);
+	if (mod(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y, 2) > 0)
 	{
-		float h = imageLoad(u_PingPong0, x).r;
-		imageStore(u_Displacement, x, vec4(perm * (h / float(N * N)), perm * (h / float(N * N)), perm * (h / float(N * N)), 1));
+		res *= -1;
 	}
-	else if (u_PingPong == 1)
-	{
-		float h = imageLoad(u_PingPong1, x).r;
-		imageStore(u_Displacement, x, vec4(perm * (h / float(N * N)), perm * (h / float(N * N)), perm * (h / float(N * N)), 1));
-	}
+	imageStore(u_Displacement, ivec2(gl_GlobalInvocationID), vec4(res, res, res, 1));
 }

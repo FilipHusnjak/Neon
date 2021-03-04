@@ -203,6 +203,7 @@ namespace Neon
 		{
 			ShaderSpecification butterflyComputeShaderSpecification;
 			butterflyComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/fft/Butterfly_Compute.glsl";
+			butterflyComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
 			s_Data.ButterflyShader = Shader::Create(butterflyComputeShaderSpecification);
 			ComputePipelineSpecification butterflyComputePipelineSpecification;
 			s_Data.ButterflyPipeline = ComputePipeline::Create(s_Data.ButterflyShader, butterflyComputePipelineSpecification);
@@ -212,6 +213,7 @@ namespace Neon
 			ShaderSpecification displacementComputeShaderSpecification;
 			displacementComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
 				"assets/shaders/fft/Displacement_Compute.glsl";
+			displacementComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
 			s_Data.DisplacementShader = Shader::Create(displacementComputeShaderSpecification);
 			ComputePipelineSpecification displacementComputePipelineSpecification;
 			s_Data.DisplacementPipeline =
@@ -451,15 +453,15 @@ namespace Neon
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
 		s_Data.ButterflyShader->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
-		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong0", 0, s_Data.HktDy, 0);
-		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong1", 0, s_Data.PingPong, 0);
+		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
+		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
 
 		s_Data.DisplacementY =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
 		s_Data.DisplacementShader->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementY, 0);
-		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong0", 0, s_Data.HktDy, 0);
-		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong1", 0, s_Data.PingPong, 0);
+		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
+		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
 	}
 
 	void SceneRenderer::Shutdown()
