@@ -14,7 +14,13 @@ obj/
 
 # Ignore assets folder
 */assets/*
+
+# Dont ignore shaders
 !*/assets/shaders*
 
-# Ignore cached shader binaries
+# Ignore shader cache
 */assets/shaders/cached/*
+*/assets/shaders/fft/cached/*
+
+# Ignore cached folders
+*/cached/*
