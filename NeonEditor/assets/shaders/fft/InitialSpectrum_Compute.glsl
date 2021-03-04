@@ -38,10 +38,10 @@ vec4 GaussRnd()
 	return rnd;
 }
 
-layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
-	vec2 x = vec2(gl_GlobalInvocationID.xy);
+	vec2 x = vec2(gl_GlobalInvocationID.xy) - float(N) / 2.0;
 	
 	vec2 k = 2.0 * M_PI / L * x;
 
@@ -59,6 +59,6 @@ void main()
 	
 	vec4 rnd = GaussRnd();
 	
-	imageStore(u_H0k, ivec2(gl_GlobalInvocationID.x, 255 - gl_GlobalInvocationID.y), vec4(rnd.xy * h0k, 0, 1));
+	imageStore(u_H0k, ivec2(gl_GlobalInvocationID.xy), vec4(rnd.xy * h0k, 0, 1));
 	imageStore(u_H0minusk, ivec2(gl_GlobalInvocationID.xy), vec4(rnd.zw * h0minusk, 0, 1));
 }

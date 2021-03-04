@@ -2,8 +2,8 @@
 
 #include "Neon/Renderer/Framebuffer.h"
 #include "Neon/Renderer/Renderer.h"
+#include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
-#include "SceneRenderer.h"
 
 namespace Neon
 {
@@ -54,12 +54,38 @@ namespace Neon
 
 		SharedRef<Shader> InitialSpectrumShader;
 		SharedRef<ComputePipeline> InitialSpectrumPipeline;
+
 		SharedRef<Texture2D> H0k;
 		SharedRef<Texture2D> H0minusk;
+
 		SharedRef<Texture2D> Noise0;
 		SharedRef<Texture2D> Noise1;
 		SharedRef<Texture2D> Noise2;
 		SharedRef<Texture2D> Noise3;
+
+		SharedRef<Shader> CurrentSpectrumShader;
+		SharedRef<ComputePipeline> CurrentSpectrumPipeline;
+
+		SharedRef<Texture2D> HktDy;
+		SharedRef<Texture2D> HktDx;
+		SharedRef<Texture2D> HktDz;
+
+		SharedRef<Shader> TwiddleIndicesShader;
+		SharedRef<ComputePipeline> TwiddleIndicesPipeline;
+
+		SharedRef<Texture2D> TwiddleIndices;
+
+		SharedRef<Shader> ButterflyShader;
+		SharedRef<ComputePipeline> ButterflyPipeline;
+
+		SharedRef<Texture2D> PingPong;
+
+		SharedRef<Shader> DisplacementShader;
+		SharedRef<ComputePipeline> DisplacementPipeline;
+
+		SharedRef<Texture2D> DisplacementY;
+
+		float CurrentTime = 0;
 	};
 
 	static SceneRendererData s_Data;
@@ -68,72 +94,129 @@ namespace Neon
 	{
 		uint32 width = Application::Get().GetWindow().GetWidth();
 		uint32 height = Application::Get().GetWindow().GetWidth();
-		RenderPassSpecification geoRenderPassSpec;
-		geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
-		geoRenderPassSpec.Attachments.push_back(
-			{4, TextureFormat::RGBA16F, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
-		geoRenderPassSpec.Attachments.push_back(
-			{1, TextureFormat::RGBA16F, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
-		geoRenderPassSpec.Attachments.push_back(
-			{4, TextureFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
-		geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
-		s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
-		FramebufferSpecification geoFramebufferSpec;
-		geoFramebufferSpec.Width = width;
-		geoFramebufferSpec.Height = height;
-		geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
-		s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
 
-		RenderPassSpecification postProcessingPassSpec;
-		postProcessingPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
-		postProcessingPassSpec.Attachments.push_back(
-			{1, TextureFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, true});
-		postProcessingPassSpec.Subpasses.push_back({false, {}, {0}, {}});
-		s_Data.PostProcessingPass = RenderPass::Create(postProcessingPassSpec);
-		FramebufferSpecification postProcessingFramebufferSpec;
-		postProcessingFramebufferSpec.Width = width;
-		postProcessingFramebufferSpec.Height = height;
-		postProcessingFramebufferSpec.Pass = s_Data.PostProcessingPass.Ptr();
-		s_Data.PostProcessingPass->SetTargetFramebuffer(Framebuffer::Create(postProcessingFramebufferSpec));
+		{
+			RenderPassSpecification geoRenderPassSpec;
+			geoRenderPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
+			geoRenderPassSpec.Attachments.push_back(
+				{4, TextureFormat::RGBA16F, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, false});
+			geoRenderPassSpec.Attachments.push_back(
+				{1, TextureFormat::RGBA16F, AttachmentLoadOp::DontCare, AttachmentStoreOp::Store, true});
+			geoRenderPassSpec.Attachments.push_back(
+				{4, TextureFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
+			geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
+			s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
+			FramebufferSpecification geoFramebufferSpec;
+			geoFramebufferSpec.Width = width;
+			geoFramebufferSpec.Height = height;
+			geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
+			s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
+		}
 
-		ShaderSpecification postProcessingShaderSpecification;
-		postProcessingShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PostProcess_Vert.glsl";
-		postProcessingShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/PostProcess_Frag.glsl";
-		postProcessingShaderSpecification.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-		s_Data.PostProcessingShader = Shader::Create(postProcessingShaderSpecification);
-		GraphicsPipelineSpecification postProcessingPipelineSpecification;
-		postProcessingPipelineSpecification.Pass = s_Data.PostProcessingPass;
-		s_Data.PostProcessingPipeline = GraphicsPipeline::Create(s_Data.PostProcessingShader, postProcessingPipelineSpecification);
+		{
+			RenderPassSpecification postProcessingPassSpec;
+			postProcessingPassSpec.ClearColor = {0.1f, 0.1f, 0.1f, 1.0f};
+			postProcessingPassSpec.Attachments.push_back(
+				{1, TextureFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, true});
+			postProcessingPassSpec.Subpasses.push_back({false, {}, {0}, {}});
+			s_Data.PostProcessingPass = RenderPass::Create(postProcessingPassSpec);
+			FramebufferSpecification postProcessingFramebufferSpec;
+			postProcessingFramebufferSpec.Width = width;
+			postProcessingFramebufferSpec.Height = height;
+			postProcessingFramebufferSpec.Pass = s_Data.PostProcessingPass.Ptr();
+			s_Data.PostProcessingPass->SetTargetFramebuffer(Framebuffer::Create(postProcessingFramebufferSpec));
+		}
 
-		ShaderSpecification envUnfilteredComputeShaderSpecification;
-		envUnfilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
-			"assets/shaders/EquirectangularToCubeMap_Compute.glsl";
-		s_Data.EnvUnfilteredComputeShader = Shader::Create(envUnfilteredComputeShaderSpecification);
-		ComputePipelineSpecification envUnfilteredPipelineSpecification;
-		s_Data.EnvUnfilteredComputePipeline =
-			ComputePipeline::Create(s_Data.EnvUnfilteredComputeShader, envUnfilteredPipelineSpecification);
+		{
+			ShaderSpecification postProcessingShaderSpecification;
+			postProcessingShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PostProcess_Vert.glsl";
+			postProcessingShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/PostProcess_Frag.glsl";
+			postProcessingShaderSpecification.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+			s_Data.PostProcessingShader = Shader::Create(postProcessingShaderSpecification);
+			GraphicsPipelineSpecification postProcessingPipelineSpecification;
+			postProcessingPipelineSpecification.Pass = s_Data.PostProcessingPass;
+			s_Data.PostProcessingPipeline =
+				GraphicsPipeline::Create(s_Data.PostProcessingShader, postProcessingPipelineSpecification);
+		}
 
-		ShaderSpecification envFilteredComputeShaderSpecification;
-		envFilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/EnvironmentMipFilter_Compute.glsl";
-		s_Data.EnvFilteredComputeShader = Shader::Create(envFilteredComputeShaderSpecification);
-		ComputePipelineSpecification envFilteredComputePipelineSpecification;
-		s_Data.EnvFilteredComputePipeline =
-			ComputePipeline::Create(s_Data.EnvFilteredComputeShader, envFilteredComputePipelineSpecification);
+		{
+			ShaderSpecification envUnfilteredComputeShaderSpecification;
+			envUnfilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/EquirectangularToCubeMap_Compute.glsl";
+			s_Data.EnvUnfilteredComputeShader = Shader::Create(envUnfilteredComputeShaderSpecification);
+			ComputePipelineSpecification envUnfilteredPipelineSpecification;
+			s_Data.EnvUnfilteredComputePipeline =
+				ComputePipeline::Create(s_Data.EnvUnfilteredComputeShader, envUnfilteredPipelineSpecification);
+		}
 
-		ShaderSpecification irradianceComputeShaderSpecification;
-		irradianceComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/EnvironmentIrradiance_Compute.glsl";
-		s_Data.IrradianceComputeShader = Shader::Create(irradianceComputeShaderSpecification);
-		ComputePipelineSpecification irradianceComputePipelineSpecification;
-		s_Data.IrradianceComputePipeline =
-			ComputePipeline::Create(s_Data.IrradianceComputeShader, irradianceComputePipelineSpecification);
+		{
+			ShaderSpecification envFilteredComputeShaderSpecification;
+			envFilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/EnvironmentMipFilter_Compute.glsl";
+			s_Data.EnvFilteredComputeShader = Shader::Create(envFilteredComputeShaderSpecification);
+			ComputePipelineSpecification envFilteredComputePipelineSpecification;
+			s_Data.EnvFilteredComputePipeline =
+				ComputePipeline::Create(s_Data.EnvFilteredComputeShader, envFilteredComputePipelineSpecification);
+		}
 
-		ShaderSpecification initialSpectrumComputeShaderSpecification;
-		initialSpectrumComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
-			"assets/shaders/fft/InitialSpectrum_Compute.glsl";
-		s_Data.InitialSpectrumShader = Shader::Create(initialSpectrumComputeShaderSpecification);
-		ComputePipelineSpecification initialSpectrumComputePipelineSpecification;
-		s_Data.InitialSpectrumPipeline =
-			ComputePipeline::Create(s_Data.InitialSpectrumShader, initialSpectrumComputePipelineSpecification);
+		{
+			ShaderSpecification irradianceComputeShaderSpecification;
+			irradianceComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/EnvironmentIrradiance_Compute.glsl";
+			s_Data.IrradianceComputeShader = Shader::Create(irradianceComputeShaderSpecification);
+			ComputePipelineSpecification irradianceComputePipelineSpecification;
+			s_Data.IrradianceComputePipeline =
+				ComputePipeline::Create(s_Data.IrradianceComputeShader, irradianceComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification initialSpectrumComputeShaderSpecification;
+			initialSpectrumComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/fft/InitialSpectrum_Compute.glsl";
+			s_Data.InitialSpectrumShader = Shader::Create(initialSpectrumComputeShaderSpecification);
+			ComputePipelineSpecification initialSpectrumComputePipelineSpecification;
+			s_Data.InitialSpectrumPipeline =
+				ComputePipeline::Create(s_Data.InitialSpectrumShader, initialSpectrumComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification currentSpectrumComputeShaderSpecification;
+			currentSpectrumComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/fft/CurrentSpectrum_Compute.glsl";
+			s_Data.CurrentSpectrumShader = Shader::Create(currentSpectrumComputeShaderSpecification);
+			ComputePipelineSpecification currentSpectrumComputePipelineSpecification;
+			s_Data.CurrentSpectrumPipeline =
+				ComputePipeline::Create(s_Data.CurrentSpectrumShader, currentSpectrumComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification twiddleIndicesComputeShaderSpecification;
+			twiddleIndicesComputeShaderSpecification.ShaderVariableCounts["BitReversedUBO"] = 256;
+			twiddleIndicesComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/fft/TwiddleIndices_Compute.glsl";
+			s_Data.TwiddleIndicesShader = Shader::Create(twiddleIndicesComputeShaderSpecification);
+			ComputePipelineSpecification twiddleIndicesComputePipelineSpecification;
+			s_Data.TwiddleIndicesPipeline =
+				ComputePipeline::Create(s_Data.TwiddleIndicesShader, twiddleIndicesComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification butterflyComputeShaderSpecification;
+			butterflyComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/fft/Butterfly_Compute.glsl";
+			s_Data.ButterflyShader = Shader::Create(butterflyComputeShaderSpecification);
+			ComputePipelineSpecification butterflyComputePipelineSpecification;
+			s_Data.ButterflyPipeline = ComputePipeline::Create(s_Data.ButterflyShader, butterflyComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification displacementComputeShaderSpecification;
+			displacementComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/fft/Displacement_Compute.glsl";
+			s_Data.DisplacementShader = Shader::Create(displacementComputeShaderSpecification);
+			ComputePipelineSpecification displacementComputePipelineSpecification;
+			s_Data.DisplacementPipeline =
+				ComputePipeline::Create(s_Data.DisplacementShader, displacementComputePipelineSpecification);
+		}
 	}
 
 	void SceneRenderer::InitializeScene(SharedRef<Scene> scene)
@@ -239,7 +322,7 @@ namespace Neon
 	void* SceneRenderer::GetFinalImageId()
 	{
 		//return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
-		return s_Data.H0k->GetRendererId();
+		return s_Data.DisplacementY->GetRendererId();
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -297,24 +380,31 @@ namespace Neon
 		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga",
 										   {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8, TextureWrap::Clamp});
 
-		s_Data.H0k = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+		s_Data.H0k =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
-		s_Data.H0minusk = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+		s_Data.H0minusk =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
-		s_Data.Noise0 = Texture2D::Create(
-			"assets/textures/fft/Noise256_0.jpg",
+		s_Data.HktDy =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+		s_Data.HktDx =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+		s_Data.HktDz =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+		s_Data.Noise0 = Texture2D::Create("assets/textures/fft/Noise256_0.jpg",
 										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
 										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
-		s_Data.Noise1 = Texture2D::Create(
-			"assets/textures/fft/Noise256_1.jpg",
+		s_Data.Noise1 = Texture2D::Create("assets/textures/fft/Noise256_1.jpg",
 										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
 										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
-		s_Data.Noise2 = Texture2D::Create(
-			"assets/textures/fft/Noise256_2.jpg",
+		s_Data.Noise2 = Texture2D::Create("assets/textures/fft/Noise256_2.jpg",
 										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
 										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
-		s_Data.Noise3 = Texture2D::Create(
-			"assets/textures/fft/Noise256_3.jpg",
+		s_Data.Noise3 = Texture2D::Create("assets/textures/fft/Noise256_3.jpg",
 										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
 										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
 
@@ -326,7 +416,50 @@ namespace Neon
 		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise2", 0, s_Data.Noise2, 0);
 		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise3", 0, s_Data.Noise3, 0);
 
-		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, 256 / 16, 256 / 16, 1);
+		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, 256 / 32, 256 / 32, 1);
+
+		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_HktDy", 0, s_Data.HktDy, 0);
+		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_HktDx", 0, s_Data.HktDx, 0);
+		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_HktDz", 0, s_Data.HktDz, 0);
+
+		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_H0k", 0, s_Data.H0k, 0);
+		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_H0minusk", 0, s_Data.H0minusk, 0);
+
+		int bitReversedIndices[256];
+		for (int i = 0; i < 256; i++)
+		{
+			bitReversedIndices[i] = 0;
+			int n = i;
+			int power = 7;
+			while (n != 0)
+			{
+				bitReversedIndices[i] += (n & 1) << power;
+				n = n >> 1;
+				power -= 1;
+			}
+		}
+
+		s_Data.TwiddleIndices =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 8, 256});
+
+		s_Data.TwiddleIndicesShader->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
+		s_Data.TwiddleIndicesShader->SetStorageBuffer("BitReversedUBO", bitReversedIndices, sizeof(bitReversedIndices));
+		Renderer::DispatchCompute(s_Data.TwiddleIndicesPipeline, 8, 256 / 32, 1);
+
+		s_Data.PingPong =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+		s_Data.ButterflyShader->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
+		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong0", 0, s_Data.HktDy, 0);
+		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong1", 0, s_Data.PingPong, 0);
+
+		s_Data.DisplacementY =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+		s_Data.DisplacementShader->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementY, 0);
+		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong0", 0, s_Data.HktDy, 0);
+		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong1", 0, s_Data.PingPong, 0);
 	}
 
 	void SceneRenderer::Shutdown()
@@ -336,7 +469,47 @@ namespace Neon
 
 	void SceneRenderer::FlushDrawList()
 	{
-		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, 256 / 16, 256 / 16, 1);
+		s_Data.CurrentSpectrumShader->SetUniformBuffer("TimeUBO", 0, &s_Data.CurrentTime, sizeof(s_Data.CurrentTime));
+		Renderer::DispatchCompute(s_Data.CurrentSpectrumPipeline, 256 / 32, 256 / 32, 1);
+		s_Data.CurrentTime += 0.01f;
+
+		int pingPong = 0;
+		// IFFT horizontal
+		for (int i = 0; i < 8; i++)
+		{
+			struct
+			{
+				int Stage;
+				int PingPong;
+				int Direction;
+			} butterflyData = {i, pingPong, 0};
+
+			s_Data.ButterflyShader->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipeline, 256 / 32, 256 / 32, 1);
+
+			pingPong++;
+			pingPong %= 2;
+		}
+
+		// IFFT vertical
+		for (int i = 0; i < 8; i++)
+		{
+			struct
+			{
+				int Stage;
+				int PingPong;
+				int Direction;
+			} butterflyData = {i, pingPong, 1};
+
+			s_Data.ButterflyShader->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipeline, 256 / 32, 256 / 32, 1);
+
+			pingPong++;
+			pingPong %= 2;
+		}
+
+		s_Data.DisplacementShader->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
+		Renderer::DispatchCompute(s_Data.DisplacementPipeline, 256 / 32, 256 / 32, 1);
 
 		GeometryPass();
 		PostProcessingPass();
