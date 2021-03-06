@@ -7,6 +7,7 @@
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Scene/Components.h>
+#include <Neon/Scene/Components/OceanComponent.h>
 #include <Neon/Scene/Entity.h>
 
 #include <imgui/imgui.h>
@@ -29,6 +30,9 @@ namespace Neon
 		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
 		auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
+
+		auto& ocean = m_EditorScene->CreateEntity("Ocean");
+		ocean.AddComponent<OceanComponent>(256);
 
 		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
 		lightEntity.AddComponent<LightComponent>(glm::vec4{-0.68418f, 0.55581f, -0.4722f, 0.f});
@@ -113,7 +117,8 @@ namespace Neon
 		ImGui::Begin("Viewport");
 		auto viewportSize = ImGui::GetContentRegionAvail();
 
-		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
+		m_EditorCamera.SetProjectionMatrix(
+			glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 		m_EditorCamera.SetViewportSize((uint32)viewportSize.x, (uint32)viewportSize.y);
 
 		ImGui::Image(Renderer::GetFinalImageId(), viewportSize);

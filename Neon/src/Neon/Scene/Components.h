@@ -77,7 +77,7 @@ namespace Neon
 		{
 			return Mesh;
 		}
-	};	
+	};
 
 	struct LightComponent
 	{

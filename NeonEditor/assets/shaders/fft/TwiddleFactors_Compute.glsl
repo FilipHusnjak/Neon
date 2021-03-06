@@ -2,7 +2,7 @@
 
 #define PI 3.1415926535897932384626433832795
 
-layout (binding = 0, rgba32f) writeonly uniform image2D u_TwiddleIndices;
+layout (binding = 0, rgba32f) writeonly uniform image2D u_TwiddleFactors;
 
 layout (std430, binding = 1) buffer BitReversedUBO
 {
@@ -42,5 +42,5 @@ void main()
 		butterflyPair = uvec2(BitsReversed[butterflyPair.x], BitsReversed[butterflyPair.y]);
 	}
 
-	imageStore(u_TwiddleIndices, ivec2(gl_GlobalInvocationID.xy), vec4(twiddle.Real, twiddle.Im, butterflyPair));
+	imageStore(u_TwiddleFactors, ivec2(gl_GlobalInvocationID.xy), vec4(twiddle.Real, twiddle.Im, butterflyPair));
 }

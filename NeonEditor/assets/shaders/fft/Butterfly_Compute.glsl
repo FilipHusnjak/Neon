@@ -1,8 +1,8 @@
 #version 450 core
 
-layout (binding = 0, rgba32f) readonly uniform image2D u_TwiddleIndices;
+layout (binding = 0, rgba32f) readonly uniform image2D m_TwiddleFactors;
 
-layout (binding = 1, rgba32f) uniform image2D u_PingPong[2];
+layout (binding = 1, rgba32f) uniform image2D u_PingPong[6];
 
 layout (std140, binding = 2) uniform PropertiesUBO
 {
@@ -38,30 +38,30 @@ Complex FromVec2(vec2 vec)
 	return Complex(vec.x, vec.y);
 }
 
-void Horizontal()
+void Horizontal(uint pingPongIndexBase)
 {
-	vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, gl_GlobalInvocationID.x)).rgba;
-	Complex p = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(data.z, gl_GlobalInvocationID.y)).rg);
-	Complex q = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(data.w, gl_GlobalInvocationID.y)).rg);
+	vec4 data = imageLoad(m_TwiddleFactors, ivec2(u_Stage, gl_GlobalInvocationID.x)).rgba;
+	Complex p = FromVec2(imageLoad(u_PingPong[pingPongIndexBase + u_PingPongIndex], ivec2(data.z, gl_GlobalInvocationID.y)).rg);
+	Complex q = FromVec2(imageLoad(u_PingPong[pingPongIndexBase + u_PingPongIndex], ivec2(data.w, gl_GlobalInvocationID.y)).rg);
 	Complex w = Complex(data.x, data.y);
 		
 	// Butterfly operation
 	Complex result = Add(p, Mul(w, q));
 		
-	imageStore(u_PingPong[int(mod(u_PingPongIndex + 1, 2))], ivec2(gl_GlobalInvocationID.xy), vec4(result.Real, result.Im, 0, 1));
+	imageStore(u_PingPong[int(pingPongIndexBase + mod(u_PingPongIndex + 1, 2))], ivec2(gl_GlobalInvocationID.xy), vec4(result.Real, result.Im, 0, 1));
 }
 
-void Vertical()
+void Vertical(uint pingPongIndexBase)
 {
-	vec4 data = imageLoad(u_TwiddleIndices, ivec2(u_Stage, gl_GlobalInvocationID.y)).rgba;
-	Complex p = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(gl_GlobalInvocationID.x, data.z)).rg);
-	Complex q = FromVec2(imageLoad(u_PingPong[u_PingPongIndex], ivec2(gl_GlobalInvocationID.x, data.w)).rg);
+	vec4 data = imageLoad(m_TwiddleFactors, ivec2(u_Stage, gl_GlobalInvocationID.y)).rgba;
+	Complex p = FromVec2(imageLoad(u_PingPong[pingPongIndexBase + u_PingPongIndex], ivec2(gl_GlobalInvocationID.x, data.z)).rg);
+	Complex q = FromVec2(imageLoad(u_PingPong[pingPongIndexBase + u_PingPongIndex], ivec2(gl_GlobalInvocationID.x, data.w)).rg);
 	Complex w = Complex(data.x, data.y);
 		
 	// Butterfly operation
 	Complex result = Add(p, Mul(w, q));
 		
-	imageStore(u_PingPong[int(mod(u_PingPongIndex + 1, 2))], ivec2(gl_GlobalInvocationID.xy), vec4(result.Real, result.Im, 0, 1));
+	imageStore(u_PingPong[int(pingPongIndexBase + mod(u_PingPongIndex + 1, 2))], ivec2(gl_GlobalInvocationID.xy), vec4(result.Real, result.Im, 0, 1));
 }
 
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
@@ -69,10 +69,16 @@ void main()
 {
 	if (u_Direction == 0)
 	{
-		Horizontal();
+		for (uint i = 0; i < 3; i++)
+		{
+			Horizontal(i * 2);
+		}
 	}
 	else
 	{
-		Vertical();
+		for (uint i = 0; i < 3; i++)
+		{
+			Vertical(i * 2);
+		}
 	}
 }

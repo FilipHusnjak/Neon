@@ -2,8 +2,9 @@
 
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
+#include "Neon/Scene/Components/OceanComponent.h"
 #include "Neon/Scene/Entity.h"
-#include "Scene.h"
+#include "Neon/Scene/Scene.h"
 
 namespace Neon
 {
@@ -51,6 +52,16 @@ namespace Neon
 			{
 				meshComponent.Mesh->OnUpdate(deltaSeconds);
 				SceneRenderer::SubmitMesh(meshComponent, transformComponent);
+			}
+		}
+		auto group2 = m_Registry.group<OceanComponent>(entt::get<TransformComponent>);
+		for (auto entity : group2)
+		{
+			auto& [oceanComponent, transformComponent] = group2.get<OceanComponent, TransformComponent>(entity);
+			oceanComponent.OnUpdate(deltaSeconds);
+			if (oceanComponent.operator SharedRef<Mesh>())
+			{
+				SceneRenderer::SubmitMesh(oceanComponent, transformComponent);
 			}
 		}
 		SceneRenderer::EndScene();
