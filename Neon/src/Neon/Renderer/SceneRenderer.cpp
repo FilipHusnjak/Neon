@@ -75,15 +75,27 @@ namespace Neon
 
 		SharedRef<Texture2D> TwiddleIndices;
 
-		SharedRef<Shader> ButterflyShader;
-		SharedRef<ComputePipeline> ButterflyPipeline;
-
 		SharedRef<Texture2D> PingPong;
 
-		SharedRef<Shader> DisplacementShader;
-		SharedRef<ComputePipeline> DisplacementPipeline;
-
+		SharedRef<Shader> ButterflyShaderDy;
+		SharedRef<ComputePipeline> ButterflyPipelineDy;
+		SharedRef<Shader> DisplacementShaderDy;
+		SharedRef<ComputePipeline> DisplacementPipelineDy;
 		SharedRef<Texture2D> DisplacementY;
+
+		SharedRef<Shader> ButterflyShaderDx;
+		SharedRef<ComputePipeline> ButterflyPipelineDx;
+		SharedRef<Shader> DisplacementShaderDx;
+		SharedRef<ComputePipeline> DisplacementPipelineDx;
+		SharedRef<Texture2D> DisplacementX;
+
+		SharedRef<Shader> ButterflyShaderDz;
+		SharedRef<ComputePipeline> ButterflyPipelineDz;
+		SharedRef<Shader> DisplacementShaderDz;
+		SharedRef<ComputePipeline> DisplacementPipelineDz;
+		SharedRef<Texture2D> DisplacementZ;
+
+		SharedRef<Mesh> OceanMesh;
 
 		float CurrentTime = 0;
 	};
@@ -204,9 +216,27 @@ namespace Neon
 			ShaderSpecification butterflyComputeShaderSpecification;
 			butterflyComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/fft/Butterfly_Compute.glsl";
 			butterflyComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
-			s_Data.ButterflyShader = Shader::Create(butterflyComputeShaderSpecification);
+			s_Data.ButterflyShaderDy = Shader::Create(butterflyComputeShaderSpecification);
 			ComputePipelineSpecification butterflyComputePipelineSpecification;
-			s_Data.ButterflyPipeline = ComputePipeline::Create(s_Data.ButterflyShader, butterflyComputePipelineSpecification);
+			s_Data.ButterflyPipelineDy = ComputePipeline::Create(s_Data.ButterflyShaderDy, butterflyComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification butterflyComputeShaderSpecification;
+			butterflyComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/fft/Butterfly_Compute.glsl";
+			butterflyComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
+			s_Data.ButterflyShaderDx = Shader::Create(butterflyComputeShaderSpecification);
+			ComputePipelineSpecification butterflyComputePipelineSpecification;
+			s_Data.ButterflyPipelineDx = ComputePipeline::Create(s_Data.ButterflyShaderDx, butterflyComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification butterflyComputeShaderSpecification;
+			butterflyComputeShaderSpecification.ShaderPaths[ShaderType::Compute] = "assets/shaders/fft/Butterfly_Compute.glsl";
+			butterflyComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
+			s_Data.ButterflyShaderDz = Shader::Create(butterflyComputeShaderSpecification);
+			ComputePipelineSpecification butterflyComputePipelineSpecification;
+			s_Data.ButterflyPipelineDz = ComputePipeline::Create(s_Data.ButterflyShaderDz, butterflyComputePipelineSpecification);
 		}
 
 		{
@@ -214,10 +244,32 @@ namespace Neon
 			displacementComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
 				"assets/shaders/fft/Displacement_Compute.glsl";
 			displacementComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
-			s_Data.DisplacementShader = Shader::Create(displacementComputeShaderSpecification);
+			s_Data.DisplacementShaderDy = Shader::Create(displacementComputeShaderSpecification);
 			ComputePipelineSpecification displacementComputePipelineSpecification;
-			s_Data.DisplacementPipeline =
-				ComputePipeline::Create(s_Data.DisplacementShader, displacementComputePipelineSpecification);
+			s_Data.DisplacementPipelineDy =
+				ComputePipeline::Create(s_Data.DisplacementShaderDy, displacementComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification displacementComputeShaderSpecification;
+			displacementComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/fft/Displacement_Compute.glsl";
+			displacementComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
+			s_Data.DisplacementShaderDx = Shader::Create(displacementComputeShaderSpecification);
+			ComputePipelineSpecification displacementComputePipelineSpecification;
+			s_Data.DisplacementPipelineDx =
+				ComputePipeline::Create(s_Data.DisplacementShaderDx, displacementComputePipelineSpecification);
+		}
+
+		{
+			ShaderSpecification displacementComputeShaderSpecification;
+			displacementComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
+				"assets/shaders/fft/Displacement_Compute.glsl";
+			displacementComputeShaderSpecification.ShaderVariableCounts["u_PingPong"] = 2;
+			s_Data.DisplacementShaderDz = Shader::Create(displacementComputeShaderSpecification);
+			ComputePipelineSpecification displacementComputePipelineSpecification;
+			s_Data.DisplacementPipelineDz =
+				ComputePipeline::Create(s_Data.DisplacementShaderDz, displacementComputePipelineSpecification);
 		}
 	}
 
@@ -323,8 +375,7 @@ namespace Neon
 
 	void* SceneRenderer::GetFinalImageId()
 	{
-		//return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
-		return s_Data.DisplacementY->GetRendererId();
+		return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -452,16 +503,54 @@ namespace Neon
 		s_Data.PingPong =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
-		s_Data.ButterflyShader->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
-		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
-		s_Data.ButterflyShader->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+		s_Data.ButterflyShaderDy->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
+		s_Data.ButterflyShaderDy->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
+		s_Data.ButterflyShaderDy->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+
+		s_Data.ButterflyShaderDx->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
+		s_Data.ButterflyShaderDx->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDx, 0);
+		s_Data.ButterflyShaderDx->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+
+		s_Data.ButterflyShaderDz->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
+		s_Data.ButterflyShaderDz->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDz, 0);
+		s_Data.ButterflyShaderDz->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
 
 		s_Data.DisplacementY =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
-		s_Data.DisplacementShader->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementY, 0);
-		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
-		s_Data.DisplacementShader->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+		s_Data.DisplacementShaderDy->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementY, 0);
+		s_Data.DisplacementShaderDy->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
+		s_Data.DisplacementShaderDy->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+
+		s_Data.DisplacementX =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+		s_Data.DisplacementShaderDx->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementX, 0);
+		s_Data.DisplacementShaderDx->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDx, 0);
+		s_Data.DisplacementShaderDx->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+
+		s_Data.DisplacementZ =
+			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
+							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+		s_Data.DisplacementShaderDz->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementZ, 0);
+		s_Data.DisplacementShaderDz->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDz, 0);
+		s_Data.DisplacementShaderDz->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+
+
+		ShaderSpecification oceanShaderSpecification;
+		oceanShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Ocean_Vert.glsl";
+		oceanShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Ocean_Frag.glsl";
+		oceanShaderSpecification.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
+		SharedRef<Shader> oceanShader = Shader::Create(oceanShaderSpecification);
+		GraphicsPipelineSpecification oceanPipelineSpecification;
+		oceanPipelineSpecification.Pass = s_Data.GeoPass;
+		oceanPipelineSpecification.Mode = PolygonMode::Line;
+		SharedRef<Pipeline> oceanPipeline = GraphicsPipeline::Create(oceanShader, oceanPipelineSpecification);
+		oceanShader->SetTexture2D("u_DisplacementY", 0, s_Data.DisplacementY, 0);
+		oceanShader->SetTexture2D("u_DisplacementX", 0, s_Data.DisplacementX, 0);
+		oceanShader->SetTexture2D("u_DisplacementZ", 0, s_Data.DisplacementZ, 0);
+
+		s_Data.OceanMesh = Mesh::GenerateGridMesh(1000, 1000, oceanShader, oceanPipeline);
 	}
 
 	void SceneRenderer::Shutdown()
@@ -473,7 +562,7 @@ namespace Neon
 	{
 		s_Data.CurrentSpectrumShader->SetUniformBuffer("TimeUBO", 0, &s_Data.CurrentTime, sizeof(s_Data.CurrentTime));
 		Renderer::DispatchCompute(s_Data.CurrentSpectrumPipeline, 256 / 32, 256 / 32, 1);
-		s_Data.CurrentTime += 0.01f;
+		s_Data.CurrentTime += 0.02f;
 
 		int pingPong = 0;
 		// IFFT horizontal
@@ -486,8 +575,8 @@ namespace Neon
 				int Direction;
 			} butterflyData = {i, pingPong, 0};
 
-			s_Data.ButterflyShader->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipeline, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDy->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDy, 256 / 32, 256 / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
@@ -503,15 +592,93 @@ namespace Neon
 				int Direction;
 			} butterflyData = {i, pingPong, 1};
 
-			s_Data.ButterflyShader->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipeline, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDy->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDy, 256 / 32, 256 / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
-		s_Data.DisplacementShader->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
-		Renderer::DispatchCompute(s_Data.DisplacementPipeline, 256 / 32, 256 / 32, 1);
+		s_Data.DisplacementShaderDy->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
+		Renderer::DispatchCompute(s_Data.DisplacementPipelineDy, 256 / 32, 256 / 32, 1);
+
+		pingPong = 0;
+		// IFFT horizontal
+		for (int i = 0; i < 8; i++)
+		{
+			struct
+			{
+				int Stage;
+				int PingPong;
+				int Direction;
+			} butterflyData = {i, pingPong, 0};
+
+			s_Data.ButterflyShaderDx->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDx, 256 / 32, 256 / 32, 1);
+
+			pingPong++;
+			pingPong %= 2;
+		}
+
+		// IFFT vertical
+		for (int i = 0; i < 8; i++)
+		{
+			struct
+			{
+				int Stage;
+				int PingPong;
+				int Direction;
+			} butterflyData = {i, pingPong, 1};
+
+			s_Data.ButterflyShaderDx->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDx, 256 / 32, 256 / 32, 1);
+
+			pingPong++;
+			pingPong %= 2;
+		}
+
+		s_Data.DisplacementShaderDx->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
+		Renderer::DispatchCompute(s_Data.DisplacementPipelineDx, 256 / 32, 256 / 32, 1);
+
+		pingPong = 0;
+		// IFFT horizontal
+		for (int i = 0; i < 8; i++)
+		{
+			struct
+			{
+				int Stage;
+				int PingPong;
+				int Direction;
+			} butterflyData = {i, pingPong, 0};
+
+			s_Data.ButterflyShaderDz->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDz, 256 / 32, 256 / 32, 1);
+
+			pingPong++;
+			pingPong %= 2;
+		}
+
+		// IFFT vertical
+		for (int i = 0; i < 8; i++)
+		{
+			struct
+			{
+				int Stage;
+				int PingPong;
+				int Direction;
+			} butterflyData = {i, pingPong, 1};
+
+			s_Data.ButterflyShaderDz->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDz, 256 / 32, 256 / 32, 1);
+
+			pingPong++;
+			pingPong %= 2;
+		}
+
+		s_Data.DisplacementShaderDz->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
+		Renderer::DispatchCompute(s_Data.DisplacementPipelineDz, 256 / 32, 256 / 32, 1);
+
+		SubmitMesh(s_Data.OceanMesh);
 
 		GeometryPass();
 		PostProcessingPass();

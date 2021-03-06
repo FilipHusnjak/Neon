@@ -72,6 +72,59 @@ namespace Neon
 		}
 	};
 
+	SharedRef<Mesh> Mesh::GenerateGridMesh(uint32 countW, uint32 countH, const SharedRef<Shader>& shader,
+									   const SharedRef<GraphicsPipeline>& graphicsPipeline)
+	{
+		SharedRef<Mesh> mesh = SharedRef<Mesh>(new Mesh(shader, graphicsPipeline));
+
+		std::vector<glm::vec2> vertices;
+		std::vector<uint32> indices;
+
+		float dx = 4.f / countW;
+		float dy = 4.f / countH;
+
+		uint32 countX = 0;
+		for (float x = 0.f; countX < countW; x += dx, countX++)
+		{
+			uint32 countY = 0;
+			for (float y = 0.f; countY < countH; y += dy, countY++)
+			{
+				vertices.emplace_back(x, y);
+			}
+		}
+
+		uint32 index = 0;
+		countX = 0;
+		for (float x = 0.f; countX < countW - 1; x += dx, countX++)
+		{
+			uint32 countY = 0;
+			for (float y = 0.f; countY < countH - 1; y += dy, countY++)
+			{
+				indices.push_back(index);
+				indices.push_back(index + 1);
+				indices.push_back(index + countW);
+
+				indices.push_back(index + 1);
+				indices.push_back(index + countW + 1);
+				indices.push_back(index + countW);
+
+				index++;
+			}
+
+			index++;
+		}
+
+		mesh->m_VertexBuffer = VertexBuffer::Create(vertices.data(), static_cast<uint32>(vertices.size()) * sizeof(vertices[0]),
+													shader->GetVertexBufferLayout());
+
+		mesh->m_IndexBuffer = IndexBuffer::Create(indices.data(), static_cast<uint32>(indices.size()) * sizeof(uint32));
+
+		Submesh& submesh = mesh->m_Submeshes.emplace_back();
+		submesh.IndexCount = static_cast<uint32>(indices.size());
+
+		return mesh;
+	}
+
 	Mesh::Mesh(const std::string& filename)
 		: m_FilePath(filename)
 	{
@@ -403,6 +456,12 @@ namespace Neon
 		m_MeshShader->SetTextureCube("u_EnvRadianceTex", 0, SceneRenderer::GetRadianceTex(), 0);
 		m_MeshShader->SetTextureCube("u_EnvIrradianceTex", 0, SceneRenderer::GetIrradianceTex(), 0);
 		m_MeshShader->SetTexture2D("u_BRDFLUTTexture", 0, SceneRenderer::GetBRDFLUTTex(), 0);
+	}
+
+	Mesh::Mesh(const SharedRef<Shader>& shader, const SharedRef<GraphicsPipeline>& graphicsPipeline)
+	{
+		m_MeshShader = shader;
+		m_MeshGraphicsPipeline = graphicsPipeline;
 	}
 
 	Mesh::~Mesh()

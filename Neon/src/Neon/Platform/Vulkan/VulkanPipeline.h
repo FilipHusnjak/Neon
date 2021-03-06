@@ -5,7 +5,7 @@
 
 namespace Neon
 {
-	static vk::Format ShaderDataTypeToVulkanFormat(ShaderDataType type)
+	static vk::Format ConvertNeonShaderDataTypeToVulkanDataType(ShaderDataType type)
 	{
 		switch (type)
 		{
@@ -37,6 +37,19 @@ namespace Neon
 		}
 		NEO_CORE_ASSERT(false, "Uknown pipeline bind point!");
 		return vk::PipelineBindPoint::eGraphics;
+	}
+
+	static vk::PolygonMode ConvertNeonPolygonModeToVulkanPolygonMode(PolygonMode polygonMode)
+	{
+		switch (polygonMode)
+		{
+			case PolygonMode::Fill:
+				return vk::PolygonMode::eFill;
+			case PolygonMode::Line:
+				return vk::PolygonMode::eLine;
+		}
+		NEO_CORE_ASSERT(false, "Uknown polygon mode!");
+		return vk::PolygonMode::eFill;
 	}
 
 	class VulkanGraphicsPipeline : public GraphicsPipeline

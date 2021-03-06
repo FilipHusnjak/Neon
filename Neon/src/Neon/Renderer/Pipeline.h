@@ -6,11 +6,6 @@
 
 namespace Neon
 {
-	struct GraphicsPipelineSpecification
-	{
-		SharedRef<RenderPass> Pass;
-	};
-
 	struct ComputePipelineSpecification
 	{
 	};
@@ -19,6 +14,18 @@ namespace Neon
 	{
 		Graphics,
 		Compute
+	};
+
+	enum class PolygonMode
+	{
+		Fill,
+		Line
+	};
+
+	struct GraphicsPipelineSpecification
+	{
+		SharedRef<RenderPass> Pass;
+		PolygonMode Mode = PolygonMode::Fill;
 	};
 
 	class Pipeline : public RefCounted

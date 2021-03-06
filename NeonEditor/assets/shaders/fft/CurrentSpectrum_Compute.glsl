@@ -73,10 +73,10 @@ void main()
 	imageStore(u_HktDy, ivec2(gl_GlobalInvocationID.xy), vec4(hktDy.Real, hktDy.Im, 0, 1));
 	
 	// dx
-	Complex hktDx = Mul(Complex(0.0, -k.x / mag), hktDy);
+	Complex hktDx = Mul(Complex(0.0, k.x / mag), hktDy);
 	imageStore(u_HktDx, ivec2(gl_GlobalInvocationID.xy), vec4(hktDx.Real, hktDx.Im, 0, 1));
 	
 	// dz
-	Complex hktDz = Mul(Complex(0.0, -k.y / mag), hktDy);
+	Complex hktDz = Mul(Complex(0.0, k.y / mag), hktDy);
 	imageStore(u_HktDz, ivec2(gl_GlobalInvocationID.xy), vec4(hktDz.Real, hktDz.Im, 0, 1));
 }

@@ -26,7 +26,7 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Gun");
+		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
 		auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
@@ -113,7 +113,7 @@ namespace Neon
 		ImGui::Begin("Viewport");
 		auto viewportSize = ImGui::GetContentRegionAvail();
 
-		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 1000.0f));
+		m_EditorCamera.SetProjectionMatrix(glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
 		m_EditorCamera.SetViewportSize((uint32)viewportSize.x, (uint32)viewportSize.y);
 
 		ImGui::Image(Renderer::GetFinalImageId(), viewportSize);

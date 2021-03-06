@@ -202,6 +202,7 @@ namespace Neon
 		deviceFeatures.samplerAnisotropy = m_PhysicalDevice->GetSupportedFeatures().samplerAnisotropy;
 		deviceFeatures.shaderClipDistance = VK_TRUE;
 		deviceFeatures.sampleRateShading = VK_TRUE;
+		deviceFeatures.fillModeNonSolid = VK_TRUE;
 		vk::PhysicalDeviceFeatures2 deviceFeatures2;
 		deviceFeatures2.pNext = &descriptorFeatures;
 		deviceFeatures2.features = deviceFeatures;

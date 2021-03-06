@@ -9,4 +9,4 @@ namespace Neon
 
 		virtual void Render() const = 0;
 	};
-}
+} // namespace Neon

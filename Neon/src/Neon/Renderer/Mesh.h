@@ -130,6 +130,9 @@ namespace Neon
 	class Mesh : public RefCounted
 	{
 	public:
+		static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, const SharedRef<Shader>& shader,
+											const SharedRef<GraphicsPipeline>& graphicsPipeline);
+
 		Mesh(const std::string& filename);
 		~Mesh();
 
@@ -174,6 +177,8 @@ namespace Neon
 		}
 
 	private:
+		Mesh(const SharedRef<Shader>& shader, const SharedRef<GraphicsPipeline>& graphicsPipeline);
+
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
 		void UpdateBoneTransforms(float time);
 		void ReadNodeHierarchy(float animationTime, const aiNode* pNode, const glm::mat4& parentTransform);

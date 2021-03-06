@@ -53,7 +53,7 @@ namespace Neon
 
 		// Rasterization state
 		vk::PipelineRasterizationStateCreateInfo rasterizationState = {};
-		rasterizationState.polygonMode = vk::PolygonMode::eFill;
+		rasterizationState.polygonMode = ConvertNeonPolygonModeToVulkanPolygonMode(m_Specification.Mode);
 		rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
 		rasterizationState.frontFace = vk::FrontFace::eCounterClockwise;
 		rasterizationState.depthClampEnable = VK_FALSE;
@@ -127,7 +127,7 @@ namespace Neon
 		{
 			vertexInputAttribs[location].binding = 0;
 			vertexInputAttribs[location].location = location;
-			vertexInputAttribs[location].format = ShaderDataTypeToVulkanFormat(element.Type);
+			vertexInputAttribs[location].format = ConvertNeonShaderDataTypeToVulkanDataType(element.Type);
 			vertexInputAttribs[location].offset = element.Offset;
 
 			location++;
