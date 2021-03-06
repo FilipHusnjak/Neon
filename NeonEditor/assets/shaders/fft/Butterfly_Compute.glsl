@@ -4,11 +4,11 @@ layout (binding = 0, rgba32f) readonly uniform image2D u_TwiddleIndices;
 
 layout (binding = 1, rgba32f) uniform image2D u_PingPong[2];
 
-layout (std140, binding = 3) uniform UBO
+layout (std140, binding = 2) uniform PropertiesUBO
 {
-	int u_Stage;
-	int u_PingPongIndex;
-	int u_Direction;
+	uint u_Stage;
+	uint u_PingPongIndex;
+	uint u_Direction;
 };
 
 struct Complex

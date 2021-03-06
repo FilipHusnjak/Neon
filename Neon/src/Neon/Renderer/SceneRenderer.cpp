@@ -95,6 +95,8 @@ namespace Neon
 		SharedRef<ComputePipeline> DisplacementPipelineDz;
 		SharedRef<Texture2D> DisplacementZ;
 
+		uint32 N;
+		uint32 logN;
 		SharedRef<Mesh> OceanMesh;
 
 		float CurrentTime = 0;
@@ -106,6 +108,9 @@ namespace Neon
 	{
 		uint32 width = Application::Get().GetWindow().GetWidth();
 		uint32 height = Application::Get().GetWindow().GetWidth();
+
+		s_Data.N = 256;
+		s_Data.logN = static_cast<uint32>(std::log2(s_Data.N));
 
 		{
 			RenderPassSpecification geoRenderPassSpec;
@@ -203,7 +208,7 @@ namespace Neon
 
 		{
 			ShaderSpecification twiddleIndicesComputeShaderSpecification;
-			twiddleIndicesComputeShaderSpecification.ShaderVariableCounts["BitReversedUBO"] = 256;
+			twiddleIndicesComputeShaderSpecification.ShaderVariableCounts["BitReversedUBO"] = s_Data.N;
 			twiddleIndicesComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
 				"assets/shaders/fft/TwiddleIndices_Compute.glsl";
 			s_Data.TwiddleIndicesShader = Shader::Create(twiddleIndicesComputeShaderSpecification);
@@ -435,19 +440,19 @@ namespace Neon
 
 		s_Data.H0k =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.H0minusk =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.HktDy =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.HktDx =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.HktDz =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.Noise0 = Texture2D::Create("assets/textures/fft/Noise256_0.jpg",
 										  {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite,
 										   TextureFormat::RGBA8, TextureWrap::Clamp, TextureMinMagFilter::Nearest});
@@ -469,7 +474,17 @@ namespace Neon
 		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise2", 0, s_Data.Noise2, 0);
 		s_Data.InitialSpectrumShader->SetTexture2D("u_Noise3", 0, s_Data.Noise3, 0);
 
-		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, 256 / 32, 256 / 32, 1);
+		struct
+		{
+			uint32 N;
+			float L;
+			float A;
+			float Windspeed;
+			glm::vec2 W;
+		} properties = {s_Data.N, 1000.f, 20.f, 26.f, glm::vec2{1, 0}};
+		s_Data.InitialSpectrumShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
+
+		Renderer::DispatchCompute(s_Data.InitialSpectrumPipeline, s_Data.N / 32, s_Data.N / 32, 1);
 
 		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_HktDy", 0, s_Data.HktDy, 0);
 		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_HktDx", 0, s_Data.HktDx, 0);
@@ -478,15 +493,18 @@ namespace Neon
 		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_H0k", 0, s_Data.H0k, 0);
 		s_Data.CurrentSpectrumShader->SetStorageTexture2D("u_H0minusk", 0, s_Data.H0minusk, 0);
 
-		int bitReversedIndices[256];
-		for (int i = 0; i < 256; i++)
+		s_Data.CurrentSpectrumShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
+
+		std::vector<uint32> bitsReversed;
+		bitsReversed.resize(s_Data.N);
+		for (uint32 i = 0; i < s_Data.N; i++)
 		{
-			bitReversedIndices[i] = 0;
-			int n = i;
-			int power = 7;
+			bitsReversed[i] = 0;
+			uint32 n = i;
+			uint32 power = s_Data.logN - 1;
 			while (n != 0)
 			{
-				bitReversedIndices[i] += (n & 1) << power;
+				bitsReversed[i] += (n & 1) << power;
 				n = n >> 1;
 				power -= 1;
 			}
@@ -494,15 +512,17 @@ namespace Neon
 
 		s_Data.TwiddleIndices =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 8, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.logN, s_Data.N});
 
 		s_Data.TwiddleIndicesShader->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
-		s_Data.TwiddleIndicesShader->SetStorageBuffer("BitReversedUBO", bitReversedIndices, sizeof(bitReversedIndices));
-		Renderer::DispatchCompute(s_Data.TwiddleIndicesPipeline, 8, 256 / 32, 1);
+		s_Data.TwiddleIndicesShader->SetStorageBuffer("BitReversedUBO", bitsReversed.data(),
+													  static_cast<uint32>(bitsReversed.size() * sizeof(bitsReversed[0])));
+		s_Data.TwiddleIndicesShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
+		Renderer::DispatchCompute(s_Data.TwiddleIndicesPipeline, s_Data.logN, s_Data.N / 32, 1);
 
 		s_Data.PingPong =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, 256, 256});
+							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.ButterflyShaderDy->SetStorageTexture2D("u_TwiddleIndices", 0, s_Data.TwiddleIndices, 0);
 		s_Data.ButterflyShaderDy->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
 		s_Data.ButterflyShaderDy->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
@@ -517,25 +537,27 @@ namespace Neon
 
 		s_Data.DisplacementY =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.DisplacementShaderDy->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementY, 0);
 		s_Data.DisplacementShaderDy->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDy, 0);
 		s_Data.DisplacementShaderDy->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+		s_Data.DisplacementShaderDy->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
 		s_Data.DisplacementX =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.DisplacementShaderDx->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementX, 0);
 		s_Data.DisplacementShaderDx->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDx, 0);
 		s_Data.DisplacementShaderDx->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
+		s_Data.DisplacementShaderDx->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
 		s_Data.DisplacementZ =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, 256, 256});
+							   TextureWrap::Repeat, TextureMinMagFilter::Linear, true, 1, false, s_Data.N, s_Data.N});
 		s_Data.DisplacementShaderDz->SetStorageTexture2D("u_Displacement", 0, s_Data.DisplacementZ, 0);
 		s_Data.DisplacementShaderDz->SetStorageTexture2D("u_PingPong", 0, s_Data.HktDz, 0);
 		s_Data.DisplacementShaderDz->SetStorageTexture2D("u_PingPong", 1, s_Data.PingPong, 0);
-
+		s_Data.DisplacementShaderDz->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
 		ShaderSpecification oceanShaderSpecification;
 		oceanShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Ocean_Vert.glsl";
@@ -561,122 +583,122 @@ namespace Neon
 	void SceneRenderer::FlushDrawList()
 	{
 		s_Data.CurrentSpectrumShader->SetUniformBuffer("TimeUBO", 0, &s_Data.CurrentTime, sizeof(s_Data.CurrentTime));
-		Renderer::DispatchCompute(s_Data.CurrentSpectrumPipeline, 256 / 32, 256 / 32, 1);
-		s_Data.CurrentTime += 0.02f;
+		Renderer::DispatchCompute(s_Data.CurrentSpectrumPipeline, s_Data.N / 32, s_Data.N / 32, 1);
+		s_Data.CurrentTime += 0.04f;
 
-		int pingPong = 0;
+		uint32 pingPong = 0;
 		// IFFT horizontal
-		for (int i = 0; i < 8; i++)
+		for (uint32 i = 0; i < s_Data.logN; i++)
 		{
 			struct
 			{
-				int Stage;
-				int PingPong;
-				int Direction;
+				uint32 Stage;
+				uint32 PingPong;
+				uint32 Direction;
 			} butterflyData = {i, pingPong, 0};
 
-			s_Data.ButterflyShaderDy->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipelineDy, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDy->SetUniformBuffer("PropertiesUBO", 0, &butterflyData);
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDy, s_Data.N / 32, s_Data.N / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
 		// IFFT vertical
-		for (int i = 0; i < 8; i++)
+		for (uint32 i = 0; i < s_Data.logN; i++)
 		{
 			struct
 			{
-				int Stage;
-				int PingPong;
-				int Direction;
+				uint32 Stage;
+				uint32 PingPong;
+				uint32 Direction;
 			} butterflyData = {i, pingPong, 1};
 
-			s_Data.ButterflyShaderDy->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipelineDy, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDy->SetUniformBuffer("PropertiesUBO", 0, &butterflyData);
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDy, s_Data.N / 32, s_Data.N / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
 		s_Data.DisplacementShaderDy->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
-		Renderer::DispatchCompute(s_Data.DisplacementPipelineDy, 256 / 32, 256 / 32, 1);
+		Renderer::DispatchCompute(s_Data.DisplacementPipelineDy, s_Data.N / 32, s_Data.N / 32, 1);
 
 		pingPong = 0;
 		// IFFT horizontal
-		for (int i = 0; i < 8; i++)
+		for (uint32 i = 0; i < s_Data.logN; i++)
 		{
 			struct
 			{
-				int Stage;
-				int PingPong;
-				int Direction;
+				uint32 Stage;
+				uint32 PingPong;
+				uint32 Direction;
 			} butterflyData = {i, pingPong, 0};
 
-			s_Data.ButterflyShaderDx->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipelineDx, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDx->SetUniformBuffer("PropertiesUBO", 0, &butterflyData);
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDx, s_Data.N / 32, s_Data.N / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
 		// IFFT vertical
-		for (int i = 0; i < 8; i++)
+		for (uint32 i = 0; i < s_Data.logN; i++)
 		{
 			struct
 			{
-				int Stage;
-				int PingPong;
-				int Direction;
+				uint32 Stage;
+				uint32 PingPong;
+				uint32 Direction;
 			} butterflyData = {i, pingPong, 1};
 
-			s_Data.ButterflyShaderDx->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipelineDx, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDx->SetUniformBuffer("PropertiesUBO", 0, &butterflyData);
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDx, s_Data.N / 32, s_Data.N / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
-		s_Data.DisplacementShaderDx->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
-		Renderer::DispatchCompute(s_Data.DisplacementPipelineDx, 256 / 32, 256 / 32, 1);
+		s_Data.DisplacementShaderDx->SetUniformBuffer("UBO", 0, &pingPong);
+		Renderer::DispatchCompute(s_Data.DisplacementPipelineDx, s_Data.N / 32, s_Data.N / 32, 1);
 
 		pingPong = 0;
 		// IFFT horizontal
-		for (int i = 0; i < 8; i++)
+		for (uint32 i = 0; i < s_Data.logN; i++)
 		{
 			struct
 			{
-				int Stage;
-				int PingPong;
-				int Direction;
+				uint32 Stage;
+				uint32 PingPong;
+				uint32 Direction;
 			} butterflyData = {i, pingPong, 0};
 
-			s_Data.ButterflyShaderDz->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipelineDz, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDz->SetUniformBuffer("PropertiesUBO", 0, &butterflyData);
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDz, s_Data.N / 32, s_Data.N / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
 		// IFFT vertical
-		for (int i = 0; i < 8; i++)
+		for (uint32 i = 0; i < s_Data.logN; i++)
 		{
 			struct
 			{
-				int Stage;
-				int PingPong;
-				int Direction;
+				uint32 Stage;
+				uint32 PingPong;
+				uint32 Direction;
 			} butterflyData = {i, pingPong, 1};
 
-			s_Data.ButterflyShaderDz->SetUniformBuffer("UBO", 0, &butterflyData, sizeof(butterflyData));
-			Renderer::DispatchCompute(s_Data.ButterflyPipelineDz, 256 / 32, 256 / 32, 1);
+			s_Data.ButterflyShaderDz->SetUniformBuffer("PropertiesUBO", 0, &butterflyData);
+			Renderer::DispatchCompute(s_Data.ButterflyPipelineDz, s_Data.N / 32, s_Data.N / 32, 1);
 
 			pingPong++;
 			pingPong %= 2;
 		}
 
-		s_Data.DisplacementShaderDz->SetUniformBuffer("UBO", 0, &pingPong, sizeof(pingPong));
-		Renderer::DispatchCompute(s_Data.DisplacementPipelineDz, 256 / 32, 256 / 32, 1);
+		s_Data.DisplacementShaderDz->SetUniformBuffer("UBO", 0, &pingPong);
+		Renderer::DispatchCompute(s_Data.DisplacementPipelineDz, s_Data.N / 32, s_Data.N / 32, 1);
 
 		SubmitMesh(s_Data.OceanMesh);
 

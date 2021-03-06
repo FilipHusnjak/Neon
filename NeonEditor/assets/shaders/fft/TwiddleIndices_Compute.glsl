@@ -9,20 +9,23 @@ layout (std430, binding = 1) buffer BitReversedUBO
 	uint BitsReversed[];
 };
 
+layout (std140, binding = 2) uniform PropertiesUBO
+{
+	uint u_N;
+};
+
 struct Complex
 {	
 	float Real;
 	float Im;
 };
 
-uint N = 256;
-
 layout (local_size_x = 1, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
 	uvec2 texCoord = gl_GlobalInvocationID.xy;
-	float k = mod(texCoord.y * (float(N) / pow(2, texCoord.x + 1)), N);
-	Complex twiddle = Complex(cos(2.0 * PI * k / float(N)), sin(2.0 * PI * k / float(N)));
+	float k = mod(texCoord.y * (float(u_N) / pow(2, texCoord.x + 1)), u_N);
+	Complex twiddle = Complex(cos(2.0 * PI * k / float(u_N)), sin(2.0 * PI * k / float(u_N)));
 	
 	uint butterflyspan = int(pow(2, texCoord.x));
 

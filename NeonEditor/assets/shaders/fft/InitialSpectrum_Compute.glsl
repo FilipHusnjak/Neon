@@ -10,18 +10,21 @@ layout (binding = 3) uniform sampler2D u_Noise1;
 layout (binding = 4) uniform sampler2D u_Noise2;
 layout (binding = 5) uniform sampler2D u_Noise3;
 
-int N = 256;
-int L = 1000;
-float A = 20;
-vec2 W = vec2(1, 0);
-float windspeed = 26;
+layout (std140, binding = 6) uniform PropertiesUBO
+{
+	uint u_N;
+	float u_L;
+	float u_A;
+	float u_Windspeed;
+	vec2 u_W;
+};
 
 const float g = 9.81;
 
 // Box-Muller-Method
 vec4 GaussRnd()
 {
-	vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / float(N);
+	vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / float(u_N);
 	
 	float noise00 = clamp(texture(u_Noise0, texCoord).r, 0.001, 1.0);
 	float noise01 = clamp(texture(u_Noise1, texCoord).r, 0.001, 1.0);
@@ -39,19 +42,19 @@ vec4 GaussRnd()
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
-	vec2 v = vec2(gl_GlobalInvocationID.xy) - float(N) / 2.0;
+	vec2 v = vec2(gl_GlobalInvocationID.xy) - float(u_N) / 2.0;
 	
-	vec2 k = 2.0 * PI / L * v;
+	vec2 k = 2.0 * PI / u_L * v;
 
-	float windspeedSq = (windspeed * windspeed) / g;
+	float windspeedSq = (u_Windspeed * u_Windspeed) / g;
 	float mag = max(0.0001, length(k));
 	float magSq = mag * mag;
 	
 	// Ph(k)
-	float phk = A / (magSq * magSq) * exp(-1.0 / (magSq * windspeedSq * windspeedSq));
+	float phk = u_A / (magSq * magSq) * exp(-1.0 / (magSq * windspeedSq * windspeedSq));
 
-	float h0k = clamp(sqrt(phk * pow(dot(normalize(k), normalize(W)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
-	float h0minusk = clamp(sqrt(phk * pow(dot(normalize(-k), normalize(W)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
+	float h0k = clamp(sqrt(phk * pow(dot(normalize(k), normalize(u_W)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
+	float h0minusk = clamp(sqrt(phk * pow(dot(normalize(-k), normalize(u_W)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
 	
 	vec4 rnd = GaussRnd();
 	

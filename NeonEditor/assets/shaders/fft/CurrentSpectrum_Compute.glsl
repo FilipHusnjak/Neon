@@ -9,10 +9,13 @@ layout (binding = 2, rgba32f) writeonly uniform image2D u_HktDz; // z displaceme
 layout (binding = 3, rgba32f) readonly uniform image2D u_H0k;
 layout (binding = 4, rgba32f) readonly uniform image2D u_H0minusk;
 
-int N = 256;
-int L = 1000;
+layout (std140, binding = 5) uniform PropertiesUBO
+{
+	uint u_N;
+	float u_L;
+};
 
-layout (std140, binding = 5) uniform TimeUBO
+layout (std140, binding = 6) uniform TimeUBO
 {
     float u_Time;
 };
@@ -52,13 +55,13 @@ Complex FromVec2(vec2 vec)
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
-	vec2 v = ivec2(gl_GlobalInvocationID.xy) - float(N) / 2.0;
+	vec2 v = ivec2(gl_GlobalInvocationID.xy) - float(u_N) / 2.0;
 	
-	vec2 k = 2.0 * PI / L * v;
+	vec2 k = 2.0 * PI / u_L * v;
 	
 	float mag = max(0.0001, length(k));
 	
-	// Dispersion relation for water waves
+	// Dispersion relation for ocean waves
 	float w = sqrt(9.81 * mag);
 	
 	Complex fourierAmp = FromVec2(imageLoad(u_H0k, ivec2(gl_GlobalInvocationID.xy)).rg);
