@@ -23,7 +23,7 @@ namespace Neon
 
 		s_ActiveScenes[m_SceneID] = this;
 
-		m_EnvironmentPath = "assets/textures/environment/birchwood_4k.hdr";
+		m_EnvironmentPath = "assets/textures/environment/daytime.hdr";
 	}
 
 	Scene::~Scene()

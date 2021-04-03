@@ -16,7 +16,7 @@ layout (std140, binding = 6) uniform PropertiesUBO
 	float u_L;
 	float u_A;
 	float u_Windspeed;
-	vec2 u_W;
+	vec2 u_WindDir;
 };
 
 const float g = 9.81;
@@ -53,8 +53,17 @@ void main()
 	// Ph(k)
 	float phk = u_A / (magSq * magSq) * exp(-1.0 / (magSq * windspeedSq * windspeedSq));
 
-	float h0k = clamp(sqrt(phk * pow(dot(normalize(k), normalize(u_W)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
-	float h0minusk = clamp(sqrt(phk * pow(dot(normalize(-k), normalize(u_W)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
+	float h0k = clamp(sqrt(phk * pow(dot(normalize(k), normalize(u_WindDir)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
+	float h0minusk = clamp(sqrt(phk * pow(dot(normalize(-k), normalize(u_WindDir)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
+
+	if (dot(k, u_WindDir) < 0.f)
+	{
+		h0k *= 0.4f;
+	}
+	else
+	{
+		h0minusk *= 0.4f;
+	}
 	
 	vec4 rnd = GaussRnd();
 	

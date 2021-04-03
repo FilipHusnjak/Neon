@@ -5,17 +5,19 @@
 layout (binding = 0, rgba32f) writeonly uniform image2D u_HktDy; // height displacement
 layout (binding = 1, rgba32f) writeonly uniform image2D u_HktDx; // x displacement
 layout (binding = 2, rgba32f) writeonly uniform image2D u_HktDz; // z displacement
+layout (binding = 3, rgba32f) writeonly uniform image2D u_HktDyDx; // dHktDy / dx
+layout (binding = 4, rgba32f) writeonly uniform image2D u_HktDyDz; // dHktDy / dz
 
-layout (binding = 3, rgba32f) readonly uniform image2D u_H0k;
-layout (binding = 4, rgba32f) readonly uniform image2D u_H0minusk;
+layout (binding = 5, rgba32f) readonly uniform image2D u_H0k;
+layout (binding = 6, rgba32f) readonly uniform image2D u_H0minusk;
 
-layout (std140, binding = 5) uniform PropertiesUBO
+layout (std140, binding = 7) uniform PropertiesUBO
 {
 	uint u_N;
 	float u_L;
 };
 
-layout (std140, binding = 6) uniform TimeUBO
+layout (std140, binding = 8) uniform TimeUBO
 {
     float u_Time;
 };
@@ -61,18 +63,17 @@ void main()
 	
 	float mag = max(0.0001, length(k));
 	
-	// Dispersion relation for ocean waves
-	float w = sqrt(9.81 * mag);
+	// Dispersion relation for deep water waves
+	float wt = sqrt(9.81 * mag) * u_Time;
 	
-	Complex fourierAmp = FromVec2(imageLoad(u_H0k, ivec2(gl_GlobalInvocationID.xy)).rg);
-	Complex fourierAmpConj = Conjugate(FromVec2(imageLoad(u_H0minusk, ivec2(gl_GlobalInvocationID.xy)).rg));
-	
-	// euler formula
-	Complex exp_iwt = Complex(cos(w * u_Time), sin(w * u_Time));
-	Complex exp_iwt_inv = Conjugate(exp_iwt);
+	// Euler formula
+	Complex amp = FromVec2(imageLoad(u_H0k, ivec2(gl_GlobalInvocationID.xy)).rg);
+	Complex ampConj = Conjugate(FromVec2(imageLoad(u_H0minusk, ivec2(gl_GlobalInvocationID.xy)).rg));
+
+	Complex exponent = Complex(cos(wt), sin(wt));
 	
 	// dy
-	Complex hktDy = Add(Mul(fourierAmp, exp_iwt), Mul(fourierAmpConj, exp_iwt_inv));
+	Complex hktDy = Add(Mul(amp, exponent), Mul(ampConj, Conjugate(exponent)));
 	imageStore(u_HktDy, ivec2(gl_GlobalInvocationID.xy), vec4(hktDy.Real, hktDy.Im, 0, 1));
 	
 	// dx
@@ -82,4 +83,12 @@ void main()
 	// dz
 	Complex hktDz = Mul(Complex(0.0, k.y / mag), hktDy);
 	imageStore(u_HktDz, ivec2(gl_GlobalInvocationID.xy), vec4(hktDz.Real, hktDz.Im, 0, 1));
+
+	// dHktDy / dx
+	Complex hktDyDx = Mul(Complex(0.0, k.x), hktDy);
+	imageStore(u_HktDyDx, ivec2(gl_GlobalInvocationID.xy), vec4(hktDyDx.Real, hktDyDx.Im, 0, 1));
+
+	// dHktDy / dz
+	Complex hktDyDz = Mul(Complex(0.0, k.y), hktDy);
+	imageStore(u_HktDyDz, ivec2(gl_GlobalInvocationID.xy), vec4(hktDyDz.Real, hktDyDz.Im, 0, 1));
 }
