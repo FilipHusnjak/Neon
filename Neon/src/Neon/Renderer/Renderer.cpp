@@ -5,6 +5,8 @@
 
 namespace Neon
 {
+	static bool s_DrawWireframe;
+
 	static SharedRef<VertexBuffer> s_QuadVertexBuffer;
 	static SharedRef<IndexBuffer> s_QuadIndexBuffer;
 
@@ -35,7 +37,15 @@ namespace Neon
 	{
 		NEO_CORE_ASSERT(s_SelectedCommandBuffer);
 
-		s_SelectedCommandBuffer->BindPipeline(mesh->GetGraphicsPipeline());
+		if (s_DrawWireframe)
+		{
+			s_SelectedCommandBuffer->BindPipeline(mesh->GetWireframeGraphicsPipeline());
+		}
+		else
+		{
+			s_SelectedCommandBuffer->BindPipeline(mesh->GetGraphicsPipeline());
+		}
+		
 		s_SelectedCommandBuffer->BindVertexBuffer(mesh->GetVertexBuffer());
 		s_SelectedCommandBuffer->BindIndexBuffer(mesh->GetIndexBuffer());
 
@@ -92,4 +102,20 @@ namespace Neon
 
 		SceneRenderer::Shutdown();
 	}
+
+	void Renderer::EnableWireframe()
+	{
+		s_DrawWireframe = true;
+	}
+
+	void Renderer::DisableWireframe()
+	{
+		s_DrawWireframe = false;
+	}
+
+	bool Renderer::IsWireframeEnabled()
+	{
+		return s_DrawWireframe;
+	}
+
 } // namespace Neon

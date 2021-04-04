@@ -5,6 +5,7 @@
 #include <Neon/Editor/Panels/ContentBrowserPanel.h>
 #include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
+#include <Neon/Editor/Panels/SceneRendererPanel.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Scene/Components.h>
 #include <Neon/Scene/Components/OceanComponent.h>
@@ -40,6 +41,7 @@ namespace Neon
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
 		m_Panels.emplace_back(SharedRef<ContentBrowserPanel>::Create());
+		m_Panels.emplace_back(SharedRef<SceneRendererPanel>::Create());
 	}
 
 	void EditorLayer::OnAttach()

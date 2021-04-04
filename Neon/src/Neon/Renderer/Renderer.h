@@ -29,6 +29,11 @@ namespace Neon
 
 		static void Shutdown();
 
+		static void EnableWireframe();
+		static void DisableWireframe();
+
+		static bool IsWireframeEnabled();
+
 		static void SelectCommandBuffer(const SharedRef<CommandBuffer>& commandBuffer)
 		{
 			s_SelectedCommandBuffer = commandBuffer;

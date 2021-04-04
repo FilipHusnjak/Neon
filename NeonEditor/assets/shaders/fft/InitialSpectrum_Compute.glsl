@@ -58,11 +58,11 @@ void main()
 
 	if (dot(k, u_WindDir) < 0.f)
 	{
-		h0k *= 0.4f;
+		h0k *= 0.5;
 	}
 	else
 	{
-		h0minusk *= 0.4f;
+		h0minusk *= 0.5;
 	}
 	
 	vec4 rnd = GaussRnd();

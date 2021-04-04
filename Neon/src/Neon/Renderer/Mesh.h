@@ -130,8 +130,8 @@ namespace Neon
 	class Mesh : public RefCounted
 	{
 	public:
-		static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, const SharedRef<Shader>& shader,
-											const SharedRef<GraphicsPipeline>& graphicsPipeline);
+		static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
+												GraphicsPipelineSpecification& pipelineSpec);
 
 		Mesh(const std::string& filename);
 		~Mesh();
@@ -142,10 +142,18 @@ namespace Neon
 		{
 			return m_MeshGraphicsPipeline;
 		}
+		const SharedRef<GraphicsPipeline>& GetWireframeGraphicsPipeline() const
+		{
+			return m_WireframeMeshGraphicsPipeline;
+		}
 
 		const SharedRef<Shader>& GetShader() const
 		{
 			return m_MeshShader;
+		}
+		const SharedRef<Shader>& GetWireframeShader() const
+		{
+			return m_WireframeMeshShader;
 		}
 
 		const SharedRef<VertexBuffer>& GetVertexBuffer() const
@@ -177,7 +185,7 @@ namespace Neon
 		}
 
 	private:
-		Mesh(const SharedRef<Shader>& shader, const SharedRef<GraphicsPipeline>& graphicsPipeline);
+		Mesh(ShaderSpecification& shaderSpec, GraphicsPipelineSpecification& pipelineSpec);
 
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
 		void UpdateBoneTransforms(float time);
@@ -212,7 +220,9 @@ namespace Neon
 		const aiScene* m_Scene;
 
 		SharedRef<Shader> m_MeshShader;
+		SharedRef<Shader> m_WireframeMeshShader;
 		SharedRef<GraphicsPipeline> m_MeshGraphicsPipeline;
+		SharedRef<GraphicsPipeline> m_WireframeMeshGraphicsPipeline;
 
 		std::vector<Material> m_Materials;
 

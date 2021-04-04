@@ -359,9 +359,18 @@ namespace Neon
 		{
 			cameraUBO.Model = dc.Transform;
 
-			SharedRef<Shader> meshShader = dc.Mesh->GetShader();
-			meshShader->SetUniformBuffer("CameraUBO", 0, &cameraUBO);
-			meshShader->SetUniformBuffer("LightUBO", 0, &lightUBO);
+			if (Renderer::IsWireframeEnabled())
+			{
+				SharedRef<Shader> meshShader = dc.Mesh->GetWireframeShader();
+				meshShader->SetUniformBuffer("CameraUBO", 0, &cameraUBO);
+			}
+			else
+			{
+				SharedRef<Shader> meshShader = dc.Mesh->GetShader();
+				meshShader->SetUniformBuffer("CameraUBO", 0, &cameraUBO);
+				meshShader->SetUniformBuffer("LightUBO", 0, &lightUBO);
+			}
+			
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform);
 		}
 

@@ -12,11 +12,18 @@ layout (std140, binding = 0) uniform CameraUBO
     vec4 u_CameraPosition;
 };
 
-layout (binding = 1) uniform sampler2D u_DisplacementY;
-layout (binding = 2) uniform sampler2D u_DisplacementX;
-layout (binding = 3) uniform sampler2D u_DisplacementZ;
-layout (binding = 4) uniform sampler2D u_DerivativesX;
-layout (binding = 5) uniform sampler2D u_DerivativesZ;
+layout (std140, binding = 1) uniform CameraUBO
+{
+    mat4 u_Model;
+    mat4 u_ViewProjection;
+    vec4 u_CameraPosition;
+};
+
+layout (binding = 2) uniform sampler2D u_DisplacementY;
+layout (binding = 3) uniform sampler2D u_DisplacementX;
+layout (binding = 4) uniform sampler2D u_DisplacementZ;
+layout (binding = 5) uniform sampler2D u_DerivativesX;
+layout (binding = 6) uniform sampler2D u_DerivativesZ;
 
 void main()
 {
@@ -28,7 +35,7 @@ void main()
 
     v_Normal = vec3(-dydx, 1.0, -dydz);
     
-    vec4 pos = vec4(10.0 * a_Position.x + 10.0 * dx, 10.0 * dy, 10.0 * a_Position.y + 10.0 * dz, 1.0);
+    vec4 pos = vec4(10.0 * a_Position.x + 100.0 * dx, 100.0 * dy, 10.0 * a_Position.y + 100.0 * dz, 1.0);
     vec4 worldPosition = u_Model * pos;
     v_WorldPosition = worldPosition.xyz / worldPosition.w;
     gl_Position = u_ViewProjection * worldPosition;

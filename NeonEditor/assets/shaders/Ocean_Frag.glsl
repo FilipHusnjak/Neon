@@ -42,5 +42,5 @@ void main()
 
 	vec3 refl = texture(u_EnvRadianceTex, l).rgb;
 
-	o_Color = vec4(vec3(dot(n, vec3(1.0))), 1.0) * vec4(0.05, 0.22, 0.4, 1.0);
+	o_Color = vec4(vec3(pow(dot(n, vec3(1.0)), 4.0)), 1.0) * vec4(0.05, 0.22, 0.4, 1.0) * 2.0;
 }

@@ -2,6 +2,7 @@
 
 #include "Mesh.h"
 #include "Neon/Renderer/SceneRenderer.h"
+#include "Neon/Renderer/Renderer.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
@@ -72,10 +73,10 @@ namespace Neon
 		}
 	};
 
-	SharedRef<Mesh> Mesh::GenerateGridMesh(uint32 countW, uint32 countH, const SharedRef<Shader>& shader,
-									   const SharedRef<GraphicsPipeline>& graphicsPipeline)
+	SharedRef<Mesh> Mesh::GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
+										   GraphicsPipelineSpecification& pipelineSpec)
 	{
-		SharedRef<Mesh> mesh = SharedRef<Mesh>(new Mesh(shader, graphicsPipeline));
+		SharedRef<Mesh> mesh = SharedRef<Mesh>(new Mesh(shaderSpec, pipelineSpec));
 
 		std::vector<glm::vec2> vertices;
 		std::vector<uint32> indices;
@@ -115,7 +116,7 @@ namespace Neon
 		}
 
 		mesh->m_VertexBuffer = VertexBuffer::Create(vertices.data(), static_cast<uint32>(vertices.size()) * sizeof(vertices[0]),
-													shader->GetVertexBufferLayout());
+													mesh->GetShader()->GetVertexBufferLayout());
 
 		mesh->m_IndexBuffer = IndexBuffer::Create(indices.data(), static_cast<uint32>(indices.size()) * sizeof(uint32));
 
@@ -314,9 +315,15 @@ namespace Neon
 		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
 		m_MeshShader = Shader::Create(shaderSpecification);
 
+		shaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
+		m_WireframeMeshShader = Shader::Create(shaderSpecification);
+
 		GraphicsPipelineSpecification graphicsPipelineSpecification;
 		graphicsPipelineSpecification.Pass = SceneRenderer::GetGeoPass();
 		m_MeshGraphicsPipeline = GraphicsPipeline::Create(m_MeshShader, graphicsPipelineSpecification);
+
+		graphicsPipelineSpecification.Mode = PolygonMode::Line;
+		m_WireframeMeshGraphicsPipeline = GraphicsPipeline::Create(m_WireframeMeshShader, graphicsPipelineSpecification);
 
 		// Materials
 		if (m_Scene->HasMaterials())
@@ -365,8 +372,8 @@ namespace Neon
 					parentPath /= std::string(aiTexPath.data);
 					std::string texturePath = parentPath.string();
 					NEO_MESH_LOG("    Albedo map path = {0}", texturePath);
-					m_Materials[i].LoadTexture2D(
-						"u_AlbedoTextures", texturePath, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8}, 0);
+					m_Materials[i].LoadTexture2D("u_AlbedoTextures", texturePath,
+												 {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8}, 0);
 					materialProperties.UseAlbedoMap = 1.f;
 					NEO_MESH_LOG("    Texture {0} loaded", texturePath);
 				}
@@ -458,10 +465,15 @@ namespace Neon
 		m_MeshShader->SetTexture2D("u_BRDFLUTTexture", 0, SceneRenderer::GetBRDFLUTTex(), 0);
 	}
 
-	Mesh::Mesh(const SharedRef<Shader>& shader, const SharedRef<GraphicsPipeline>& graphicsPipeline)
+	Mesh::Mesh(ShaderSpecification& shaderSpec,
+			   GraphicsPipelineSpecification& pipelineSpec)
 	{
-		m_MeshShader = shader;
-		m_MeshGraphicsPipeline = graphicsPipeline;
+		m_MeshShader = Shader::Create(shaderSpec);
+		shaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
+		m_WireframeMeshShader = Shader::Create(shaderSpec);
+		m_MeshGraphicsPipeline = GraphicsPipeline::Create(m_MeshShader, pipelineSpec);
+		pipelineSpec.Mode = PolygonMode::Line;
+		m_WireframeMeshGraphicsPipeline = GraphicsPipeline::Create(m_WireframeMeshShader, pipelineSpec);
 	}
 
 	Mesh::~Mesh()
@@ -516,6 +528,7 @@ namespace Neon
 			boneTransforms[i] = m_BoneInfo[i].FinalTransformation;
 		}
 		m_MeshShader->SetStorageBuffer("BonesUBO", boneTransforms.data());
+		m_WireframeMeshShader->SetStorageBuffer("BonesUBO", boneTransforms.data());
 	}
 
 	void Mesh::ReadNodeHierarchy(float animationTime, const aiNode* pNode, const glm::mat4& parentTransform)

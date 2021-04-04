@@ -5,6 +5,7 @@
 #include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
+#include "Neon/Scene/Components/OceanComponent.h"
 #include "Neon/Scene/Entity.h"
 
 #include <imgui/imgui.h>
@@ -384,6 +385,10 @@ namespace Neon
 			ImGui::Spacing();
 
 			DrawComponent<LightComponent>("Light Component", selectedEntity, [](LightComponent& component) {
+
+			});
+
+			DrawComponent<OceanComponent>("Ocean Component", selectedEntity, [](OceanComponent& component) {
 
 			});
 

@@ -105,7 +105,7 @@ namespace Neon
 			float A;
 			float Windspeed;
 			glm::vec2 W;
-		} properties = {m_N, 10.f, 20000.f, 26.f, glm::vec2{1, 1}};
+		} properties = {m_N, 100.f, 20.f, 26.f, glm::vec2{1, 1}};
 		m_InitialSpectrumShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
 		Renderer::DispatchCompute(m_InitialSpectrumPipeline, m_N / 32, m_N / 32, 1);
@@ -209,18 +209,26 @@ namespace Neon
 		oceanShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Ocean_Vert.glsl";
 		oceanShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Ocean_Frag.glsl";
 		oceanShaderSpecification.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-		SharedRef<Shader> oceanShader = Shader::Create(oceanShaderSpecification);
 		GraphicsPipelineSpecification oceanPipelineSpecification;
 		oceanPipelineSpecification.Pass = SceneRenderer::GetGeoPass();
 		oceanPipelineSpecification.Mode = PolygonMode::Fill;
-		SharedRef<Pipeline> oceanPipeline = GraphicsPipeline::Create(oceanShader, oceanPipelineSpecification);
+
+		m_Mesh = Mesh::GenerateGridMesh(100, 100, oceanShaderSpecification, oceanPipelineSpecification);
+
+		SharedRef<Shader> oceanShader = m_Mesh->GetShader();
 		oceanShader->SetTexture2D("u_DisplacementY", 0, m_DisplacementY, 0);
 		oceanShader->SetTexture2D("u_DisplacementX", 0, m_DisplacementX, 0);
 		oceanShader->SetTexture2D("u_DisplacementZ", 0, m_DisplacementZ, 0);
 		oceanShader->SetTexture2D("u_DerivativesX", 0, m_DerivativeX, 0);
 		oceanShader->SetTexture2D("u_DerivativesZ", 0, m_DerivativeZ, 0);
 		oceanShader->SetTextureCube("u_EnvRadianceTex", 0, SceneRenderer::GetRadianceTex(), 0);
-		m_Mesh = Mesh::GenerateGridMesh(1000, 1000, oceanShader, oceanPipeline);
+
+		oceanShader = m_Mesh->GetWireframeShader();
+		oceanShader->SetTexture2D("u_DisplacementY", 0, m_DisplacementY, 0);
+		oceanShader->SetTexture2D("u_DisplacementX", 0, m_DisplacementX, 0);
+		oceanShader->SetTexture2D("u_DisplacementZ", 0, m_DisplacementZ, 0);
+		oceanShader->SetTexture2D("u_DerivativesX", 0, m_DerivativeX, 0);
+		oceanShader->SetTexture2D("u_DerivativesZ", 0, m_DerivativeZ, 0);
 	}
 
 	OceanComponent::~OceanComponent()
