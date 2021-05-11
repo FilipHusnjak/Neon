@@ -44,7 +44,7 @@ void Horizontal(uint pingPongIndexBase)
 	Complex p = FromVec2(imageLoad(u_PingPong[pingPongIndexBase + u_PingPongIndex], ivec2(data.z, gl_GlobalInvocationID.y)).rg);
 	Complex q = FromVec2(imageLoad(u_PingPong[pingPongIndexBase + u_PingPongIndex], ivec2(data.w, gl_GlobalInvocationID.y)).rg);
 	Complex w = Complex(data.x, data.y);
-		
+
 	// Butterfly operation
 	Complex result = Add(p, Mul(w, q));
 		

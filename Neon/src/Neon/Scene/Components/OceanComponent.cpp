@@ -11,7 +11,6 @@ namespace Neon
 		: m_N(n)
 	{
 		m_LogN = static_cast<uint32>(std::log2(n));
-
 		{
 			ShaderSpecification initialSpectrumComputeShaderSpecification;
 			initialSpectrumComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
@@ -62,28 +61,27 @@ namespace Neon
 			m_DisplacementPipeline = ComputePipeline::Create(m_DisplacementShader, displacementComputePipelineSpecification);
 		}
 
+		float L = 20.f;
+
 		m_H0k = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 								   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
-		m_H0minusk =
-			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
 		m_HktDy = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-									 TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+									 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_HktDx = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-									 TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+									 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_HktDz = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-									 TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+									 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_HktDyDx = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-									 TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+									   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_HktDyDz = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-									 TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
-		m_Noise0 = Texture2D::Create("assets/textures/fft/Noise256_0.jpg",
+									   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
+		m_Noise0 = Texture2D::Create("assets/textures/fft/Noise512_0.jpg",
 									 {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA8,
 									  TextureWrap::Clamp, TextureMinMagFilter::Nearest});
-		m_Noise1 = Texture2D::Create("assets/textures/fft/Noise256_1.jpg",
+		m_Noise1 = Texture2D::Create("assets/textures/fft/Noise512_1.jpg",
 									 {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA8,
 									  TextureWrap::Clamp, TextureMinMagFilter::Nearest});
-		m_Noise2 = Texture2D::Create("assets/textures/fft/Noise256_2.jpg",
+		m_Noise2 = Texture2D::Create("assets/textures/fft/Noise512_2.jpg",
 									 {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA8,
 									  TextureWrap::Clamp, TextureMinMagFilter::Nearest});
 		m_Noise3 = Texture2D::Create("assets/textures/fft/Noise256_3.jpg",
@@ -91,7 +89,6 @@ namespace Neon
 									  TextureWrap::Clamp, TextureMinMagFilter::Nearest});
 
 		m_InitialSpectrumShader->SetStorageTexture2D("u_H0k", 0, m_H0k, 0);
-		m_InitialSpectrumShader->SetStorageTexture2D("u_H0minusk", 0, m_H0minusk, 0);
 
 		m_InitialSpectrumShader->SetTexture2D("u_Noise0", 0, m_Noise0, 0);
 		m_InitialSpectrumShader->SetTexture2D("u_Noise1", 0, m_Noise1, 0);
@@ -104,8 +101,8 @@ namespace Neon
 			float L;
 			float A;
 			float Windspeed;
-			glm::vec2 W;
-		} properties = {m_N, 100.f, 20.f, 26.f, glm::vec2{1, 1}};
+			glm::vec2 WindDir;
+		} properties = {m_N, L, 0.45f * 1e-3f, 6.5f, glm::vec2{-0.4f, -0.9f}};
 		m_InitialSpectrumShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
 		Renderer::DispatchCompute(m_InitialSpectrumPipeline, m_N / 32, m_N / 32, 1);
@@ -117,7 +114,6 @@ namespace Neon
 		m_CurrentSpectrumShader->SetStorageTexture2D("u_HktDyDz", 0, m_HktDyDz, 0);
 
 		m_CurrentSpectrumShader->SetStorageTexture2D("u_H0k", 0, m_H0k, 0);
-		m_CurrentSpectrumShader->SetStorageTexture2D("u_H0minusk", 0, m_H0minusk, 0);
 
 		m_CurrentSpectrumShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
@@ -148,19 +144,19 @@ namespace Neon
 
 		m_PingPong[0] =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_PingPong[1] =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_PingPong[2] =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_PingPong[3] =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 		m_PingPong[4] =
 			Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
-							   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
+							   TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, false, m_N, m_N});
 
 		m_ButterflyShader->SetStorageTexture2D("m_TwiddleFactors", 0, m_TwiddleFactors, 0);
 		m_ButterflyShader->SetStorageTexture2D("u_PingPong", 0, m_HktDy, 0);
@@ -213,9 +209,10 @@ namespace Neon
 		oceanPipelineSpecification.Pass = SceneRenderer::GetGeoPass();
 		oceanPipelineSpecification.Mode = PolygonMode::Fill;
 
-		m_Mesh = Mesh::GenerateGridMesh(100, 100, oceanShaderSpecification, oceanPipelineSpecification);
+		m_Mesh = Mesh::GenerateGridMesh(1000, 1000, oceanShaderSpecification, oceanPipelineSpecification);
 
 		SharedRef<Shader> oceanShader = m_Mesh->GetShader();
+		oceanShader->SetUniformBuffer("PropertiesUBO", 0, &L);
 		oceanShader->SetTexture2D("u_DisplacementY", 0, m_DisplacementY, 0);
 		oceanShader->SetTexture2D("u_DisplacementX", 0, m_DisplacementX, 0);
 		oceanShader->SetTexture2D("u_DisplacementZ", 0, m_DisplacementZ, 0);
@@ -224,6 +221,7 @@ namespace Neon
 		oceanShader->SetTextureCube("u_EnvRadianceTex", 0, SceneRenderer::GetRadianceTex(), 0);
 
 		oceanShader = m_Mesh->GetWireframeShader();
+		oceanShader->SetUniformBuffer("PropertiesUBO", 0, &L);
 		oceanShader->SetTexture2D("u_DisplacementY", 0, m_DisplacementY, 0);
 		oceanShader->SetTexture2D("u_DisplacementX", 0, m_DisplacementX, 0);
 		oceanShader->SetTexture2D("u_DisplacementZ", 0, m_DisplacementZ, 0);

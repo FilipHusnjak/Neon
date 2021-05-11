@@ -33,10 +33,12 @@ namespace Neon
 		transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
 		auto& ocean = m_EditorScene->CreateEntity("Ocean");
-		ocean.AddComponent<OceanComponent>(256);
+		ocean.AddComponent<OceanComponent>(512);
+		auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
+		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
 
 		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
-		lightEntity.AddComponent<LightComponent>(glm::vec4{-0.68418f, 0.55581f, -0.4722f, 0.f});
+		lightEntity.AddComponent<LightComponent>(glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());

@@ -14,7 +14,7 @@ void main()
 {	
 	for (uint i = 0; i < 5; i++)
 	{
-		float res = imageLoad(u_ButterflyResult[i], ivec2(gl_GlobalInvocationID)).r / float(u_N * u_N);
+		float res = imageLoad(u_ButterflyResult[i], ivec2(gl_GlobalInvocationID)).r;
 		if (mod(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y, 2) > 0)
 		{
 			res *= -1;

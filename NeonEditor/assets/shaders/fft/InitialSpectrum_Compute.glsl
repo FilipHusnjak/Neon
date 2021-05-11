@@ -3,7 +3,6 @@
 #define PI 3.1415926535897932384626433832795
 
 layout (binding = 0, rgba32f) writeonly uniform image2D u_H0k;
-layout (binding = 1, rgba32f) writeonly uniform image2D u_H0minusk;
 
 layout (binding = 2) uniform sampler2D u_Noise0;
 layout (binding = 3) uniform sampler2D u_Noise1;
@@ -46,27 +45,32 @@ void main()
 	
 	vec2 k = 2.0 * PI / u_L * v;
 
-	float windspeedSq = (u_Windspeed * u_Windspeed) / g;
-	float mag = max(0.0001, length(k));
-	float magSq = mag * mag;
-	
+	float KdotW = dot(k, u_WindDir);
+	float k2 = dot(k, k);
 	// Ph(k)
-	float phk = u_A / (magSq * magSq) * exp(-1.0 / (magSq * windspeedSq * windspeedSq));
-
-	float h0k = clamp(sqrt(phk * pow(dot(normalize(k), normalize(u_WindDir)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
-	float h0minusk = clamp(sqrt(phk * pow(dot(normalize(-k), normalize(u_WindDir)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
-
-	if (dot(k, u_WindDir) < 0.f)
+	float phk = 0;
+	if (k2 > 0.000001)
 	{
-		h0k *= 0.5;
+		 phk = u_A * (exp(-1.0 / (k2 * u_L * u_L))) / (k2 * k2 * k2) * (KdotW * KdotW) * exp(-k2 * u_L * u_L / 1000000.0);
 	}
-	else
+
+	if (KdotW < 0.f)
 	{
-		h0minusk *= 0.5;
+		phk *= 0.07;
 	}
+
+	//float windspeedSq = (u_Windspeed * u_Windspeed) / g;
+	//float mag = max(0.0001, length(k));
+	//float magSq = mag * mag;
+
+	// Ph(k)
+	//float phk = u_A / (magSq * magSq) * exp(-1.0 / (magSq * windspeedSq * windspeedSq));
+
+	float h0k = sqrt(phk / 2.0);
+	//float h0minusk = clamp(sqrt(phk * pow(dot(normalize(-k), normalize(u_WindDir)), 2.0)) / sqrt(2.0), -4000.0, 4000.0);
 	
 	vec4 rnd = GaussRnd();
 	
 	imageStore(u_H0k, ivec2(gl_GlobalInvocationID.xy), vec4(rnd.xy * h0k, 0, 1));
-	imageStore(u_H0minusk, ivec2(gl_GlobalInvocationID.xy), vec4(rnd.zw * h0minusk, 0, 1));
+	//imageStore(u_H0minusk, ivec2(gl_GlobalInvocationID.xy), vec4(rnd.zw * h0minusk, 0, 1));
 }

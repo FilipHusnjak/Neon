@@ -27,7 +27,6 @@ namespace Neon
 		SharedRef<Shader> m_InitialSpectrumShader;
 		SharedRef<ComputePipeline> m_InitialSpectrumPipeline;
 		SharedRef<Texture2D> m_H0k;
-		SharedRef<Texture2D> m_H0minusk;
 		SharedRef<Texture2D> m_Noise0;
 		SharedRef<Texture2D> m_Noise1;
 		SharedRef<Texture2D> m_Noise2;

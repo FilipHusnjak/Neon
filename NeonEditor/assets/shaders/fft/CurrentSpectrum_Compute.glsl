@@ -9,7 +9,6 @@ layout (binding = 3, rgba32f) writeonly uniform image2D u_HktDyDx; // dHktDy / d
 layout (binding = 4, rgba32f) writeonly uniform image2D u_HktDyDz; // dHktDy / dz
 
 layout (binding = 5, rgba32f) readonly uniform image2D u_H0k;
-layout (binding = 6, rgba32f) readonly uniform image2D u_H0minusk;
 
 layout (std140, binding = 7) uniform PropertiesUBO
 {
@@ -68,7 +67,7 @@ void main()
 	
 	// Euler formula
 	Complex amp = FromVec2(imageLoad(u_H0k, ivec2(gl_GlobalInvocationID.xy)).rg);
-	Complex ampConj = Conjugate(FromVec2(imageLoad(u_H0minusk, ivec2(gl_GlobalInvocationID.xy)).rg));
+	Complex ampConj = Conjugate(FromVec2(imageLoad(u_H0k, int(u_N) - ivec2(gl_GlobalInvocationID.xy)).rg));
 
 	Complex exponent = Complex(cos(wt), sin(wt));
 	

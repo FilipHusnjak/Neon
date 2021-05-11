@@ -16,10 +16,10 @@ namespace Neon
 	{
 		m_FocalPoint = glm::vec3(0.0f);
 
-		m_Distance = 100.f;
+		m_Distance = 200.f;
 
 		m_Yaw = 3.0f * M_PI / 4.0f;
-		m_Pitch = M_PI / 4.0f;
+		m_Pitch = M_PI / 8.0f;
 
 		CalculatePosition();
 		UpdateCameraView();
