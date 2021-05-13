@@ -14,9 +14,9 @@ namespace Neon
 {
 	EditorCamera::EditorCamera()
 	{
-		m_FocalPoint = glm::vec3(0.0f);
+		m_FocalPoint = glm::vec3(0.f, 5.f,0.f);
 
-		m_Distance = 200.f;
+		m_Distance = 15.f;
 
 		m_Yaw = 3.0f * M_PI / 4.0f;
 		m_Pitch = M_PI / 8.0f;

@@ -5,10 +5,8 @@
 layout (binding = 0, rgba32f) writeonly uniform image2D u_HktDy; // height displacement
 layout (binding = 1, rgba32f) writeonly uniform image2D u_HktDx; // x displacement
 layout (binding = 2, rgba32f) writeonly uniform image2D u_HktDz; // z displacement
-layout (binding = 3, rgba32f) writeonly uniform image2D u_HktDyDx; // dHktDy / dx
-layout (binding = 4, rgba32f) writeonly uniform image2D u_HktDyDz; // dHktDy / dz
 
-layout (binding = 5, rgba32f) readonly uniform image2D u_H0k;
+layout (binding = 3, rgba32f) readonly uniform image2D u_H0k;
 
 layout (std140, binding = 7) uniform PropertiesUBO
 {
@@ -82,12 +80,4 @@ void main()
 	// dz
 	Complex hktDz = Mul(Complex(0.0, k.y / mag), hktDy);
 	imageStore(u_HktDz, ivec2(gl_GlobalInvocationID.xy), vec4(hktDz.Real, hktDz.Im, 0, 1));
-
-	// dHktDy / dx
-	Complex hktDyDx = Mul(Complex(0.0, k.x), hktDy);
-	imageStore(u_HktDyDx, ivec2(gl_GlobalInvocationID.xy), vec4(hktDyDx.Real, hktDyDx.Im, 0, 1));
-
-	// dHktDy / dz
-	Complex hktDyDz = Mul(Complex(0.0, k.y), hktDy);
-	imageStore(u_HktDyDz, ivec2(gl_GlobalInvocationID.xy), vec4(hktDyDz.Real, hktDyDz.Im, 0, 1));
 }

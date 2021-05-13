@@ -6,8 +6,8 @@
 
 layout (location = 0) out vec4 o_Color;
 
-layout (location = 0) in vec3 v_Normal;
-layout (location = 1) in vec3 v_WorldPosition;
+layout (location = 0) in vec3 v_WorldPosition;
+layout (location = 1) in vec2 v_LocalPosition;
 
 struct Light
 {
@@ -23,13 +23,15 @@ layout (std140, binding = 0) uniform CameraUBO
     vec4 u_CameraPosition;
 };
 
-layout (std140, binding = 7) uniform LightUBO
+layout (binding = 3) uniform sampler2D u_Gradients;
+
+layout (std140, binding = 4) uniform LightUBO
 {
 	uint u_Count;
 	Light u_Lights[MAX_LIGHT_COUNT];
 };
 
-layout (binding = 8) uniform samplerCube u_EnvRadianceTex;
+layout (binding = 5) uniform samplerCube u_EnvRadianceTex;
 
 const float PI = 3.141592;
 const float Gamma = 2.2;
@@ -105,11 +107,14 @@ vec3 Lighting(vec3 V)
 
 void main()
 {
-	vec3 N = normalize(v_Normal);
+	vec3 oceanColor = vec3(0.2122, 0.6105, 1.0000);
+
+	vec4 grad = texture(u_Gradients, v_LocalPosition);
+	vec3 N = normalize(grad.xyz);
 	vec3 V = u_CameraPosition.xyz - v_WorldPosition;
 	vec3 L = reflect(-normalize(V), N);
 
-    PBRProperties.Albedo = vec4(0.05, 0.22, 0.4, 1.0);
+	PBRProperties.Albedo = vec4(0.05, 0.22, 0.4, 1.0);
     PBRProperties.Normal = N;
     PBRProperties.Metalness = 0.1;
     PBRProperties.Roughness = max(0.5, 1.0 - 1.0 / (1.0 + length(V) * 0.001));

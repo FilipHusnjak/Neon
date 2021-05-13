@@ -28,9 +28,9 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
-		auto& transformComponent = mesh.GetComponent<TransformComponent>();
-		transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
+		//auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
+		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
+		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
 		auto& ocean = m_EditorScene->CreateEntity("Ocean");
 		ocean.AddComponent<OceanComponent>(512);
@@ -38,7 +38,7 @@ namespace Neon
 		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
 
 		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
-		lightEntity.AddComponent<LightComponent>(glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
+		lightEntity.AddComponent<LightComponent>(glm::normalize(glm::vec4{-1.f, 0.3f, 1.f, 0.f}));
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
