@@ -81,8 +81,8 @@ namespace Neon
 		std::vector<glm::vec2> vertices;
 		std::vector<uint32> indices;
 
-		float dx = 8.f / countW;
-		float dy = 8.f / countH;
+		float dx = 1.f / countW;
+		float dy = 1.f / countH;
 
 		uint32 countX = 0;
 		for (float x = 0.f; countX < countW; x += dx, countX++)

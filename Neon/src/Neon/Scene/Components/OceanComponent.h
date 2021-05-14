@@ -37,6 +37,8 @@ namespace Neon
 		SharedRef<Texture2D> m_HktDy;
 		SharedRef<Texture2D> m_HktDx;
 		SharedRef<Texture2D> m_HktDz;
+		SharedRef<Texture2D> m_HktDyDx;
+		SharedRef<Texture2D> m_HktDyDz;
 
 		SharedRef<Shader> m_TwiddleFactorsShader;
 		SharedRef<ComputePipeline> m_TwiddleFactorsPipeline;
@@ -48,11 +50,11 @@ namespace Neon
 
 		SharedRef<Shader> m_DisplacementShader;
 		SharedRef<ComputePipeline> m_DisplacementPipeline;
-		SharedRef<Texture2D> m_Displacement;
-
-		SharedRef<Shader> m_GradientsShader;
-		SharedRef<ComputePipeline> m_GradientsPipeline;
-		SharedRef<Texture2D> m_Gradients;
+		SharedRef<Texture2D> m_DisplacementY;
+		SharedRef<Texture2D> m_DisplacementX;
+		SharedRef<Texture2D> m_DisplacementZ;
+		SharedRef<Texture2D> m_DerivativeX;
+		SharedRef<Texture2D> m_DerivativeZ;
 
 		SharedRef<Mesh> m_Mesh;
 	};

@@ -2,7 +2,7 @@
 
 layout (binding = 0, rgba32f) readonly uniform image2D m_TwiddleFactors;
 
-layout (binding = 1, rgba32f) uniform image2D u_PingPong[6];
+layout (binding = 1, rgba32f) uniform image2D u_PingPong[10];
 
 layout (std140, binding = 2) uniform PropertiesUBO
 {

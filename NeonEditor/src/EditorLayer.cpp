@@ -38,7 +38,7 @@ namespace Neon
 		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
 
 		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
-		lightEntity.AddComponent<LightComponent>(glm::normalize(glm::vec4{-1.f, 0.3f, 1.f, 0.f}));
+		lightEntity.AddComponent<LightComponent>(glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
