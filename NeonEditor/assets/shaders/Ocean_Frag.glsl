@@ -8,6 +8,8 @@ layout (location = 0) out vec4 o_Color;
 
 layout (location = 0) in vec3 v_Normal;
 layout (location = 1) in vec3 v_WorldPosition;
+layout (location = 2) in float v_J;
+layout (location = 3) in vec3 v_Foam;
 
 struct Light
 {
@@ -23,19 +25,20 @@ layout (std140, binding = 0) uniform CameraUBO
     vec4 u_CameraPosition;
 };
 
-layout (std140, binding = 7) uniform LightUBO
+layout (std140, binding = 10) uniform LightUBO
 {
 	uint u_Count;
 	Light u_Lights[MAX_LIGHT_COUNT];
 };
 
-layout (binding = 8) uniform samplerCube u_EnvRadianceTex;
+layout (binding = 11) uniform samplerCube u_EnvRadianceTex;
 
 void main()
 {
-    vec3 oceanColor = vec3(0.0000, 0.0103, 0.0331);
-    const vec3 sunColor			= vec3(1.0, 1.0, 0.47);
-	const vec3 sundir			= vec3(0.603, 0.240, -0.761);
+    const vec3 oceanColor = vec3(0.0000, 0.0103, 0.0331);
+    const vec3 sunColor	= vec3(1.0, 1.0, 0.47);
+	const vec3 sundir = vec3(0.603, 0.240, -0.761);
+	const vec3 SSSColor = vec3(0.154, 0.886, 0.991);
 
 	vec3 N = normalize(v_Normal);
 	vec3 V = normalize(u_CameraPosition.xyz - v_WorldPosition);
@@ -46,15 +49,8 @@ void main()
 
 	vec3 refl = texture(u_EnvRadianceTex, L).rgb;
 
-	// Reinhard tonemapping operator.
-    const float pureWhite = 1.0;
-	float luminance = dot(refl, vec3(0.2126, 0.7152, 0.0722));
-	float mappedLuminance = (luminance * (1.0 + luminance / (pureWhite * pureWhite))) / (1.0 + luminance);
+	float turbulence = max(0.85 - v_J, 0.0);
 
-	// Scale color by ratio of average luminances.
-	//refl = (mappedLuminance / luminance) * refl;
-
-	// tweaked from ARM/Mali's sample
 	float color_mod = 1.0 + 3.0 * smoothstep(1.2, 1.8, 0.0);
 
     const float rho = 0.3;
@@ -72,5 +68,6 @@ void main()
 
 	float spec = mult * exp(-((hdotx * hdotx) + (hdoty * hdoty)) / (hdotn * hdotn));
 
-	o_Color = vec4(mix(oceanColor, refl * color_mod, F) + sunColor * spec, 1.0);
+	vec3 color = mix(oceanColor, vec3(1.0, 1.0, 1.0), turbulence);
+	o_Color = vec4(mix(color, refl * color_mod, F) + sunColor * spec, 1.0);
 }
