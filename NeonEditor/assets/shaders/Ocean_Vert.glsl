@@ -41,7 +41,7 @@ void main()
 
     v_Foam = texture(u_Foam, a_Position).rgb;
     
-    vec4 pos = vec4(u_L * a_Position.x + 1.3 * dx, dy, u_L * a_Position.y + 1.3 * dz, 1.0);
+    vec4 pos = vec4(u_L * a_Position.x + 0.9 * dx, dy, u_L * a_Position.y + 0.9 * dz, 1.0);
     vec4 worldPosition = u_Model * pos;
     v_WorldPosition = worldPosition.xyz / worldPosition.w;
     gl_Position = u_ViewProjection * worldPosition;

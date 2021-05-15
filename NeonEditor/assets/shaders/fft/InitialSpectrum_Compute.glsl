@@ -45,13 +45,15 @@ void main()
 	
 	vec2 k = 2.0 * PI / u_L * v;
 
+	float windspeedSq = (u_Windspeed * u_Windspeed) / g;
+
 	float KdotW = dot(k, u_WindDir);
 	float k2 = dot(k, k);
 	// Ph(k)
 	float phk = 0;
 	if (k2 > 0.000001)
 	{
-		 phk = u_A * (exp(-1.0 / (k2 * u_L * u_L))) / (k2 * k2 * k2) * (KdotW * KdotW) * exp(-k2 * u_L * u_L / 1000000.0);
+		 phk = u_A * (exp(-1.0 / (k2 * windspeedSq * windspeedSq))) / (k2 * k2 * k2) * (KdotW * KdotW) * exp(-k2 * windspeedSq * windspeedSq / 1000000.0);
 	}
 
 	if (KdotW < 0.f)
@@ -59,7 +61,7 @@ void main()
 		phk *= 0.07;
 	}
 
-	//float windspeedSq = (u_Windspeed * u_Windspeed) / g;
+	//
 	//float mag = max(0.0001, length(k));
 	//float magSq = mag * mag;
 

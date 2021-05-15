@@ -39,6 +39,8 @@ void main()
     const vec3 sunColor	= vec3(1.0, 1.0, 0.47);
 	const vec3 sundir = vec3(0.603, 0.240, -0.761);
 	const vec3 SSSColor = vec3(0.154, 0.886, 0.991);
+	const float SSSStrength = 0.2;
+	const float SSSDistortion = 0.0;
 
 	vec3 N = normalize(v_Normal);
 	vec3 V = normalize(u_CameraPosition.xyz - v_WorldPosition);
@@ -69,5 +71,10 @@ void main()
 	float spec = mult * exp(-((hdotx * hdotx) + (hdoty * hdoty)) / (hdotn * hdotn));
 
 	vec3 color = mix(oceanColor, vec3(1.0, 1.0, 1.0), turbulence);
+
+	vec3 SSSLight = sundir + N * SSSDistortion;
+	float VdotL = pow(clamp((dot(V, -SSSLight)), 0.0, 1.0), 5) * SSSStrength;
+	color += SSSColor * VdotL;
+
 	o_Color = vec4(mix(color, refl * color_mod, F) + sunColor * spec, 1.0);
 }

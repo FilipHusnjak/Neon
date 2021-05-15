@@ -69,7 +69,7 @@ namespace Neon
 			m_JacobianPipeline = ComputePipeline::Create(m_JacobianShader, jacobianComputePipelineSpecification);
 		}
 
-		float L = 20.f;
+		float L = 40.f;
 
 		m_H0k = Texture2D::Create({TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA32F,
 								   TextureWrap::Clamp, TextureMinMagFilter::Nearest, true, 1, false, m_N, m_N});
@@ -121,7 +121,7 @@ namespace Neon
 			float A;
 			float Windspeed;
 			glm::vec2 WindDir;
-		} properties = {m_N, L, 0.45f * 1e-3f, 6.5f, glm::vec2{-0.4f, -0.9f}};
+		} properties = {m_N, L, 0.35f * 1e-3f, 8.f, glm::vec2{-0.4f, -0.9f}};
 		m_InitialSpectrumShader->SetUniformBuffer("PropertiesUBO", 0, &properties);
 
 		Renderer::DispatchCompute(m_InitialSpectrumPipeline, m_N / 32, m_N / 32, 1);
