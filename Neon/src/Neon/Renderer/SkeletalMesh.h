@@ -94,7 +94,7 @@ namespace Neon
 		bool m_AnimationPlaying = true;
 
 	private:
-		void UpdateBoneTransforms(float time);
+		void UpdateBoneTransforms();
 		void ReadNodeHierarchy(float animationTime, const aiNode* pNode, const glm::mat4& parentTransform);
 
 		const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);

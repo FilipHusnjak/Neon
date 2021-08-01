@@ -104,6 +104,7 @@ namespace Neon
 					BoneInfo bi;
 					m_BoneInfo.push_back(bi);
 					m_BoneInfo[boneIndex].BoneOffset = Mat4FromAssimpMat4(bone->mOffsetMatrix);
+					m_BoneInfo[boneIndex].FinalTransformation = glm::mat4(1.f);
 					m_BoneMapping[boneName] = boneIndex;
 				}
 				else
@@ -140,6 +141,8 @@ namespace Neon
 		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
 
 		CreateShaderAndGraphicsPipeline(shaderSpecification);
+
+		UpdateBoneTransforms();
 	}
 
 	void SkeletalMesh::OnUpdate(float deltaSeconds)
@@ -158,14 +161,13 @@ namespace Neon
 			}
 
 			// TODO: We only need to recalculate bones if rendering has been requested at the current animation frame
-			UpdateBoneTransforms(m_AnimationTime);
+			ReadNodeHierarchy(m_AnimationTime, m_Scene->mRootNode, glm::mat4(1.0f));
+			UpdateBoneTransforms();
 		}
 	}
 
-	void SkeletalMesh::UpdateBoneTransforms(float time)
+	void SkeletalMesh::UpdateBoneTransforms()
 	{
-		ReadNodeHierarchy(time, m_Scene->mRootNode, glm::mat4(1.0f));
-
 		static std::vector<glm::mat4> boneTransforms;
 		boneTransforms.resize(m_BoneInfo.size());
 		for (uint32 i = 0; i < m_BoneInfo.size(); i++)
