@@ -6,6 +6,7 @@
 #include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Editor/Panels/SceneRendererPanel.h>
+#include <Neon/Physics/Physics.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Scene/Components.h>
 #include <Neon/Scene/Components/OceanComponent.h>
@@ -28,13 +29,14 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		//auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
+		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
+		mesh.AddComponent<RigidBodyComponent>();
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
-		auto& ocean = m_EditorScene->CreateEntity("Ocean");
-		ocean.AddComponent<OceanComponent>(512);
-		auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
+		//auto& ocean = m_EditorScene->CreateEntity("Ocean");
+		//ocean.AddComponent<OceanComponent>(512);
+		//auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
 		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
 
 		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
@@ -44,6 +46,8 @@ namespace Neon
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
 		m_Panels.emplace_back(SharedRef<ContentBrowserPanel>::Create());
 		m_Panels.emplace_back(SharedRef<SceneRendererPanel>::Create());
+
+		Physics::CreateActor(mesh);
 	}
 
 	void EditorLayer::OnAttach()

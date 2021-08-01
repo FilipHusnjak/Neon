@@ -4,6 +4,7 @@
 #include "Neon/Renderer/Framebuffer.h"
 #include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
+#include "Neon/Physics/Physics.h"
 
 #include <imgui/imgui.h>
 
@@ -31,11 +32,17 @@ namespace Neon
 		m_GuiContext->Init();
 
 		Renderer::Init();
+
+		Physics::Initialize();
+		Physics::CreateScene();
 	}
 
 	Application::~Application()
 	{
 		m_GuiContext->Shutdown();
+
+		Physics::DestroyScene();
+		Physics::Shutdown();
 
 		Renderer::Shutdown();
 	}
