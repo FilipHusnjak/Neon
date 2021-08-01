@@ -1,6 +1,6 @@
 #include "neopch.h"
 
-#include "MeshComponent.h"
+#include "PrimitiveComponent.h"
 
 namespace Neon
 {

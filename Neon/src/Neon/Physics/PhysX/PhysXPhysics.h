@@ -18,8 +18,6 @@ namespace Neon
 
 		physx::PxFrictionType::Enum NeonToPhysXFrictionType(FrictionType type);
 
-
-
 	} // namespace PhysXUtils
 
 	class PhysXPhysics : public Physics

@@ -29,7 +29,7 @@ namespace Neon
 		static void CreateScene();
 		static void DestroyScene();
 
-		static SharedRef<PhysicsActor> CreateActor(Entity entity);
+		static SharedRef<PhysicsScene> GetCurrentScene();
 
 		static const SharedRef<Physics> Get();
 

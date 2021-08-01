@@ -1,7 +1,6 @@
 #include "neopch.h"
 
 #include "Neon/Physics/PhysX/PhysXPhysicsPrimitives.h"
-#include "Neon/Physics/PhysicsActor.h"
 
 namespace Neon
 {
@@ -12,7 +11,7 @@ namespace Neon
 
 		physx::PxSphereGeometry geometry = physx::PxSphereGeometry(radius);
 		physx::PxShape* shape = physx::PxRigidActorExt::createExclusiveShape(
-			*static_cast<physx::PxRigidActor*>(physicsBody.GetPhysicsActor().GetHandle()), geometry,
+			*static_cast<physx::PxRigidActor*>(physicsBody.GetHandle()), geometry,
 			*static_cast<physx::PxMaterial*>(physicsBody.GetMaterial()->GetHandle()));
 		m_InternalShape = shape;
 		shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);

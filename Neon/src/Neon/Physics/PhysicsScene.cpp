@@ -13,22 +13,22 @@ namespace Neon
 	{
 	}
 
-	SharedRef<PhysicsActor> PhysicsScene::CreateActor(Entity entity)
+	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody()
 	{
-		SharedRef<PhysicsActor> actor = InternalCreateActor(entity);
-		m_Actors.push_back(actor);
-		return actor;
+		SharedRef<PhysicsBody> physicsBody = InternalAddPhysicsBody();
+		m_PhysicsBodies.emplace_back(physicsBody);
+		return physicsBody;
 	}
 
-	void PhysicsScene::RemoveActor(SharedRef<PhysicsActor> actor)
+	void PhysicsScene::RemovePhysicsBody(SharedRef<PhysicsBody> physicsBody)
 	{
-		InternalRemoveActor(actor);
+		InternalRemovePhysicsBody(physicsBody);
 
-		for (auto it = m_Actors.begin(); it != m_Actors.end(); it++)
+		for (auto it = m_PhysicsBodies.begin(); it != m_PhysicsBodies.end(); it++)
 		{
-			if ((*it)->GetEntity() == actor->GetEntity())
+			if (it->Ptr() == physicsBody.Ptr())
 			{
-				m_Actors.erase(it);
+				m_PhysicsBodies.erase(it);
 				break;
 			}
 		}
@@ -36,9 +36,9 @@ namespace Neon
 
 	void PhysicsScene::Destroy()
 	{
-		for (auto& actor : m_Actors)
+		for (auto& physicsBody : m_PhysicsBodies)
 		{
-			RemoveActor(actor);
+			RemovePhysicsBody(physicsBody);
 		}
 	}
 

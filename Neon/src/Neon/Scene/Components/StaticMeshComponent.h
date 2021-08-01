@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Neon/Renderer/StaticMesh.h"
-#include "Neon/Scene/Components/MeshComponent.h"
+#include "Neon/Scene/Components/PrimitiveComponent.h"
 
 namespace Neon
 {
-	class StaticMeshComponent : public MeshComponent
+	class StaticMeshComponent : public PrimitiveComponent
 	{
 	public:
 		StaticMeshComponent() = default;

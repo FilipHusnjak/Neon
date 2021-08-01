@@ -14,8 +14,8 @@ namespace Neon
 
 		virtual void Destroy() override;
 
-		virtual SharedRef<PhysicsActor> InternalCreateActor(Entity entity) override;
-		void InternalRemoveActor(SharedRef<PhysicsActor> actor) override;
+		virtual SharedRef<PhysicsBody> InternalAddPhysicsBody() override;
+		virtual void InternalRemovePhysicsBody(SharedRef<PhysicsBody> actor) override;
 
 	private:
 		physx::PxScene* m_PhysXScene;

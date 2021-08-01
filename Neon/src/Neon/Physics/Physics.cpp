@@ -58,11 +58,11 @@ namespace Neon
 		s_Scene->Destroy();
 	}
 
-	SharedRef<PhysicsActor> Physics::CreateActor(Entity entity)
+	SharedRef<PhysicsScene> Physics::GetCurrentScene()
 	{
 		NEO_CORE_ASSERT(s_Scene, "Scene not created!");
 
-		return s_Scene->CreateActor(entity);
+		return s_Scene;
 	}
 
 	const SharedRef<Physics> Physics::Get()

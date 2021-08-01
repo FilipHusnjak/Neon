@@ -6,8 +6,7 @@
 namespace Neon
 {
 	PhysicsPrimitive::PhysicsPrimitive(const PhysicsBody& physicsBody)
-		: m_PhysicsBody(physicsBody)
-		, m_InternalShape(nullptr)
+		: m_InternalShape(nullptr)
 	{
 	}
 

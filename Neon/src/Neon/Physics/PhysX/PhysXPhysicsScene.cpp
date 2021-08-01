@@ -2,7 +2,7 @@
 
 #include "Neon/Physics/PhysX/PhysXContactListener.h"
 #include "Neon/Physics/PhysX/PhysXPhysics.h"
-#include "Neon/Physics/PhysX/PhysXPhysicsActor.h"
+#include "Neon/Physics/PhysX/PhysXPhysicsBody.h"
 #include "Neon/Physics/PhysX/PhysXPhysicsScene.h"
 
 namespace Neon
@@ -49,18 +49,20 @@ namespace Neon
 		m_PhysXScene = nullptr;
 	}
 
-	SharedRef<PhysicsActor> PhysXPhysicsScene::InternalCreateActor(Entity entity)
+	SharedRef<PhysicsBody> PhysXPhysicsScene::InternalAddPhysicsBody()
 	{
-		SharedRef<PhysicsActor> actor = SharedRef<PhysXPhysicsActor>::Create(entity);
-		NEO_CORE_ASSERT(actor->GetHandle());
-		m_PhysXScene->addActor(*static_cast<physx::PxRigidActor*>(actor->GetHandle()));
-		return actor;
+		SharedRef<PhysicsBody> physicsBody = SharedRef<PhysXPhysicsBody>::Create();
+		NEO_CORE_ASSERT(physicsBody->GetHandle());
+		m_PhysXScene->addActor(*static_cast<physx::PxRigidActor*>(physicsBody->GetHandle()));
+		return physicsBody;
 	}
 
-	void PhysXPhysicsScene::InternalRemoveActor(SharedRef<PhysicsActor> actor)
+	void PhysXPhysicsScene::InternalRemovePhysicsBody(SharedRef<PhysicsBody> physicsBody)
 	{
-		NEO_CORE_ASSERT(actor->GetHandle());
-		m_PhysXScene->removeActor(*static_cast<physx::PxRigidActor*>(actor->GetHandle()));
+		NEO_CORE_ASSERT(physicsBody);
+		NEO_CORE_ASSERT(physicsBody->GetHandle());
+		m_PhysXScene->removeActor(*static_cast<physx::PxRigidActor*>(physicsBody->GetHandle()));
+		physicsBody->Destroy();
 	}
 
 } // namespace Neon

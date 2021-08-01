@@ -10,6 +10,7 @@
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Scene/Components.h>
 #include <Neon/Scene/Components/OceanComponent.h>
+#include <Neon/Scene/Components/PrimitiveComponent.h>
 #include <Neon/Scene/Entity.h>
 
 #include <imgui/imgui.h>
@@ -30,7 +31,6 @@ namespace Neon
 		m_EditorScene->Init();
 
 		auto& mesh = m_EditorScene->CreateSkeletalMesh("assets/models/zero/zero.fbx", "Gun");
-		mesh.AddComponent<RigidBodyComponent>();
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
@@ -47,7 +47,7 @@ namespace Neon
 		m_Panels.emplace_back(SharedRef<ContentBrowserPanel>::Create());
 		m_Panels.emplace_back(SharedRef<SceneRendererPanel>::Create());
 
-		Physics::CreateActor(mesh);
+		Physics::GetCurrentScene()->AddPhysicsBody();
 	}
 
 	void EditorLayer::OnAttach()

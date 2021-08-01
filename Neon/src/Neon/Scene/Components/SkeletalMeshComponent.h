@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Neon/Renderer/SkeletalMesh.h"
-#include "Neon/Scene/Components/MeshComponent.h"
+#include "Neon/Scene/Components/PrimitiveComponent.h"
 
 namespace Neon
 {
-	class SkeletalMeshComponent : public MeshComponent
+	class SkeletalMeshComponent : public PrimitiveComponent
 	{
 	public:
 		SkeletalMeshComponent() = default;
@@ -24,5 +24,7 @@ namespace Neon
 
 	private:
 		SharedRef<SkeletalMesh> m_SkeletalMesh;
+
+		std::map<std::string, SharedRef<PhysicsBody>> m_PhysicsBodyMap;
 	};
 } // namespace Neon

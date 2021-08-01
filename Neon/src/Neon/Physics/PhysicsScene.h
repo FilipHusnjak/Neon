@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Neon/Physics/PhysicsActor.h"
+#include "Neon/Physics/PhysicsBody.h"
 #include "Neon/Physics/PhysicsSettings.h"
 
 namespace Neon
@@ -11,17 +11,17 @@ namespace Neon
 		PhysicsScene(const PhysicsSettings& settings);
 		virtual ~PhysicsScene();
 
-		SharedRef<PhysicsActor> CreateActor(Entity entity);
-		void RemoveActor(SharedRef<PhysicsActor> actor);
+		SharedRef<PhysicsBody> AddPhysicsBody();
+		void RemovePhysicsBody(SharedRef<PhysicsBody> physicsBody);
 
 		virtual void Destroy();
 
 	protected:
-		virtual SharedRef<PhysicsActor> InternalCreateActor(Entity entity) = 0;
-		virtual void InternalRemoveActor(SharedRef<PhysicsActor> actor) = 0;
+		virtual SharedRef<PhysicsBody> InternalAddPhysicsBody() = 0;
+		virtual void InternalRemovePhysicsBody(SharedRef<PhysicsBody> physicsBody) = 0;
 
 	protected:
-		std::vector<SharedRef<PhysicsActor>> m_Actors;
+		std::vector<SharedRef<PhysicsBody>> m_PhysicsBodies;
 
 		float m_SubStepSize;
 		float m_Accumulator = 0.0f;
