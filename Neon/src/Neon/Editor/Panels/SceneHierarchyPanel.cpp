@@ -1,10 +1,12 @@
 #include "neopch.h"
 
+#include "Neon/Editor/Panels/SceneHierarchyPanel.h"
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
+#include "Neon/Scene/Components/SkeletalMeshComponent.h"
+#include "Neon/Scene/Components/StaticMeshComponent.h"
 #include "Neon/Scene/Entity.h"
 #include "Neon/Scene/Scene.h"
-#include "SceneHierarchyPanel.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -95,10 +97,15 @@ namespace Neon
 					auto newEntity = SceneRenderer::CreateEntity("Empty Entity");
 					SceneRenderer::SetSelectedEntity(newEntity);
 				}
-				if (ImGui::MenuItem("Mesh"))
+				if (ImGui::MenuItem("Static Mesh"))
 				{
 					auto newEntity = SceneRenderer::CreateEntity("Mesh Entity");
-					newEntity.AddComponent<MeshComponent>();
+					newEntity.AddComponent<StaticMeshComponent>();
+				}
+				if (ImGui::MenuItem("Skeletal Mesh"))
+				{
+					auto newEntity = SceneRenderer::CreateEntity("Mesh Entity");
+					newEntity.AddComponent<SkeletalMeshComponent>();
 				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Directional Light"))

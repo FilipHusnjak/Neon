@@ -29,7 +29,7 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		auto& mesh = m_EditorScene->CreateMesh("assets/models/cube/cube.obj", "Entity1");
+		auto& mesh = m_EditorScene->CreateSkeletalMesh("assets/models/zero/zero.fbx", "Gun");
 		mesh.AddComponent<RigidBodyComponent>();
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};

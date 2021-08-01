@@ -58,27 +58,6 @@ namespace Neon
 		}
 	};
 
-	struct MeshComponent
-	{
-		SharedRef<Neon::Mesh> Mesh;
-
-		MeshComponent() = default;
-		MeshComponent(const MeshComponent& other) = default;
-		MeshComponent(const SharedRef<Neon::Mesh>& mesh)
-			: Mesh(mesh)
-		{
-		}
-		~MeshComponent()
-		{
-			RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(Mesh));
-		}
-
-		operator SharedRef<Neon::Mesh>()
-		{
-			return Mesh;
-		}
-	};
-
 	struct LightComponent
 	{
 		LightComponent() = default;

@@ -29,7 +29,8 @@ namespace Neon
 
 		Entity CreateEntity(const std::string& name = "");
 		Entity CreateEntityWithID(UUID uuid, const std::string& name = "", bool runtimeMap = false);
-		Entity CreateMesh(const std::string& path, const std::string& name = "");
+		Entity CreateStaticMesh(const std::string& path, const std::string& name = "");
+		Entity CreateSkeletalMesh(const std::string& path, const std::string& name = "");
 		void DestroyEntity(Entity entity);
 
 		template<typename T>

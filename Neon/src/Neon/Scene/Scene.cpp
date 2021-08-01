@@ -3,6 +3,8 @@
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components.h"
 #include "Neon/Scene/Components/OceanComponent.h"
+#include "Neon/Scene/Components/SkeletalMeshComponent.h"
+#include "Neon/Scene/Components/StaticMeshComponent.h"
 #include "Neon/Scene/Entity.h"
 #include "Neon/Scene/Scene.h"
 
@@ -44,14 +46,23 @@ namespace Neon
 	void Scene::OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera)
 	{
 		SceneRenderer::BeginScene({editorCamera, 0.1f, 1000.0f, 45.0f});
-		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
-		for (auto entity : group)
+		auto group0 = m_Registry.group<StaticMeshComponent>(entt::get<TransformComponent>);
+		for (auto entity : group0)
 		{
-			auto& [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
-			if (meshComponent.Mesh)
+			auto& [meshComponent, transformComponent] = group0.get<StaticMeshComponent, TransformComponent>(entity);
+			if (meshComponent.GetMesh())
 			{
-				meshComponent.Mesh->OnUpdate(deltaSeconds);
-				SceneRenderer::SubmitMesh(meshComponent, transformComponent);
+				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), transformComponent);
+			}
+		}
+		auto group1 = m_Registry.group<SkeletalMeshComponent>(entt::get<TransformComponent>);
+		for (auto entity : group1)
+		{
+			auto& [meshComponent, transformComponent] = group1.get<SkeletalMeshComponent, TransformComponent>(entity);
+			meshComponent.OnUpdate(deltaSeconds);
+			if (meshComponent.GetMesh())
+			{
+				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), transformComponent);
 			}
 		}
 		auto group2 = m_Registry.group<OceanComponent>(entt::get<TransformComponent>);
@@ -111,12 +122,22 @@ namespace Neon
 		return entity;
 	}
 
-	Entity Scene::CreateMesh(const std::string& path, const std::string& name /*= ""*/)
+	Entity Scene::CreateStaticMesh(const std::string& path, const std::string& name /*= ""*/)
 	{
 		auto entity = CreateEntity(name);
 
-		SharedRef<Mesh> mesh = SharedRef<Mesh>::Create(path);
-		entity.AddComponent<MeshComponent>(mesh);
+		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path);
+		entity.AddComponent<StaticMeshComponent>(staticMesh);
+
+		return entity;
+	}
+
+	Entity Scene::CreateSkeletalMesh(const std::string& path, const std::string& name /*= ""*/)
+	{
+		auto entity = CreateEntity(name);
+
+		SharedRef<SkeletalMesh> skeletalMesh = SharedRef<SkeletalMesh>::Create(path);
+		entity.AddComponent<SkeletalMeshComponent>(skeletalMesh);
 
 		return entity;
 	}

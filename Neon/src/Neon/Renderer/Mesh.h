@@ -12,105 +12,25 @@ struct aiNode;
 struct aiAnimation;
 struct aiNodeAnim;
 struct aiScene;
+struct aiMesh;
 
 namespace Assimp
 {
 	class Importer;
 }
 
+#define MESH_DEBUG_LOG 1
+#if MESH_DEBUG_LOG
+	#define NEO_MESH_LOG(...) NEO_CORE_TRACE(__VA_ARGS__)
+#else
+	#define NEO_MESH_LOG(...)
+#endif
+
 namespace Neon
 {
-#define MAX_BONES_PER_VERTEX 10
-
-	struct StaticVertex
-	{
-		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec3 Tangent;
-		glm::vec3 Binormal;
-		uint32 MaterialIndex;
-		glm::vec2 Texcoord;
-	};
-
-	struct AnimatedVertex
-	{
-		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec3 Tangent;
-		glm::vec3 Binormal;
-		uint32 MaterialIndex;
-		glm::vec2 Texcoord;
-
-		uint32 BoneIds[MAX_BONES_PER_VERTEX] = {};
-		float Weights[MAX_BONES_PER_VERTEX] = {};
-
-		void AddBoneData(uint32 boneId, float weight)
-		{
-			for (uint32 i = 0; i < MAX_BONES_PER_VERTEX; i++)
-			{
-				if (Weights[i] == 0.0)
-				{
-					BoneIds[i] = boneId;
-					Weights[i] = weight;
-					return;
-				}
-			}
-
-			// TODO: Keep top weights
-			NEO_CORE_WARN(
-				"Vertex has more than {0} bones/weights affecting it, extra data will be discarded (BoneID={1}, Weight={2})",
-				MAX_BONES_PER_VERTEX, boneId, weight);
-		}
-	};
-
 	struct Index
 	{
 		uint32 V1, V2, V3;
-	};
-
-	struct BoneInfo
-	{
-		glm::mat4 BoneOffset;
-		glm::mat4 FinalTransformation;
-	};
-
-	struct VertexBoneData
-	{
-		uint32 Ids[10];
-		float Weights[10];
-
-		VertexBoneData()
-		{
-			memset(Ids, 0, sizeof(Ids));
-			memset(Weights, 0, sizeof(Weights));
-		};
-
-		void AddBoneData(uint32_t BoneID, float Weight)
-		{
-			for (size_t i = 0; i < MAX_BONES_PER_VERTEX; i++)
-			{
-				if (Weights[i] == 0.0)
-				{
-					Ids[i] = BoneID;
-					Weights[i] = Weight;
-					return;
-				}
-			}
-
-			NEO_CORE_ASSERT(false, "Too many bones!");
-		}
-	};
-
-	struct Triangle
-	{
-		StaticVertex V0, V1, V2;
-
-		Triangle(const StaticVertex& v0, const StaticVertex& v1, const StaticVertex& v2)
-			: V0(v0)
-			, V1(v1)
-			, V2(v2)
-		{
-		}
 	};
 
 	class Submesh
@@ -130,13 +50,11 @@ namespace Neon
 	class Mesh : public RefCounted
 	{
 	public:
-		static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
-												GraphicsPipelineSpecification& pipelineSpec);
+		//static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
+		//										GraphicsPipelineSpecification& pipelineSpec);
 
 		Mesh(const std::string& filename);
-		~Mesh();
-
-		void OnUpdate(float deltaSeconds);
+		virtual ~Mesh() = default;
 
 		const SharedRef<GraphicsPipeline>& GetGraphicsPipeline() const
 		{
@@ -184,40 +102,22 @@ namespace Neon
 			return m_FilePath;
 		}
 
-	private:
-		Mesh(ShaderSpecification& shaderSpec, GraphicsPipelineSpecification& pipelineSpec);
-
+	protected:
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
-		void UpdateBoneTransforms(float time);
-		void ReadNodeHierarchy(float animationTime, const aiNode* pNode, const glm::mat4& parentTransform);
+		void CreateShaderAndGraphicsPipeline(ShaderSpecification& shaderSpecification);
 
-		const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
-		uint32 FindPosition(float animationTime, const aiNodeAnim* pNodeAnim);
-		uint32 FindRotation(float animationTime, const aiNodeAnim* pNodeAnim);
-		uint32 FindScaling(float animationTime, const aiNodeAnim* pNodeAnim);
-		glm::vec3 InterpolateTranslation(float animationTime, const aiNodeAnim* nodeAnim);
-		glm::quat InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim);
-		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
-
-	private:
+	protected:
+		const aiScene* m_Scene;
 		std::vector<Submesh> m_Submeshes;
 
 		UniqueRef<Assimp::Importer> m_Importer;
 
 		glm::mat4 m_InverseTransform;
 
-		std::vector<BoneInfo> m_BoneInfo;
-
 		SharedRef<VertexBuffer> m_VertexBuffer;
 		SharedRef<IndexBuffer> m_IndexBuffer;
 
-		std::vector<StaticVertex> m_StaticVertices;
-		std::vector<AnimatedVertex> m_AnimatedVertices;
 		std::vector<Index> m_Indices;
-		std::unordered_map<std::string, uint32> m_BoneMapping;
-		std::vector<glm::mat4> m_BoneTransforms;
-
-		const aiScene* m_Scene;
 
 		SharedRef<Shader> m_MeshShader;
 		SharedRef<Shader> m_WireframeMeshShader;
@@ -225,13 +125,6 @@ namespace Neon
 		SharedRef<GraphicsPipeline> m_WireframeMeshGraphicsPipeline;
 
 		std::vector<Material> m_Materials;
-
-		// Animation
-		bool m_IsAnimated = false;
-		float m_AnimationTime = 0.0f;
-		float m_WorldTime = 0.0f;
-		float m_TimeMultiplier = 1.0f;
-		bool m_AnimationPlaying = true;
 
 		std::string m_FilePath;
 	};

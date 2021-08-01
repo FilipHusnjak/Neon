@@ -252,7 +252,7 @@ namespace Neon
 		oceanPipelineSpecification.Pass = SceneRenderer::GetGeoPass();
 		oceanPipelineSpecification.Mode = PolygonMode::Fill;
 
-		m_Mesh = Mesh::GenerateGridMesh(1000, 1000, oceanShaderSpecification, oceanPipelineSpecification);
+		//m_Mesh = Mesh::GenerateGridMesh(1000, 1000, oceanShaderSpecification, oceanPipelineSpecification);
 
 		SharedRef<Shader> oceanShader = m_Mesh->GetShader();
 		oceanShader->SetUniformBuffer("PropertiesUBO", 0, &L);
