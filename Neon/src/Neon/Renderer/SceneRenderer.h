@@ -2,7 +2,7 @@
 
 #include "Neon/Renderer/Camera.h"
 #include "Neon/Renderer/Mesh.h"
-#include "Neon/Scene/Entity.h"
+#include "Neon/Scene/Actor.h"
 
 namespace Neon
 {
@@ -22,11 +22,11 @@ namespace Neon
 		static void InitializeScene(SharedRef<Scene> scene);
 		const static SharedRef<Scene>& GetActiveScene();
 
-		static void SetSelectedEntity(Entity entity);
-		static Entity GetSelectedEntity();
+		static void SetSelectedActor(SharedRef<Actor> actor);
+		static SharedRef<Actor> GetSelectedActor();
 
-		static Entity CreateEntity(const std::string& name = "Entity");
-		static void DestroyEntity(Entity entity);
+		static SharedRef<Actor> CreateActor(UUID uuid, const std::string& name = "Actor");
+		static void DestroyActor(SharedRef<Actor> actor);
 
 		static void SetViewportSize(uint32 width, uint32 height);
 

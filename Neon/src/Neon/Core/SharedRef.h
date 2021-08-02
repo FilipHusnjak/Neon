@@ -142,6 +142,11 @@ namespace Neon
 			return m_Ptr;
 		}
 
+		bool operator==(const SharedRef<T>& other) const
+		{
+			return Ptr() == other.Ptr();
+		}
+
 		void Reset(T* ptr = nullptr)
 		{
 			RemoveRef();

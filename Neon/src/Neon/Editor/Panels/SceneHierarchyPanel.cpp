@@ -2,10 +2,10 @@
 
 #include "Neon/Editor/Panels/SceneHierarchyPanel.h"
 #include "Neon/Renderer/SceneRenderer.h"
-#include "Neon/Scene/Components.h"
-#include "Neon/Scene/Components/SkeletalMeshComponent.h"
+#include "Neon/Scene/Components/LightComponent.h"
 #include "Neon/Scene/Components/StaticMeshComponent.h"
-#include "Neon/Scene/Entity.h"
+#include "Neon/Scene/Components/SkeletalMeshComponent.h"
+#include "Neon/Scene/Actor.h"
 #include "Neon/Scene/Scene.h"
 
 #include <imgui/imgui.h>
@@ -13,30 +13,26 @@
 
 namespace Neon
 {
-	static void DrawEntityNode(Entity entity)
+	static bool DrawActorNode(const SharedRef<Actor>& actor)
 	{
-		const char* name = "Unnamed Entity";
-		if (entity.HasComponent<TagComponent>())
-		{
-			name = entity.GetComponent<TagComponent>().Tag.c_str();
-		}
+		const char* name = actor->GetTag().c_str();
 
 		ImGuiTreeNodeFlags flags =
-			(entity == SceneRenderer::GetSelectedEntity() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Leaf;
+			(actor == SceneRenderer::GetSelectedActor() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Leaf;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-		bool opened = ImGui::TreeNodeEx((void*)(uint32)entity, flags, name);
+		bool opened = ImGui::TreeNodeEx((void*)(uint32)actor->GetHandle(), flags, name);
 		if (ImGui::IsItemClicked())
 		{
-			SceneRenderer::SetSelectedEntity(entity);
+			SceneRenderer::SetSelectedActor(actor);
 		}
 
-		bool entityDeleted = false;
+		bool actorDeleted = false;
 		if (ImGui::BeginPopupContextItem())
 		{
 			if (ImGui::MenuItem("Delete"))
 			{
-				entityDeleted = true;
+				actorDeleted = true;
 			}
 
 			ImGui::EndPopup();
@@ -47,15 +43,7 @@ namespace Neon
 			ImGui::TreePop();
 		}
 
-		// Defer deletion until end of node UI
-		if (entityDeleted)
-		{
-			if (SceneRenderer::GetSelectedEntity() == entity)
-			{
-				SceneRenderer::SetSelectedEntity({});
-			}
-			SceneRenderer::DestroyEntity(entity);
-		}
+		return actorDeleted;
 	}
 
 	void SceneHierarchyPanel::Render() const
@@ -69,21 +57,26 @@ namespace Neon
 		ImGui::Begin("Hierarchy");
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen;
-		if (ImGui::TreeNodeEx((void*)(uint32)activeScene->m_SceneEntity, flags, activeScene->GetName().c_str()))
+		if (ImGui::TreeNodeEx((void*)(uint32)activeScene->m_SceneID, flags, activeScene->GetName().c_str()))
 		{
 			if (ImGui::IsItemClicked())
 			{
-				SceneRenderer::SetSelectedEntity({});
+				SceneRenderer::SetSelectedActor({});
 			}
 
-			uint32 entityCount = 0, meshCount = 0;
-			activeScene->m_Registry.each([&](auto entity) {
-				Entity e(entity, activeScene.Ptr());
-				if (e.HasComponent<IDComponent>())
+			SharedRef<Actor> actorToDelete = nullptr;
+			for (const auto& [k, v] : activeScene->m_ActorMap)
+			{
+				if (DrawActorNode(v) && SceneRenderer::GetSelectedActor() == v)
 				{
-					DrawEntityNode(e);
+					actorToDelete = v;
 				}
-			});
+			}
+			if (actorToDelete)
+			{
+				SceneRenderer::DestroyActor(actorToDelete);
+				SceneRenderer::SetSelectedActor({});
+			}
 
 			ImGui::TreePop();
 		}
@@ -92,26 +85,26 @@ namespace Neon
 		{
 			if (ImGui::BeginMenu("Create"))
 			{
-				if (ImGui::MenuItem("Empty Entity"))
+				if (ImGui::MenuItem("Actor"))
 				{
-					auto newEntity = SceneRenderer::CreateEntity("Empty Entity");
-					SceneRenderer::SetSelectedEntity(newEntity);
+					auto newActor = SceneRenderer::CreateActor(0, "Actor");
+					SceneRenderer::SetSelectedActor(newActor);
 				}
-				if (ImGui::MenuItem("Static Mesh"))
+				if (ImGui::MenuItem("Static Mesh Actor"))
 				{
-					auto newEntity = SceneRenderer::CreateEntity("Mesh Entity");
-					newEntity.AddComponent<StaticMeshComponent>();
+					auto newActor = SceneRenderer::CreateActor(0, "Static Mesh Actor");
+					newActor->AddComponent<StaticMeshComponent>();
 				}
-				if (ImGui::MenuItem("Skeletal Mesh"))
+				if (ImGui::MenuItem("Skeletal Mesh Actor"))
 				{
-					auto newEntity = SceneRenderer::CreateEntity("Mesh Entity");
-					newEntity.AddComponent<SkeletalMeshComponent>();
+					auto newActor = SceneRenderer::CreateActor(0, "Skeletal Mesh Actor");
+					newActor->AddComponent<SkeletalMeshComponent>();
 				}
 				ImGui::Separator();
-				if (ImGui::MenuItem("Directional Light"))
+				if (ImGui::MenuItem("Directional Light Actor"))
 				{
-					auto newEntity = SceneRenderer::CreateEntity("Directional Light Entity");
-					newEntity.AddComponent<LightComponent>();
+					auto newActor = SceneRenderer::CreateActor(0, "Directional Light Actor");
+					newActor->AddComponent<LightComponent>();
 				}
 				ImGui::EndMenu();
 			}
