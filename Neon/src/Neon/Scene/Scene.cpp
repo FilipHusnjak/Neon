@@ -1,16 +1,16 @@
 #include "neopch.h"
 
 #include "Neon/Renderer/SceneRenderer.h"
-#include "Neon/Scene/Components.h"
+#include "Neon/Scene/Actor.h"
+#include "Neon/Scene/Components/LightComponent.h"
 #include "Neon/Scene/Components/OceanComponent.h"
 #include "Neon/Scene/Components/SkeletalMeshComponent.h"
 #include "Neon/Scene/Components/StaticMeshComponent.h"
-#include "Neon/Scene/Entity.h"
 #include "Neon/Scene/Scene.h"
 
 namespace Neon
 {
-	std::unordered_map<UUID, Scene*> s_ActiveScenes;
+	static std::unordered_map<UUID, Scene*> s_ActiveScenes;
 
 	struct SceneComponent
 	{
@@ -20,9 +20,6 @@ namespace Neon
 	Scene::Scene(const std::string name /*= "SampleScene"*/)
 		: m_Name(name)
 	{
-		m_SceneEntity = m_Registry.create();
-		m_Registry.emplace<SceneComponent>(m_SceneEntity, m_SceneID);
-
 		s_ActiveScenes[m_SceneID] = this;
 
 		m_EnvironmentPath = "assets/textures/environment/daytime.hdr";
@@ -46,33 +43,36 @@ namespace Neon
 	void Scene::OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera)
 	{
 		SceneRenderer::BeginScene({editorCamera, 0.1f, 1000.0f, 45.0f});
-		auto group0 = m_Registry.group<StaticMeshComponent>(entt::get<TransformComponent>);
+		auto group0 = m_Registry.view<StaticMeshComponent>();
 		for (auto entity : group0)
 		{
-			auto& [meshComponent, transformComponent] = group0.get<StaticMeshComponent, TransformComponent>(entity);
+			auto& meshComponent = group0.get<StaticMeshComponent>(entity);
+			SharedRef<Actor> actor = GetActor(entity);
 			if (meshComponent.GetMesh())
 			{
-				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), transformComponent);
+				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), actor->GetTransformMat());
 			}
 		}
-		auto group1 = m_Registry.group<SkeletalMeshComponent>(entt::get<TransformComponent>);
+		auto group1 = m_Registry.view<SkeletalMeshComponent>();
 		for (auto entity : group1)
 		{
-			auto& [meshComponent, transformComponent] = group1.get<SkeletalMeshComponent, TransformComponent>(entity);
+			auto& meshComponent = group1.get<SkeletalMeshComponent>(entity);
+			SharedRef<Actor> actor = GetActor(entity);
 			meshComponent.OnUpdate(deltaSeconds);
 			if (meshComponent.GetMesh())
 			{
-				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), transformComponent);
+				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), actor->GetTransformMat());
 			}
 		}
-		auto group2 = m_Registry.group<OceanComponent>(entt::get<TransformComponent>);
+		auto group2 = m_Registry.view<OceanComponent>();
 		for (auto entity : group2)
 		{
-			auto& [oceanComponent, transformComponent] = group2.get<OceanComponent, TransformComponent>(entity);
+			auto& oceanComponent = group2.get<OceanComponent>(entity);
+			SharedRef<Actor> actor = GetActor(entity);
 			oceanComponent.OnUpdate(deltaSeconds);
 			if (oceanComponent.operator SharedRef<Mesh>())
 			{
-				SceneRenderer::SubmitMesh(oceanComponent, transformComponent);
+				SceneRenderer::SubmitMesh(oceanComponent, actor->GetTransformMat());
 			}
 		}
 		SceneRenderer::EndScene();
@@ -88,79 +88,45 @@ namespace Neon
 		m_ViewportHeight = height;
 	}
 
-	Entity Scene::CreateEntity(const std::string& name /*= ""*/)
+	SharedRef<Actor> Scene::CreateActor(UUID uuid, const std::string& name /*= ""*/)
 	{
-		auto entity = Entity{m_Registry.create(), this};
-		auto& idComponent = entity.AddComponent<IDComponent>();
-		idComponent.ID = {};
-
-		entity.AddComponent<TransformComponent>();
-		if (!name.empty())
-		{
-			entity.AddComponent<TagComponent>(name);
-		}
-
-		m_EntityIDMap[idComponent.ID] = entity;
-
-		return entity;
+		entt::entity entity = m_Registry.create();
+		auto actor = SharedRef<Actor>::Create(entity, this, name, uuid);
+		m_ActorMap[entity] = actor;
+		return actor;
 	}
 
-	Entity Scene::CreateEntityWithID(UUID uuid, const std::string& name /*= ""*/, bool runtimeMap /*= false*/)
+	SharedRef<Actor> Scene::CreateStaticMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/)
 	{
-		auto entity = Entity{m_Registry.create(), this};
-		auto& idComponent = entity.AddComponent<IDComponent>();
-		idComponent.ID = uuid;
-
-		entity.AddComponent<TransformComponent>();
-		if (!name.empty())
-		{
-			entity.AddComponent<TagComponent>(name);
-		}
-
-		NEO_CORE_ASSERT(m_EntityIDMap.find(uuid) == m_EntityIDMap.end());
-		m_EntityIDMap[uuid] = entity;
-		return entity;
-	}
-
-	Entity Scene::CreateStaticMesh(const std::string& path, const std::string& name /*= ""*/)
-	{
-		auto entity = CreateEntity(name);
+		auto actor = CreateActor(uuid, name);
 
 		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path);
-		entity.AddComponent<StaticMeshComponent>(staticMesh);
+		actor->AddComponent<StaticMeshComponent>(staticMesh);
 
-		return entity;
+		return actor;
 	}
 
-	Entity Scene::CreateSkeletalMesh(const std::string& path, const std::string& name /*= ""*/)
+	SharedRef<Actor> Scene::CreateSkeletalMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/)
 	{
-		auto entity = CreateEntity(name);
+		auto actor = CreateActor(uuid, name);
 
 		SharedRef<SkeletalMesh> skeletalMesh = SharedRef<SkeletalMesh>::Create(path);
-		entity.AddComponent<SkeletalMeshComponent>(skeletalMesh);
+		actor->AddComponent<SkeletalMeshComponent>(skeletalMesh);
 
-		return entity;
+		return actor;
 	}
 
-	void Scene::DestroyEntity(Entity entity)
+	void Scene::DestroyActor(SharedRef<Actor> actor)
 	{
-		m_Registry.destroy(entity.m_EntityHandle);
+		m_ActorMap.erase(actor->m_EntityHandle);
+		m_Registry.destroy(actor->m_EntityHandle);
 	}
 
-	Entity Scene::FindEntityByTag(const std::string& tag)
+	const SharedRef<Actor>& Scene::GetActor(entt::entity entity) const
 	{
-		// TODO: Indexing by tag?
-		auto view = m_Registry.view<TagComponent>();
-		for (auto entity : view)
-		{
-			const auto& canditate = view.get<TagComponent>(entity).Tag;
-			if (canditate == tag)
-			{
-				return Entity(entity, this);
-			}
-		}
-
-		return Entity{};
+		NEO_CORE_ASSERT(m_ActorMap.find(entity) != m_ActorMap.end());
+		NEO_CORE_ASSERT(m_ActorMap.at(entity));
+		return m_ActorMap.at(entity);
 	}
 
 	SharedRef<Scene> Scene::GetScene(UUID uuid)

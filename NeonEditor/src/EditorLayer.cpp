@@ -6,12 +6,11 @@
 #include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Editor/Panels/SceneRendererPanel.h>
-#include <Neon/Physics/Physics.h>
 #include <Neon/Renderer/Renderer.h>
-#include <Neon/Scene/Components.h>
+#include <Neon/Scene/Components/LightComponent.h>
 #include <Neon/Scene/Components/OceanComponent.h>
-#include <Neon/Scene/Components/PrimitiveComponent.h>
-#include <Neon/Scene/Entity.h>
+#include <Neon/Scene/Components/StaticMeshComponent.h>
+#include <Neon/Scene/Actor.h>
 
 #include <imgui/imgui.h>
 
@@ -30,7 +29,9 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		auto& mesh = m_EditorScene->CreateSkeletalMesh("assets/models/zero/zero.fbx", "Gun");
+		auto& mesh = m_EditorScene->CreateStaticMesh("assets/models/cube/cube.obj", 0, "Cube");
+		auto& staticMeshComponent = mesh->GetComponent<StaticMeshComponent>();
+		staticMeshComponent.CreatePhysicsBody();
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
@@ -39,15 +40,13 @@ namespace Neon
 		//auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
 		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
 
-		auto lightEntity = m_EditorScene->CreateEntity("DirectionalLight");
-		lightEntity.AddComponent<LightComponent>(glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
+		auto lightEntity = m_EditorScene->CreateActor(0, "DirectionalLight");
+		lightEntity->AddComponent<LightComponent>(glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());
 		m_Panels.emplace_back(SharedRef<ContentBrowserPanel>::Create());
 		m_Panels.emplace_back(SharedRef<SceneRendererPanel>::Create());
-
-		Physics::GetCurrentScene()->AddPhysicsBody();
 	}
 
 	void EditorLayer::OnAttach()

@@ -4,11 +4,11 @@
 #include "Neon/Renderer/Mesh.h"
 #include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
-#include "Neon/Scene/Components.h"
+#include "Neon/Scene/Actor.h"
+#include "Neon/Scene/Components/LightComponent.h"
 #include "Neon/Scene/Components/OceanComponent.h"
 #include "Neon/Scene/Components/SkeletalMeshComponent.h"
 #include "Neon/Scene/Components/StaticMeshComponent.h"
-#include "Neon/Scene/Entity.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -20,11 +20,11 @@
 namespace Neon
 {
 	template<typename T, typename UIFunc>
-	static void DrawComponent(const std::string& name, Entity entity, UIFunc uiFunc)
+	static void DrawComponent(const std::string& name, SharedRef<Actor> actor, UIFunc uiFunc)
 	{
-		if (entity.HasComponent<T>())
+		if (actor->HasComponent<T>())
 		{
-			auto& component = entity.GetComponent<T>();
+			auto& component = actor->GetComponent<T>();
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4, 4});
@@ -61,7 +61,7 @@ namespace Neon
 
 			if (removeComponent)
 			{
-				entity.RemoveComponent<T>();
+				actor->RemoveComponent<T>();
 			}
 		}
 	}
@@ -155,35 +155,29 @@ namespace Neon
 
 	void InspectorPanel::Render() const
 	{
-		Entity selectedEntity = SceneRenderer::GetSelectedEntity();
+		SharedRef<Actor> selectedActor = SceneRenderer::GetSelectedActor();
 
 		ImGui::Begin("Inspector");
 
-		if (selectedEntity)
+		if (selectedActor)
 		{
-			const char* name = "Unnamed Entity";
-			if (selectedEntity.HasComponent<TagComponent>())
+			const char* name = selectedActor->GetTag().c_str();
+
+			DrawVec3Control("Translation", selectedActor->GetTranslation());
+
+			glm::vec3 originalEulerAngles = glm::degrees(selectedActor->GetRotation());
+			if (DrawVec3Control("Rotation", originalEulerAngles))
 			{
-				name = selectedEntity.GetComponent<TagComponent>().Tag.c_str();
+				// Wrap euler angles between -180 and 180 degrees
+				originalEulerAngles -= 360.f * glm::floor((originalEulerAngles + glm::vec3(180.f)) / 360.f);
+				selectedActor->GetRotation() = glm::radians(originalEulerAngles);
 			}
 
-			DrawComponent<TransformComponent>("Transform Component", selectedEntity, [](TransformComponent& component) {
-				DrawVec3Control("Translation", component.Translation);
-
-				glm::vec3 originalEulerAngles = glm::degrees(component.Rotation);
-				if (DrawVec3Control("Rotation", originalEulerAngles))
-				{
-					// Wrap euler angles between -180 and 180 degrees
-					originalEulerAngles -= 360.f * glm::floor((originalEulerAngles + glm::vec3(180.f)) / 360.f);
-					component.Rotation = glm::radians(originalEulerAngles);
-				}
-
-				DrawVec3Control("Scale", component.Scale);
-			});
+			DrawVec3Control("Scale", selectedActor->GetScale());
 
 			ImGui::Spacing();
 
-			DrawComponent<StaticMeshComponent>("Static Mesh Component", selectedEntity, [this](StaticMeshComponent& component) {
+			DrawComponent<StaticMeshComponent>("Static Mesh Component", selectedActor, [this](StaticMeshComponent& component) {
 				ImGui::BeginTable("##meshfiletable", 3);
 
 				ImGui::TableSetupColumn("##meshfileTitle", 0, 100);
@@ -225,53 +219,54 @@ namespace Neon
 
 			ImGui::Spacing();
 
-			DrawComponent<SkeletalMeshComponent>("Skeletal Mesh Component", selectedEntity, [this](SkeletalMeshComponent& component) {
-				ImGui::BeginTable("##meshfiletable", 3);
+			DrawComponent<SkeletalMeshComponent>(
+				"Skeletal Mesh Component", selectedActor, [this](SkeletalMeshComponent& component) {
+					ImGui::BeginTable("##meshfiletable", 3);
 
-				ImGui::TableSetupColumn("##meshfileTitle", 0, 100);
-				ImGui::TableSetupColumn("##meshfile", 0, 700);
-				ImGui::TableSetupColumn("##meshfileButton", 0, 40);
+					ImGui::TableSetupColumn("##meshfileTitle", 0, 100);
+					ImGui::TableSetupColumn("##meshfile", 0, 700);
+					ImGui::TableSetupColumn("##meshfileButton", 0, 40);
 
-				ImGui::TableNextColumn();
-				ImGui::Text("File Path");
+					ImGui::TableNextColumn();
+					ImGui::Text("File Path");
 
-				ImGui::TableNextColumn();
-				if (component.GetMesh())
-				{
-					ImGui::InputText("##meshfilepath", (char*)component.GetMesh()->GetFilePath().c_str(), 256,
-									 ImGuiInputTextFlags_ReadOnly);
-				}
-				else
-				{
-					ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
-				}
-
-				ImGui::TableNextColumn();
-				if (ImGui::Button("...##openmesh"))
-				{
-					std::string file = Application::Get().OpenFile();
-					if (!file.empty())
+					ImGui::TableNextColumn();
+					if (component.GetMesh())
 					{
-						RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(component.GetMesh()));
-						component.LoadMesh(file);
+						ImGui::InputText("##meshfilepath", (char*)component.GetMesh()->GetFilePath().c_str(), 256,
+										 ImGuiInputTextFlags_ReadOnly);
 					}
-				}
+					else
+					{
+						ImGui::InputText("##meshfilepath", (char*)"Null", 256, ImGuiInputTextFlags_ReadOnly);
+					}
 
-				ImGui::EndTable();
+					ImGui::TableNextColumn();
+					if (ImGui::Button("...##openmesh"))
+					{
+						std::string file = Application::Get().OpenFile();
+						if (!file.empty())
+						{
+							RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(component.GetMesh()));
+							component.LoadMesh(file);
+						}
+					}
 
-				if (component.GetMesh() && ImGui::TreeNodeEx("Materials"))
-				{
-					RenderMeshProperties(component.GetMesh());
-				}
-			});
+					ImGui::EndTable();
+
+					if (component.GetMesh() && ImGui::TreeNodeEx("Materials"))
+					{
+						RenderMeshProperties(component.GetMesh());
+					}
+				});
 
 			ImGui::Spacing();
 
-			DrawComponent<LightComponent>("Light Component", selectedEntity, [](LightComponent& component) {
+			DrawComponent<LightComponent>("Light Component", selectedActor, [](LightComponent& component) {
 
 			});
 
-			DrawComponent<OceanComponent>("Ocean Component", selectedEntity, [](OceanComponent& component) {
+			DrawComponent<OceanComponent>("Ocean Component", selectedActor, [](OceanComponent& component) {
 
 			});
 
@@ -288,27 +283,27 @@ namespace Neon
 
 			if (ImGui::BeginPopup("AddComponentPanel"))
 			{
-				if (!selectedEntity.HasComponent<StaticMeshComponent>())
+				if (!selectedActor->HasComponent<StaticMeshComponent>())
 				{
 					if (ImGui::Button("StaticMeshComponent"))
 					{
-						selectedEntity.AddComponent<StaticMeshComponent>();
+						selectedActor->AddComponent<StaticMeshComponent>();
 						ImGui::CloseCurrentPopup();
 					}
 				}
-				if (!selectedEntity.HasComponent<SkeletalMeshComponent>())
+				if (!selectedActor->HasComponent<SkeletalMeshComponent>())
 				{
 					if (ImGui::Button("SkeletalMeshComponent"))
 					{
-						selectedEntity.AddComponent<SkeletalMeshComponent>();
+						selectedActor->AddComponent<SkeletalMeshComponent>();
 						ImGui::CloseCurrentPopup();
 					}
 				}
-				if (!selectedEntity.HasComponent<LightComponent>())
+				if (!selectedActor->HasComponent<LightComponent>())
 				{
 					if (ImGui::Button("LightComponent"))
 					{
-						selectedEntity.AddComponent<LightComponent>();
+						selectedActor->AddComponent<LightComponent>();
 						ImGui::CloseCurrentPopup();
 					}
 				}

@@ -3,14 +3,14 @@
 #include "Neon/Renderer/Framebuffer.h"
 #include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
-#include "Neon/Scene/Components.h"
+#include "Neon/Scene/Components/LightComponent.h"
 
 namespace Neon
 {
 	struct SceneRendererData
 	{
 		SharedRef<Scene> ActiveScene = nullptr;
-		Entity SelectedEntity = {};
+		SharedRef<Actor> SelectedActor = {};
 
 		struct SceneInfo
 		{
@@ -164,28 +164,28 @@ namespace Neon
 		return s_Data.ActiveScene;
 	}
 
-	void SceneRenderer::SetSelectedEntity(Entity entity)
+	void SceneRenderer::SetSelectedActor(SharedRef<Actor> actor)
 	{
-		s_Data.SelectedEntity = entity;
+		s_Data.SelectedActor = actor;
 	}
 
-	Entity SceneRenderer::GetSelectedEntity()
+	SharedRef<Actor> SceneRenderer::GetSelectedActor()
 	{
-		return s_Data.SelectedEntity;
+		return s_Data.SelectedActor;
 	}
 
-	Entity SceneRenderer::CreateEntity(const std::string& name /*= "Entity"*/)
+	SharedRef<Actor> SceneRenderer::CreateActor(UUID uuid, const std::string& name /*= "Actor"*/)
 	{
 		NEO_CORE_ASSERT(s_Data.ActiveScene);
 
-		return s_Data.ActiveScene->CreateEntity(name);
+		return s_Data.ActiveScene->CreateActor(uuid, name);
 	}
 
-	void SceneRenderer::DestroyEntity(Entity entity)
+	void SceneRenderer::DestroyActor(SharedRef<Actor> actor)
 	{
 		NEO_CORE_ASSERT(s_Data.ActiveScene);
 
-		s_Data.ActiveScene->DestroyEntity(entity);
+		s_Data.ActiveScene->DestroyActor(actor);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
@@ -329,16 +329,16 @@ namespace Neon
 		} lightUBO = {};
 
 		uint32 i = 0;
-		for (auto entity : s_Data.ActiveScene->GetAllEntitiesWithComponent<LightComponent>())
+		for (auto actor : s_Data.ActiveScene->GetAllActorsWithComponent<LightComponent>())
 		{
 			if (i >= 100)
 			{
 				NEO_CORE_ASSERT("Max number of light entities in the scene is {}", 100);
 			}
-			const auto& lightComponent = s_Data.ActiveScene->GetEntityComponent<LightComponent>(entity);
-			lightUBO.Lights[i].Strength[0] = lightComponent.Strength;
-			lightUBO.Lights[i].Direction = lightComponent.Direction;
-			lightUBO.Lights[i].Radiance = lightComponent.Radiance;
+			const auto& lightComponent = s_Data.ActiveScene->GetActorComponent<LightComponent>(actor);
+			lightUBO.Lights[i].Strength[0] = lightComponent.GetStrength();
+			lightUBO.Lights[i].Direction = lightComponent.GetDirection();
+			lightUBO.Lights[i].Radiance = lightComponent.GetRadiance();
 			i++;
 		}
 		lightUBO.Count[0] = i;
@@ -370,7 +370,7 @@ namespace Neon
 				meshShader->SetUniformBuffer("CameraUBO", 0, &cameraUBO);
 				meshShader->SetUniformBuffer("LightUBO", 0, &lightUBO);
 			}
-			
+
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform);
 		}
 
