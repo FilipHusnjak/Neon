@@ -8,10 +8,10 @@
 
 namespace Neon
 {
-	class Actor;
+	class Entity;
 	class Material;
 
-	using ActorMap = std::unordered_map<entt::entity, SharedRef<Actor>>;
+	using EntityMap = std::unordered_map<UUID, Entity>;
 
 	class Scene : public RefCounted
 	{
@@ -27,24 +27,30 @@ namespace Neon
 
 		void SetViewportSize(uint32 width, uint32 height);
 
-		SharedRef<Actor> CreateActor(UUID uuid = 0, const std::string& name = "");
-		SharedRef<Actor> CreateStaticMesh(const std::string& path, UUID uuid = 0, const std::string& name = "");
-		SharedRef<Actor> CreateSkeletalMesh(const std::string& path, UUID uuid = 0, const std::string& name = "");
-		void DestroyActor(SharedRef<Actor> actor);
+		Entity CreateEntity(const std::string& name = "");
+		Entity CreateEntityWithID(UUID uuid, const std::string& name = "", bool runtimeMap = false);
+		Entity CreateStaticMesh(const std::string& path, const std::string& name = "");
+		Entity CreateSkeletalMesh(const std::string& path, const std::string& name = "");
+		void DestroyEntity(Entity entity);
 
 		template<typename T>
-		auto GetAllActorsWithComponent()
+		auto GetAllEntitiesWithComponent()
 		{
 			return m_Registry.view<T>();
 		}
 
 		template<typename T>
-		T& GetActorComponent(entt::entity entity)
+		T& GetEntityComponent(entt::entity entity)
 		{
 			return m_Registry.get<T>(entity);
 		}
 
-		const SharedRef<Actor>& GetActor(entt::entity entity) const;
+		Entity FindEntityByTag(const std::string& tag);
+
+		const EntityMap& GetEntityMap() const
+		{
+			return m_EntityIDMap;
+		}
 
 		UUID GetUUID() const
 		{
@@ -60,18 +66,19 @@ namespace Neon
 
 	private:
 		UUID m_SceneID;
+		entt::entity m_SceneEntity;
 		entt::registry m_Registry;
 
 		std::string m_Name;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
+		EntityMap m_EntityIDMap;
+
 		std::string m_EnvironmentPath;
 
 		float m_SkyboxLod = 1.0f;
 
-		ActorMap m_ActorMap;
-
-		friend class Actor;
+		friend class Entity;
 		friend class SceneRenderer;
 		friend class SceneHierarchyPanel;
 	};

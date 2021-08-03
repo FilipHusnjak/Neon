@@ -13,8 +13,6 @@ namespace Neon
 		SkeletalMeshComponent(const SharedRef<SkeletalMesh>& skeletalMesh);
 		~SkeletalMeshComponent();
 
-		virtual void CreatePhysicsBody(const std::string& boneName = std::string()) override;
-
 		void OnUpdate(float deltaSeconds);
 
 		void LoadMesh(const std::string& filename);

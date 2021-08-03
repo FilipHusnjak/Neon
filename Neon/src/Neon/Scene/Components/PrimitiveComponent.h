@@ -12,8 +12,6 @@ namespace Neon
 		PrimitiveComponent(const PrimitiveComponent& other) = default;
 		~PrimitiveComponent() = default;
 
-		virtual void CreatePhysicsBody(const std::string& boneName = std::string());
-
 	private:
 		bool m_LockPositionX = false;
 		bool m_LockPositionY = false;
