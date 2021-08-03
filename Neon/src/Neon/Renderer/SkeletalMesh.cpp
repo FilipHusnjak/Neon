@@ -145,7 +145,7 @@ namespace Neon
 		UpdateBoneTransforms();
 	}
 
-	void SkeletalMesh::OnUpdate(float deltaSeconds)
+	void SkeletalMesh::TickAnimation(float deltaSeconds)
 	{
 		if (m_IsAnimated)
 		{

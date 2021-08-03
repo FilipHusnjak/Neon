@@ -281,7 +281,7 @@ namespace Neon
 		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_Mesh));
 	}
 
-	void OceanComponent::OnUpdate(float deltaSeconds)
+	void OceanComponent::TickComponent(float deltaSeconds)
 	{
 		m_CurrentSpectrumShader->SetUniformBuffer("TimeUBO", 0, &m_CurrentTimeSeconds);
 		Renderer::DispatchCompute(m_CurrentSpectrumPipeline, m_N / 32, m_N / 32, 1);

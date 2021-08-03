@@ -30,11 +30,11 @@ namespace Neon
 		m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody();
 	}
 
-	void SkeletalMeshComponent::OnUpdate(float deltaSeconds)
+	void SkeletalMeshComponent::TickComponent(float deltaSeconds)
 	{
 		if (m_SkeletalMesh)
 		{
-			m_SkeletalMesh->OnUpdate(deltaSeconds);
+			m_SkeletalMesh->TickAnimation(deltaSeconds);
 		}
 	}
 

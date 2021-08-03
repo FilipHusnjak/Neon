@@ -12,7 +12,7 @@ namespace Neon
 		OceanComponent(const OceanComponent& other) = default;
 		virtual ~OceanComponent();
 
-		void OnUpdate(float deltaSeconds);
+		virtual void TickComponent(float deltaSeconds) override;
 
 		operator SharedRef<Mesh>()
 		{

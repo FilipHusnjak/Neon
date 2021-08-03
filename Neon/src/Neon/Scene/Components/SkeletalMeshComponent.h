@@ -15,7 +15,7 @@ namespace Neon
 
 		virtual void CreatePhysicsBody(const std::string& boneName = std::string()) override;
 
-		void OnUpdate(float deltaSeconds);
+		virtual void TickComponent(float deltaSeconds) override;
 
 		void LoadMesh(const std::string& filename);
 

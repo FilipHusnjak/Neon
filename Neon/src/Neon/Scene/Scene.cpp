@@ -36,11 +36,16 @@ namespace Neon
 		SceneRenderer::InitializeScene(this);
 	}
 
-	void Scene::OnUpdate(float deltaSeconds)
+	void Scene::TickScene(float deltaSeconds)
 	{
+		for (auto& [k, actor] : m_ActorMap)
+		{
+			NEO_CORE_ASSERT(actor);
+			actor->Tick(deltaSeconds);
+		}
 	}
 
-	void Scene::OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera)
+	void Scene::OnRenderEditor(const EditorCamera& editorCamera)
 	{
 		SceneRenderer::BeginScene({editorCamera, 0.1f, 1000.0f, 45.0f});
 		auto group0 = m_Registry.view<StaticMeshComponent>();
@@ -58,7 +63,6 @@ namespace Neon
 		{
 			auto& meshComponent = group1.get<SkeletalMeshComponent>(entity);
 			SharedRef<Actor> actor = GetActor(entity);
-			meshComponent.OnUpdate(deltaSeconds);
 			if (meshComponent.GetMesh())
 			{
 				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), actor->GetTransformMat());
@@ -69,7 +73,6 @@ namespace Neon
 		{
 			auto& oceanComponent = group2.get<OceanComponent>(entity);
 			SharedRef<Actor> actor = GetActor(entity);
-			oceanComponent.OnUpdate(deltaSeconds);
 			if (oceanComponent.operator SharedRef<Mesh>())
 			{
 				SceneRenderer::SubmitMesh(oceanComponent, actor->GetTransformMat());

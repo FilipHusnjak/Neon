@@ -77,7 +77,7 @@ namespace Neon
 		SkeletalMesh(const std::string& filename);
 		virtual ~SkeletalMesh() = default;
 
-		void OnUpdate(float deltaSeconds);
+		void TickAnimation(float deltaSeconds);
 	
 	private:
 		std::vector<BoneInfo> m_BoneInfo;

@@ -111,6 +111,8 @@ namespace Neon
 
 		const glm::mat4 GetTransformMat();
 
+		void Tick(float deltaSeconds);
+
 	private:
 		entt::entity m_EntityHandle{entt::null};
 		Scene* m_Scene = nullptr;

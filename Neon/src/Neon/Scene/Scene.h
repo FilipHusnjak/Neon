@@ -21,8 +21,8 @@ namespace Neon
 
 		void Init();
 
-		void OnUpdate(float deltaSeconds);
-		void OnRenderEditor(float deltaSeconds, const EditorCamera& editorCamera);
+		void TickScene(float deltaSeconds);
+		void OnRenderEditor(const EditorCamera& editorCamera);
 		void OnEvent(Event& e);
 
 		void SetViewportSize(uint32 width, uint32 height);

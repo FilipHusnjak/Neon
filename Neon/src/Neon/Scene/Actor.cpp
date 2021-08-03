@@ -27,4 +27,13 @@ namespace Neon
 			   glm::scale(glm::mat4(1.f), glm::abs(m_Scale));
 	}
 
+	void Actor::Tick(float deltaSeconds)
+	{
+		for (ActorComponent* component : m_ActorComponents)
+		{
+			NEO_CORE_ASSERT(component);
+			component->TickComponent(deltaSeconds);
+		}
+	}
+
 } // namespace Neon

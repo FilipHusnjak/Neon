@@ -71,8 +71,8 @@ namespace Neon
 
 		m_EditorCamera.OnUpdate(deltaSeconds);
 
-		m_EditorScene->OnUpdate(deltaSeconds);
-		m_EditorScene->OnRenderEditor(deltaSeconds, m_EditorCamera);
+		m_EditorScene->TickScene(deltaSeconds);
+		m_EditorScene->OnRenderEditor(m_EditorCamera);
 	}
 
 	void EditorLayer::OnRenderGui()
