@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Neon/Renderer/Mesh.h"
+#include "Neon/Scene/Components/ActorComponent.h"
 
 namespace Neon
 {
-	class OceanComponent
+	class OceanComponent : public ActorComponent
 	{
 	public:
 		OceanComponent(uint32 n);

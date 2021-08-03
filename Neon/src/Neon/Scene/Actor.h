@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Scene.h"
+#include "Neon/Scene/Scene.h"
+#include "Neon/Scene/Components/ActorComponent.h"
 
 namespace Neon
 {
@@ -19,7 +20,9 @@ namespace Neon
 		T& AddComponent(Args&&... args)
 		{
 			assert(!HasComponent<T>());
-			return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			m_ActorComponents.push_back(&component);
+			return component;
 		}
 
 		template<typename T>
@@ -38,7 +41,20 @@ namespace Neon
 		template<typename T>
 		void RemoveComponent()
 		{
-			assert(HasComponent<T>());
+			T& component = GetComponent<T>();
+			auto* actorComponent = static_cast<ActorComponent*>(&component);
+			assert(actorComponent);
+			for (auto it = m_ActorComponents.begin(); it != m_ActorComponents.end();)
+			{
+				if (*it == actorComponent)
+				{
+					it = m_ActorComponents.erase(it);
+				}
+				else
+				{
+					++it;				
+				}
+			}
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
@@ -101,6 +117,8 @@ namespace Neon
 
 		std::string m_Tag = std::string();
 		UUID m_ID = 0;
+
+		std::vector<ActorComponent*> m_ActorComponents;
 
 		glm::vec3 m_Translation;
 		glm::vec3 m_Rotation;
