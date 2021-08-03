@@ -9,7 +9,7 @@ namespace Neon
 	public:
 		OceanComponent(uint32 n);
 		OceanComponent(const OceanComponent& other) = default;
-		~OceanComponent();
+		virtual ~OceanComponent();
 
 		void OnUpdate(float deltaSeconds);
 

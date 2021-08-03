@@ -1,15 +1,18 @@
 #pragma once
 
+#include "Neon/Scene/Components/ActorComponent.h"
+
 #include <glm/glm.hpp>
 
 namespace Neon
 {
-	class LightComponent
+	class LightComponent : public ActorComponent
 	{
 	public:
 		LightComponent() = default;
+		LightComponent(Actor* owner, const glm::vec4& direction);
 		LightComponent(const LightComponent& other) = default;
-		LightComponent(const glm::vec4& direction);
+		virtual ~LightComponent() = default;
 
 		float GetStrength() const
 		{

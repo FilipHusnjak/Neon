@@ -2,15 +2,19 @@
 
 #include "Neon/Physics/PhysicsBody.h"
 #include "Neon/Renderer/Mesh.h"
+#include "Neon/Scene/Components/ActorComponent.h"
 
 namespace Neon
 {
-	class PrimitiveComponent
+	class Actor;
+
+	class PrimitiveComponent : public ActorComponent
 	{
 	public:
 		PrimitiveComponent() = default;
+		PrimitiveComponent(Actor* owner);
 		PrimitiveComponent(const PrimitiveComponent& other) = default;
-		~PrimitiveComponent() = default;
+		virtual ~PrimitiveComponent() = default;
 
 		virtual void CreatePhysicsBody(const std::string& boneName = std::string());
 

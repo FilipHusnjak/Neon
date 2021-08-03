@@ -4,8 +4,10 @@
 
 namespace Neon
 {
-	LightComponent::LightComponent(const glm::vec4& direction) : m_Direction(direction)
+	LightComponent::LightComponent(Actor* owner, const glm::vec4& direction)
+		: ActorComponent(owner)
+		, m_Direction(direction)
 	{
 	}
 
-}
+} // namespace Neon

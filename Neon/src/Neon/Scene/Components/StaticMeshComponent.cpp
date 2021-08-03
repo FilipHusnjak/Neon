@@ -5,8 +5,9 @@
 
 namespace Neon
 {
-	StaticMeshComponent::StaticMeshComponent(const SharedRef<StaticMesh>& staticMesh)
-		: m_StaticMesh(staticMesh)
+	StaticMeshComponent::StaticMeshComponent(Actor* owner, const SharedRef<StaticMesh>& staticMesh)
+		: PrimitiveComponent(owner)
+		, m_StaticMesh(staticMesh)
 	{
 	}
 

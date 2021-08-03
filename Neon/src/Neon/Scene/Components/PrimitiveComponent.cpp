@@ -5,6 +5,10 @@
 
 namespace Neon
 {
+	PrimitiveComponent::PrimitiveComponent(Actor* owner) : ActorComponent(owner)
+	{
+	}
+
 	void PrimitiveComponent::CreatePhysicsBody(const std::string& boneName /*= std::string()*/)
 	{
 		if (m_PhysicsBody)

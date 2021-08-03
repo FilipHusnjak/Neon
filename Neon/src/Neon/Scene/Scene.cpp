@@ -101,7 +101,7 @@ namespace Neon
 		auto actor = CreateActor(uuid, name);
 
 		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path);
-		actor->AddComponent<StaticMeshComponent>(staticMesh);
+		actor->AddComponent<StaticMeshComponent>(actor.Ptr(), staticMesh);
 
 		return actor;
 	}
@@ -111,7 +111,7 @@ namespace Neon
 		auto actor = CreateActor(uuid, name);
 
 		SharedRef<SkeletalMesh> skeletalMesh = SharedRef<SkeletalMesh>::Create(path);
-		actor->AddComponent<SkeletalMeshComponent>(skeletalMesh);
+		actor->AddComponent<SkeletalMeshComponent>(actor.Ptr(), skeletalMesh);
 
 		return actor;
 	}

@@ -9,9 +9,9 @@ namespace Neon
 	{
 	public:
 		StaticMeshComponent() = default;
+		StaticMeshComponent(Actor* owner, const SharedRef<StaticMesh>& staticMesh);
 		StaticMeshComponent(const StaticMeshComponent& other) = default;
-		StaticMeshComponent(const SharedRef<StaticMesh>& staticMesh);
-		~StaticMeshComponent();
+		virtual ~StaticMeshComponent();
 
 		void LoadMesh(const std::string& filename);
 

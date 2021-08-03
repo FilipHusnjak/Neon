@@ -6,8 +6,9 @@
 
 namespace Neon
 {
-	SkeletalMeshComponent::SkeletalMeshComponent(const SharedRef<SkeletalMesh>& skeletalMesh)
-		: m_SkeletalMesh(skeletalMesh)
+	SkeletalMeshComponent::SkeletalMeshComponent(Actor* owner, const SharedRef<SkeletalMesh>& skeletalMesh)
+		: PrimitiveComponent(owner)
+		, m_SkeletalMesh(skeletalMesh)
 	{
 	}
 

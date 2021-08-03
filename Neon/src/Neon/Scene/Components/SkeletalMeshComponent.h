@@ -9,9 +9,9 @@ namespace Neon
 	{
 	public:
 		SkeletalMeshComponent() = default;
+		SkeletalMeshComponent(Actor* owner, const SharedRef<SkeletalMesh>& skeletalMesh);
 		SkeletalMeshComponent(const SkeletalMeshComponent& other) = default;
-		SkeletalMeshComponent(const SharedRef<SkeletalMesh>& skeletalMesh);
-		~SkeletalMeshComponent();
+		virtual ~SkeletalMeshComponent();
 
 		virtual void CreatePhysicsBody(const std::string& boneName = std::string()) override;
 
