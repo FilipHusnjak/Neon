@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Neon/Scene/Scene.h"
+#include "Neon/Math/Math.h"
 #include "Neon/Scene/Components/ActorComponent.h"
+#include "Neon/Scene/Scene.h"
 
 namespace Neon
 {
@@ -9,69 +10,48 @@ namespace Neon
 	{
 	public:
 		Actor() = default;
-		Actor(entt::entity handle, Scene* scene, const std::string& tag, UUID id, glm::vec3 translation = glm::vec3(),
-			  glm::vec3 rotation = glm::vec3(), glm::vec3 scale = glm::vec3(1.f));
+		Actor(Scene* scene, const std::string& tag, UUID id, Transform transform = Transform());
 		Actor(const Actor& other) = delete;
 		Actor(const Actor&& other) = delete;
 		Actor& operator=(const Actor& other) = delete;
 		Actor& operator=(const Actor&& other) = delete;
 
 		template<typename T, typename... Args>
-		T& AddComponent(Args&&... args)
+		SharedRef<T> AddRootComponent(Args&&... args)
 		{
-			assert(!HasComponent<T>());
-			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
-			m_ActorComponents.push_back(&component);
+			if (m_RootComponent)
+			{
+				RemoveComponent(m_RootComponent);
+			}
+			m_RootComponent = SharedRef<T>::Create(std::forward<Args>(args)...);
+			m_ActorComponents.push_back(m_RootComponent);
+			return m_RootComponent.As<T>();
+		}
+
+		template<typename T, typename... Args>
+		SharedRef<T> AddComponent(Args&&... args)
+		{
+			return m_ActorComponents.emplace_back(SharedRef<T>::Create(std::forward<Args>(args)...)).As<T>();
+		}
+
+		template<typename T>
+		SharedRef<T> GetRootComponent()
+		{
+			SharedRef<T> component = m_RootComponent.As<T>();
+			NEO_CORE_ASSERT(component);
 			return component;
 		}
 
-		template<typename T>
-		T& GetComponent()
+		std::vector<SharedRef<ActorComponent>>& GetActorComponents()
 		{
-			assert(HasComponent<T>());
-			return m_Scene->m_Registry.get<T>(m_EntityHandle);
+			return m_ActorComponents;
+		}
+		const std::vector<SharedRef<ActorComponent>>& GetActorComponents() const
+		{
+			return m_ActorComponents;
 		}
 
-		template<typename T>
-		bool HasComponent()
-		{
-			return m_Scene->m_Registry.has<T>(m_EntityHandle);
-		}
-
-		template<typename T>
-		void RemoveComponent()
-		{
-			T& component = GetComponent<T>();
-			auto* actorComponent = static_cast<ActorComponent*>(&component);
-			assert(actorComponent);
-			for (auto it = m_ActorComponents.begin(); it != m_ActorComponents.end();)
-			{
-				if (*it == actorComponent)
-				{
-					it = m_ActorComponents.erase(it);
-				}
-				else
-				{
-					++it;				
-				}
-			}
-			m_Scene->m_Registry.remove<T>(m_EntityHandle);
-		}
-
-		entt::entity GetHandle() const
-		{
-			return m_EntityHandle;
-		}
-
-		operator bool() const
-		{
-			return m_EntityHandle != entt::null && m_Scene;
-		}
-
-		bool operator==(Actor other) const
-		{
-			return m_EntityHandle == other.m_EntityHandle;
-		}
+		void RemoveComponent(const SharedRef<ActorComponent>& component);
 
 		const std::string& GetTag() const
 		{
@@ -83,48 +63,56 @@ namespace Neon
 			return m_ID;
 		}
 
+		const Transform& GetTransform() const
+		{
+			return m_ActorTransform;
+		}
 		const glm::vec3& GetTranslation() const
 		{
-			return m_Translation;
+			return m_ActorTransform.Translation;
 		}
 		const glm::vec3& GetRotation() const
 		{
-			return m_Rotation;
+			return m_ActorTransform.Rotation;
 		}
 		const glm::vec3& GetScale() const
 		{
-			return m_Scale;
+			return m_ActorTransform.Scale;
 		}
 
+		Transform& GetTransform()
+		{
+			return m_ActorTransform;
+		}
 		glm::vec3& GetTranslation()
 		{
-			return m_Translation;
+			return m_ActorTransform.Translation;
 		}
 		glm::vec3& GetRotation()
 		{
-			return m_Rotation;
+			return m_ActorTransform.Rotation;
 		}
 		glm::vec3& GetScale()
 		{
-			return m_Scale;
+			return m_ActorTransform.Scale;
 		}
-
-		const glm::mat4 GetTransformMat();
 
 		void Tick(float deltaSeconds);
 
+		void SetTranslation(glm::vec3 translation);
+		void SetRotation(glm::vec3 rotation);
+		void SetScale(glm::vec3 scale);
+
 	private:
-		entt::entity m_EntityHandle{entt::null};
 		Scene* m_Scene = nullptr;
 
 		std::string m_Tag = std::string();
 		UUID m_ID = 0;
 
-		std::vector<ActorComponent*> m_ActorComponents;
+		Transform m_ActorTransform;
 
-		glm::vec3 m_Translation;
-		glm::vec3 m_Rotation;
-		glm::vec3 m_Scale;
+		SharedRef<ActorComponent> m_RootComponent = nullptr;
+		std::vector<SharedRef<ActorComponent>> m_ActorComponents;
 
 		friend class Scene;
 	};

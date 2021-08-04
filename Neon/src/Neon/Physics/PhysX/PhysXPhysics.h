@@ -12,7 +12,14 @@ namespace Neon
 
 	namespace PhysXUtils
 	{
+		physx::PxTransform ToPhysXTransform(const Transform& transform);
+		Transform FromPhysXTransform(const physx::PxTransform& physxTransform);
+
 		const physx::PxVec3& ToPhysXVector(const glm::vec3& vector);
+		glm::vec3 FromPhysXVector(const physx::PxVec3& vector);
+
+		physx::PxQuat ToPhysXQuat(const glm::quat& quat);
+		glm::quat FromPhysXQuat(const physx::PxQuat& quat);
 
 		physx::PxBroadPhaseType::Enum NeonToPhysXBroadphaseType(BroadphaseType type);
 

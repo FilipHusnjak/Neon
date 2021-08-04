@@ -11,5 +11,11 @@ namespace Neon
 
 	void ActorComponent::TickComponent(float deltaSeconds)
 	{
+		NEO_CORE_ASSERT(m_Owner);
 	}
+
+	void ActorComponent::RenderGui()
+	{
+	}
+
 } // namespace Neon

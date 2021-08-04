@@ -8,18 +8,17 @@ namespace Neon
 	class SkeletalMeshComponent : public PrimitiveComponent
 	{
 	public:
-		SkeletalMeshComponent() = default;
-		SkeletalMeshComponent(Actor* owner, const SharedRef<SkeletalMesh>& skeletalMesh);
+		SkeletalMeshComponent(Actor* owner, const SharedRef<SkeletalMesh>& skeletalMesh = nullptr);
 		SkeletalMeshComponent(const SkeletalMeshComponent& other) = default;
 		virtual ~SkeletalMeshComponent();
 
-		virtual void CreatePhysicsBody(const std::string& boneName = std::string()) override;
+		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string()) override;
 
 		virtual void TickComponent(float deltaSeconds) override;
 
-		void LoadMesh(const std::string& filename);
+		virtual void LoadMesh(const std::string& filename) override;
 
-		SharedRef<SkeletalMesh> GetMesh() const
+		virtual SharedRef<Mesh> GetMesh() const override
 		{
 			return m_SkeletalMesh;
 		}

@@ -3,6 +3,7 @@
 #include "Neon/Renderer/Camera.h"
 #include "Neon/Renderer/Mesh.h"
 #include "Neon/Scene/Actor.h"
+#include "Neon/Scene/Components/LightComponent.h"
 
 namespace Neon
 {
@@ -34,6 +35,7 @@ namespace Neon
 		static void EndScene();
 
 		static void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform = glm::mat4(1.0f));
+		static void SubmitLight(const Light& light);
 
 		static const SharedRef<RenderPass>& GetGeoPass();
 

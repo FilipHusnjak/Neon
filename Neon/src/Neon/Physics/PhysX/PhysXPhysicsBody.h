@@ -9,11 +9,16 @@ namespace Neon
 	class PhysXPhysicsBody : public PhysicsBody
 	{
 	public:
-		PhysXPhysicsBody();
+		PhysXPhysicsBody(PhysicsBodyType bodyType, const Transform& transform);
 
 		virtual void Destroy() override;
 
 		virtual void AddSpherePrimitive(float radius = 1.f) override;
+
+		virtual Transform GetBodyTransform() const override;
+
+		virtual glm::vec3 GetBodyTranslation() const override;
+		virtual glm::vec3 GetBodyRotation() const override;
 
 		virtual void* GetHandle() const override
 		{

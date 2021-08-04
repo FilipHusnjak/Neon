@@ -8,7 +8,7 @@ namespace Neon
 	class OceanComponent : public ActorComponent
 	{
 	public:
-		OceanComponent(uint32 n);
+		OceanComponent(Actor* owner, uint32 n);
 		OceanComponent(const OceanComponent& other) = default;
 		virtual ~OceanComponent();
 

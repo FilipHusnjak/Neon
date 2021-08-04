@@ -27,7 +27,6 @@ namespace Neon
 
 	Scene::~Scene()
 	{
-		m_Registry.clear();
 		s_ActiveScenes.erase(m_SceneID);
 	}
 
@@ -38,47 +37,11 @@ namespace Neon
 
 	void Scene::TickScene(float deltaSeconds)
 	{
-		for (auto& [k, actor] : m_ActorMap)
+		for (auto& actor : m_Actors)
 		{
 			NEO_CORE_ASSERT(actor);
 			actor->Tick(deltaSeconds);
 		}
-	}
-
-	void Scene::OnRenderEditor(const EditorCamera& editorCamera)
-	{
-		SceneRenderer::BeginScene({editorCamera, 0.1f, 1000.0f, 45.0f});
-		auto group0 = m_Registry.view<StaticMeshComponent>();
-		for (auto entity : group0)
-		{
-			auto& meshComponent = group0.get<StaticMeshComponent>(entity);
-			SharedRef<Actor> actor = GetActor(entity);
-			if (meshComponent.GetMesh())
-			{
-				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), actor->GetTransformMat());
-			}
-		}
-		auto group1 = m_Registry.view<SkeletalMeshComponent>();
-		for (auto entity : group1)
-		{
-			auto& meshComponent = group1.get<SkeletalMeshComponent>(entity);
-			SharedRef<Actor> actor = GetActor(entity);
-			if (meshComponent.GetMesh())
-			{
-				SceneRenderer::SubmitMesh(meshComponent.GetMesh(), actor->GetTransformMat());
-			}
-		}
-		auto group2 = m_Registry.view<OceanComponent>();
-		for (auto entity : group2)
-		{
-			auto& oceanComponent = group2.get<OceanComponent>(entity);
-			SharedRef<Actor> actor = GetActor(entity);
-			if (oceanComponent.operator SharedRef<Mesh>())
-			{
-				SceneRenderer::SubmitMesh(oceanComponent, actor->GetTransformMat());
-			}
-		}
-		SceneRenderer::EndScene();
 	}
 
 	void Scene::OnEvent(Event& e)
@@ -93,10 +56,7 @@ namespace Neon
 
 	SharedRef<Actor> Scene::CreateActor(UUID uuid, const std::string& name /*= ""*/)
 	{
-		entt::entity entity = m_Registry.create();
-		auto actor = SharedRef<Actor>::Create(entity, this, name, uuid);
-		m_ActorMap[entity] = actor;
-		return actor;
+		return m_Actors.emplace_back(SharedRef<Actor>::Create(this, name, uuid));
 	}
 
 	SharedRef<Actor> Scene::CreateStaticMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/)
@@ -104,7 +64,7 @@ namespace Neon
 		auto actor = CreateActor(uuid, name);
 
 		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path);
-		actor->AddComponent<StaticMeshComponent>(actor.Ptr(), staticMesh);
+		actor->AddRootComponent<StaticMeshComponent>(actor.Ptr(), staticMesh);
 
 		return actor;
 	}
@@ -114,22 +74,24 @@ namespace Neon
 		auto actor = CreateActor(uuid, name);
 
 		SharedRef<SkeletalMesh> skeletalMesh = SharedRef<SkeletalMesh>::Create(path);
-		actor->AddComponent<SkeletalMeshComponent>(actor.Ptr(), skeletalMesh);
+		actor->AddRootComponent<SkeletalMeshComponent>(actor.Ptr(), skeletalMesh);
 
 		return actor;
 	}
 
 	void Scene::DestroyActor(SharedRef<Actor> actor)
 	{
-		m_ActorMap.erase(actor->m_EntityHandle);
-		m_Registry.destroy(actor->m_EntityHandle);
-	}
-
-	const SharedRef<Actor>& Scene::GetActor(entt::entity entity) const
-	{
-		NEO_CORE_ASSERT(m_ActorMap.find(entity) != m_ActorMap.end());
-		NEO_CORE_ASSERT(m_ActorMap.at(entity));
-		return m_ActorMap.at(entity);
+		for (auto it = m_Actors.begin(); it != m_Actors.end();)
+		{
+			if (it->Ptr() == actor.Ptr())
+			{
+				it = m_Actors.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
 	}
 
 	SharedRef<Scene> Scene::GetScene(UUID uuid)

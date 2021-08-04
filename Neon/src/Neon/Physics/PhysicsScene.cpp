@@ -13,9 +13,27 @@ namespace Neon
 	{
 	}
 
-	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody()
+	uint32 PhysicsScene::GetNumSubsteps(float deltaSeconds)
 	{
-		SharedRef<PhysicsBody> physicsBody = InternalAddPhysicsBody();
+		if (m_Accumulator > m_SubStepSize)
+		{
+			m_Accumulator = 0.0f;
+		}
+
+		m_Accumulator += deltaSeconds;
+		if (m_Accumulator < m_SubStepSize)
+		{
+			return 0;
+		}
+
+		uint32 substepCount = glm::min(static_cast<uint32>(m_Accumulator / m_SubStepSize), c_MaxSubSteps);
+		m_Accumulator -= (float)substepCount * m_SubStepSize;
+		return substepCount;
+	}
+
+	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	{
+		SharedRef<PhysicsBody> physicsBody = InternalAddPhysicsBody(physicsBodyType, transform);
 		m_PhysicsBodies.emplace_back(physicsBody);
 		return physicsBody;
 	}
@@ -36,9 +54,10 @@ namespace Neon
 
 	void PhysicsScene::Destroy()
 	{
-		for (auto& physicsBody : m_PhysicsBodies)
+		for (auto it = m_PhysicsBodies.begin(); it != m_PhysicsBodies.end();)
 		{
-			RemovePhysicsBody(physicsBody);
+			InternalRemovePhysicsBody(*it);
+			it = m_PhysicsBodies.erase(it);
 		}
 	}
 

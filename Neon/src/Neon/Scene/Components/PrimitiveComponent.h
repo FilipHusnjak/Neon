@@ -11,14 +11,22 @@ namespace Neon
 	class PrimitiveComponent : public ActorComponent
 	{
 	public:
-		PrimitiveComponent() = default;
 		PrimitiveComponent(Actor* owner);
 		PrimitiveComponent(const PrimitiveComponent& other) = default;
-		virtual ~PrimitiveComponent() = default;
+		virtual ~PrimitiveComponent();
 
-		virtual void CreatePhysicsBody(const std::string& boneName = std::string());
+		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string());
 
-	private:
+		virtual void LoadMesh(const std::string& filename) = 0;
+
+		virtual SharedRef<Mesh> GetMesh() const = 0;
+
+		virtual void RenderGui() override;
+
+	protected:
+		void RenderMeshProperties(SharedRef<Mesh> mesh) const;
+
+	protected:
 		bool m_LockPositionX = false;
 		bool m_LockPositionY = false;
 		bool m_LockPositionZ = false;
@@ -27,5 +35,8 @@ namespace Neon
 		bool m_LockRotationZ = false;
 
 		SharedRef<PhysicsBody> m_PhysicsBody;
+
+	private:
+		SharedRef<Texture2D> m_CheckerboardTex;
 	};
 } // namespace Neon

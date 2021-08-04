@@ -10,7 +10,7 @@ namespace Neon
 		: PhysicsMaterial(staticFriction, dynamicFriction, restitution)
 	{
 		physx::PxPhysics* physSDK = static_cast<physx::PxPhysics*>(Physics::GetPhysicsSDK());
-		physSDK->createMaterial(staticFriction, dynamicFriction, restitution);
+		m_Handle = physSDK->createMaterial(staticFriction, dynamicFriction, restitution);
 	}
 
 } // namespace Neon

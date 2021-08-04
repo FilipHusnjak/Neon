@@ -6,11 +6,13 @@
 #include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Editor/Panels/SceneRendererPanel.h>
+#include <Neon/Physics/Physics.h>
 #include <Neon/Renderer/Renderer.h>
+#include <Neon/Renderer/SceneRenderer.h>
+#include <Neon/Scene/Actor.h>
 #include <Neon/Scene/Components/LightComponent.h>
 #include <Neon/Scene/Components/OceanComponent.h>
 #include <Neon/Scene/Components/StaticMeshComponent.h>
-#include <Neon/Scene/Actor.h>
 
 #include <imgui/imgui.h>
 
@@ -30,8 +32,14 @@ namespace Neon
 		m_EditorScene->Init();
 
 		auto& mesh = m_EditorScene->CreateStaticMesh("assets/models/cube/cube.obj", 0, "Cube");
-		auto& staticMeshComponent = mesh->GetComponent<StaticMeshComponent>();
-		staticMeshComponent.CreatePhysicsBody();
+		mesh->SetTranslation(glm::vec3(10.f, 50.f, 0.f));
+		auto& staticMeshComponent = mesh->GetRootComponent<StaticMeshComponent>();
+		staticMeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+
+		auto& plane = m_EditorScene->CreateStaticMesh("assets/models/plane/plane.obj", 1, "Plane");
+		auto& staticMeshComponent2 = plane->GetRootComponent<StaticMeshComponent>();
+		staticMeshComponent2->CreatePhysicsBody(PhysicsBodyType::Static);
+
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
 
@@ -40,7 +48,7 @@ namespace Neon
 		//auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
 		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
 
-		auto lightEntity = m_EditorScene->CreateActor(0, "DirectionalLight");
+		auto lightEntity = m_EditorScene->CreateActor(2, "DirectionalLight");
 		lightEntity->AddComponent<LightComponent>(lightEntity.Ptr(), glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
@@ -71,8 +79,11 @@ namespace Neon
 
 		m_EditorCamera.OnUpdate(deltaSeconds);
 
+		Physics::TickPhysics(deltaSeconds);
+
+		SceneRenderer::BeginScene({m_EditorCamera, 0.1f, 1000.0f, 45.0f});
 		m_EditorScene->TickScene(deltaSeconds);
-		m_EditorScene->OnRenderEditor(m_EditorCamera);
+		SceneRenderer::EndScene();
 	}
 
 	void EditorLayer::OnRenderGui()

@@ -2,38 +2,56 @@
 
 #include "Neon/Scene/Actor.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/euler_angles.hpp>
-
 namespace Neon
 {
-	Actor::Actor(entt::entity handle, Scene* scene, const std::string& tag, UUID id, glm::vec3 translation /*= glm::vec3()*/,
-				 glm::vec3 rotation /*= glm::vec3()*/, glm::vec3 scale /*= glm::vec3(1.f)*/)
-		: m_EntityHandle(handle)
-		, m_Scene(scene)
+	Actor::Actor(Scene* scene, const std::string& tag, UUID id, Transform transform)
+		: m_Scene(scene)
 		, m_Tag(tag)
 		, m_ID(id)
-		, m_Translation(translation)
-		, m_Rotation(rotation)
-		, m_Scale(scale)
+		, m_ActorTransform(transform)
 	{
-
 	}
 
-	const glm::mat4 Actor::GetTransformMat()
+	void Actor::RemoveComponent(const SharedRef<ActorComponent>& component)
 	{
-		return glm::translate(glm::mat4(1.f), m_Translation) * glm::eulerAngleXYZ(m_Rotation.x, m_Rotation.y, m_Rotation.z) *
-			   glm::scale(glm::mat4(1.f), glm::abs(m_Scale));
+		if (m_RootComponent == component)
+		{
+			m_RootComponent.Reset();
+		}
+
+		for (auto it = m_ActorComponents.begin(); it != m_ActorComponents.end();)
+		{
+			if (it->Ptr() == component.Ptr())
+			{
+				it = m_ActorComponents.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
 	}
 
 	void Actor::Tick(float deltaSeconds)
 	{
-		for (ActorComponent* component : m_ActorComponents)
+		for (auto& component : m_ActorComponents)
 		{
 			NEO_CORE_ASSERT(component);
 			component->TickComponent(deltaSeconds);
 		}
+	}
+
+	void Actor::SetTranslation(glm::vec3 translation)
+	{
+		m_ActorTransform.Translation = translation;
+	}
+	void Actor::SetRotation(glm::vec3 rotation)
+	{
+		m_ActorTransform.Rotation = rotation;
+	}
+	void Actor::SetScale(glm::vec3 scale)
+	{
+		m_ActorTransform.Scale = scale;
 	}
 
 } // namespace Neon

@@ -1,6 +1,9 @@
 #include "neopch.h"
 
+#include "Neon/Core/Application.h"
 #include "Neon/Renderer/RendererContext.h"
+#include "Neon/Renderer/SceneRenderer.h"
+#include "Neon/Scene/Actor.h"
 #include "Neon/Scene/Components/StaticMeshComponent.h"
 
 namespace Neon
@@ -14,6 +17,19 @@ namespace Neon
 	StaticMeshComponent::~StaticMeshComponent()
 	{
 		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_StaticMesh));
+	}
+
+	void StaticMeshComponent::TickComponent(float deltaSeconds)
+	{
+		PrimitiveComponent::TickComponent(deltaSeconds);
+
+		if (m_PhysicsBody)
+		{
+			m_Owner->SetTranslation(m_PhysicsBody->GetBodyTranslation());
+			m_Owner->SetRotation(m_PhysicsBody->GetBodyRotation());
+		}
+
+		SceneRenderer::SubmitMesh(m_StaticMesh, m_Owner->GetTransform().GetMatrix());
 	}
 
 	void StaticMeshComponent::LoadMesh(const std::string& filename)

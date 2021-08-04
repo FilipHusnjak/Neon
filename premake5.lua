@@ -22,7 +22,6 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Neon/vendor/GLFW/include"
 IncludeDir["ImGui"] = "Neon/vendor/ImGui"
 IncludeDir["glm"] = "Neon/vendor/glm"
-IncludeDir["entt"] = "Neon/vendor/entt/include"
 IncludeDir["shaderc"] = "Neon/vendor/shaderc/include"
 IncludeDir["SPIRV_Cross"] = "Neon/vendor/SPIRV-Cross"
 IncludeDir["Vulkan"] = "Neon/vendor/Vulkan/1.2.148.1/include"
@@ -114,7 +113,6 @@ project "Neon"
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.entt}",
 		"%{IncludeDir.shaderc}",
 		"%{IncludeDir.SPIRV_Cross}",
 		"%{prj.name}/vendor/assimp/include",
@@ -232,7 +230,6 @@ project "NeonEditor"
 		"%{prj.name}/src",
 		"Neon/src",
 		"Neon/vendor",
-		"%{IncludeDir.entt}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.shaderc}"
 	}

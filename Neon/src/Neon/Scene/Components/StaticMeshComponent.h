@@ -8,14 +8,15 @@ namespace Neon
 	class StaticMeshComponent : public PrimitiveComponent
 	{
 	public:
-		StaticMeshComponent() = default;
-		StaticMeshComponent(Actor* owner, const SharedRef<StaticMesh>& staticMesh);
+		StaticMeshComponent(Actor* owner, const SharedRef<StaticMesh>& staticMesh = nullptr);
 		StaticMeshComponent(const StaticMeshComponent& other) = default;
 		virtual ~StaticMeshComponent();
 
-		void LoadMesh(const std::string& filename);
+		virtual void TickComponent(float deltaSeconds) override;
 
-		SharedRef<StaticMesh> GetMesh() const
+		virtual void LoadMesh(const std::string& filename) override;
+
+		virtual SharedRef<Mesh> GetMesh() const override
 		{
 			return m_StaticMesh;
 		}

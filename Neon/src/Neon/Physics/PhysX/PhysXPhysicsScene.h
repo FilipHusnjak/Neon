@@ -12,9 +12,11 @@ namespace Neon
 		PhysXPhysicsScene(const PhysicsSettings& settings);
 		virtual ~PhysXPhysicsScene() override;
 
+		virtual void Tick(float deltaSeconds) override;
+
 		virtual void Destroy() override;
 
-		virtual SharedRef<PhysicsBody> InternalAddPhysicsBody() override;
+		virtual SharedRef<PhysicsBody> InternalAddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform) override;
 		virtual void InternalRemovePhysicsBody(SharedRef<PhysicsBody> actor) override;
 
 	private:

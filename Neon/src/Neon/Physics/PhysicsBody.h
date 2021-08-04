@@ -1,11 +1,18 @@
 #pragma once
 
+#include "Neon/Math/Math.h"
 #include "Neon/Physics/PhysicsMaterial.h"
 #include "Neon/Physics/PhysicsPrimitives.h"
 
 namespace Neon
 {
 	class PhysicsActor;
+
+	enum class PhysicsBodyType
+	{
+		Static,
+		Dynamic
+	};
 
 	enum class PhysicsType
 	{
@@ -23,7 +30,7 @@ namespace Neon
 	class PhysicsBody : public RefCounted
 	{
 	public:
-		PhysicsBody();
+		PhysicsBody(PhysicsBodyType bodyType, const Transform& transform = Transform());
 		virtual ~PhysicsBody() = default;
 
 		virtual void Destroy() = 0;
@@ -33,6 +40,11 @@ namespace Neon
 		void SetMaterial(const SharedRef<PhysicsMaterial>& material);
 
 		virtual void AddSpherePrimitive(float radius = 1.f) = 0;
+
+		virtual Transform GetBodyTransform() const = 0;
+
+		virtual glm::vec3 GetBodyTranslation() const = 0;
+		virtual glm::vec3 GetBodyRotation() const = 0;
 
 		const SharedRef<PhysicsMaterial>& GetMaterial() const
 		{
@@ -56,7 +68,7 @@ namespace Neon
 		float m_AngularDamping = 0.0f;
 		float m_EnableGravity = true;
 
+		PhysicsBodyType m_BodyType;
 		PhysicsType m_PhysicsType = PhysicsType::Simulated;
-
 	};
 } // namespace Neon

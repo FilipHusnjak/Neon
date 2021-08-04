@@ -21,7 +21,7 @@ namespace Neon
 			(actor == SceneRenderer::GetSelectedActor() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_Leaf;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
-		bool opened = ImGui::TreeNodeEx((void*)(uint32)actor->GetHandle(), flags, name);
+		bool opened = ImGui::TreeNodeEx((void*)(uint32)actor->GetID(), flags, name);
 		if (ImGui::IsItemClicked())
 		{
 			SceneRenderer::SetSelectedActor(actor);
@@ -65,11 +65,11 @@ namespace Neon
 			}
 
 			SharedRef<Actor> actorToDelete = nullptr;
-			for (const auto& [k, v] : activeScene->m_ActorMap)
+			for (const auto& actor : activeScene->m_Actors)
 			{
-				if (DrawActorNode(v) && SceneRenderer::GetSelectedActor() == v)
+				if (DrawActorNode(actor) && SceneRenderer::GetSelectedActor() == actor)
 				{
-					actorToDelete = v;
+					actorToDelete = actor;
 				}
 			}
 			if (actorToDelete)
@@ -93,18 +93,18 @@ namespace Neon
 				if (ImGui::MenuItem("Static Mesh Actor"))
 				{
 					auto newActor = SceneRenderer::CreateActor(0, "Static Mesh Actor");
-					newActor->AddComponent<StaticMeshComponent>();
+					newActor->AddComponent<StaticMeshComponent>(newActor.Ptr());
 				}
 				if (ImGui::MenuItem("Skeletal Mesh Actor"))
 				{
 					auto newActor = SceneRenderer::CreateActor(0, "Skeletal Mesh Actor");
-					newActor->AddComponent<SkeletalMeshComponent>();
+					newActor->AddComponent<SkeletalMeshComponent>(newActor.Ptr());
 				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Directional Light Actor"))
 				{
 					auto newActor = SceneRenderer::CreateActor(0, "Directional Light Actor");
-					newActor->AddComponent<LightComponent>();
+					newActor->AddComponent<LightComponent>(newActor.Ptr());
 				}
 				ImGui::EndMenu();
 			}

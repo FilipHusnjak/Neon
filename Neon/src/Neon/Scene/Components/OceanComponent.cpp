@@ -7,8 +7,9 @@
 
 namespace Neon
 {
-	OceanComponent::OceanComponent(uint32 n)
-		: m_N(n)
+	OceanComponent::OceanComponent(Actor* owner, uint32 n)
+		: ActorComponent(owner)
+		, m_N(n)
 	{
 		m_LogN = static_cast<uint32>(std::log2(n));
 		{
@@ -104,8 +105,8 @@ namespace Neon
 									  TextureWrap::Clamp, TextureMinMagFilter::Nearest});
 
 		m_Foam = Texture2D::Create("assets/textures/fft/Foam.jpg",
-									 {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA8,
-									  TextureWrap::Clamp, TextureMinMagFilter::Linear});
+								   {TextureUsageFlagBits::ShaderRead | TextureUsageFlagBits::ShaderWrite, TextureFormat::RGBA8,
+									TextureWrap::Clamp, TextureMinMagFilter::Linear});
 
 		m_InitialSpectrumShader->SetStorageTexture2D("u_H0k", 0, m_H0k, 0);
 
@@ -283,6 +284,8 @@ namespace Neon
 
 	void OceanComponent::TickComponent(float deltaSeconds)
 	{
+		ActorComponent::TickComponent(deltaSeconds);
+
 		m_CurrentSpectrumShader->SetUniformBuffer("TimeUBO", 0, &m_CurrentTimeSeconds);
 		Renderer::DispatchCompute(m_CurrentSpectrumPipeline, m_N / 32, m_N / 32, 1);
 		m_CurrentTimeSeconds += deltaSeconds;

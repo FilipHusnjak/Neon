@@ -4,7 +4,8 @@
 
 namespace Neon
 {
-	PhysicsBody::PhysicsBody()
+	PhysicsBody::PhysicsBody(PhysicsBodyType bodyType, const Transform& transform)
+		: m_BodyType(bodyType)
 	{
 	}
 

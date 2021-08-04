@@ -19,53 +19,6 @@
 
 namespace Neon
 {
-	template<typename T, typename UIFunc>
-	static void DrawComponent(const std::string& name, SharedRef<Actor> actor, UIFunc uiFunc)
-	{
-		if (actor->HasComponent<T>())
-		{
-			auto& component = actor->GetComponent<T>();
-			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4, 4});
-			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-			ImGui::Separator();
-
-			const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-													 ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
-													 ImGuiTreeNodeFlags_FramePadding;
-			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
-			ImGui::PopStyleVar();
-			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
-			if (ImGui::Button("::", ImVec2{lineHeight, lineHeight}))
-			{
-				ImGui::OpenPopup("ComponentSettings");
-			}
-
-			bool removeComponent = false;
-			if (ImGui::BeginPopup("ComponentSettings"))
-			{
-				if (ImGui::MenuItem("Remove component"))
-				{
-					removeComponent = true;
-				}
-
-				ImGui::EndPopup();
-			}
-
-			if (open)
-			{
-				uiFunc(component);
-				ImGui::TreePop();
-			}
-
-			if (removeComponent)
-			{
-				actor->RemoveComponent<T>();
-			}
-		}
-	}
-
 	static bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.f, float columnWidth = 120.f)
 	{
 		bool modified = false;
@@ -148,11 +101,6 @@ namespace Neon
 		return modified;
 	}
 
-	InspectorPanel::InspectorPanel()
-	{
-		m_CheckerboardTex = Texture2D::Create("assets/editor/Checkerboard.tga", {TextureUsageFlagBits::ShaderRead});
-	}
-
 	void InspectorPanel::Render() const
 	{
 		SharedRef<Actor> selectedActor = SceneRenderer::GetSelectedActor();
@@ -177,7 +125,9 @@ namespace Neon
 
 			ImGui::Spacing();
 
-			DrawComponent<StaticMeshComponent>("Static Mesh Component", selectedActor, [this](StaticMeshComponent& component) {
+			DrawActorComponents(selectedActor);
+
+			/*DrawComponent<StaticMeshComponent>("Static Mesh Component", selectedActor, [this](StaticMeshComponent& component) {
 				ImGui::BeginTable("##meshfiletable", 3);
 
 				ImGui::TableSetupColumn("##meshfileTitle", 0, 100);
@@ -270,7 +220,7 @@ namespace Neon
 
 			});
 
-			ImGui::Spacing();
+			ImGui::Spacing();*/
 
 			ImGui::Separator();
 
@@ -283,29 +233,20 @@ namespace Neon
 
 			if (ImGui::BeginPopup("AddComponentPanel"))
 			{
-				if (!selectedActor->HasComponent<StaticMeshComponent>())
+				if (ImGui::Button("StaticMeshComponent"))
 				{
-					if (ImGui::Button("StaticMeshComponent"))
-					{
-						selectedActor->AddComponent<StaticMeshComponent>();
-						ImGui::CloseCurrentPopup();
-					}
+					selectedActor->AddComponent<StaticMeshComponent>(selectedActor.Ptr());
+					ImGui::CloseCurrentPopup();
 				}
-				if (!selectedActor->HasComponent<SkeletalMeshComponent>())
+				if (ImGui::Button("SkeletalMeshComponent"))
 				{
-					if (ImGui::Button("SkeletalMeshComponent"))
-					{
-						selectedActor->AddComponent<SkeletalMeshComponent>();
-						ImGui::CloseCurrentPopup();
-					}
+					selectedActor->AddComponent<SkeletalMeshComponent>(selectedActor.Ptr());
+					ImGui::CloseCurrentPopup();
 				}
-				if (!selectedActor->HasComponent<LightComponent>())
+				if (ImGui::Button("LightComponent"))
 				{
-					if (ImGui::Button("LightComponent"))
-					{
-						selectedActor->AddComponent<LightComponent>();
-						ImGui::CloseCurrentPopup();
-					}
+					selectedActor->AddComponent<LightComponent>(selectedActor.Ptr());
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			}
@@ -314,169 +255,51 @@ namespace Neon
 		ImGui::End();
 	}
 
-	void InspectorPanel::RenderMeshProperties(SharedRef<Mesh> mesh) const
+	void InspectorPanel::DrawActorComponents(SharedRef<Actor> actor) const
 	{
-		NEO_CORE_ASSERT(mesh);
-
-		ImGui::BeginTable("##meshmaterialssizetable", 2);
-
-		ImGui::TableNextColumn();
-		ImGui::Text("Size");
-
-		ImGui::TableNextColumn();
-		ImGui::InputText("##meshmaterialssize", (char*)std::to_string(mesh->GetMaterials().size()).c_str(), 10);
-
-		ImGui::EndTable();
-
-		for (uint32 i = 0; i < mesh->GetMaterials().size(); i++)
+		for (auto& component : actor->GetActorComponents())
 		{
-			Material& material = mesh->GetMaterials()[i];
-			MaterialProperties materialProperties = material.GetProperties();
+			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-			std::string name = "Element " + std::to_string(i);
-			if (ImGui::TreeNodeEx(name.c_str()))
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4, 4});
+			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			ImGui::Separator();
+
+			const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
+													 ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
+													 ImGuiTreeNodeFlags_FramePadding;
+			bool open = ImGui::TreeNodeEx((void*)typeid(component).hash_code(), treeNodeFlags, typeid(component).name());
+			ImGui::PopStyleVar();
+			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
+			if (ImGui::Button("::", ImVec2{lineHeight, lineHeight}))
 			{
-				if (ImGui::CollapsingHeader("Albedo", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+				ImGui::OpenPopup("ComponentSettings");
+			}
+
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove component"))
 				{
-					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-					ImGui::Image(materialProperties.UseAlbedoMap > 0.5 ? material.GetTexture2D("u_AlbedoTextures")->GetRendererId()
-																	   : m_CheckerboardTex->GetRendererId(),
-								 ImVec2(64, 64));
-					ImGui::PopStyleVar();
-
-					if (ImGui::IsItemClicked())
-					{
-						std::string filename = Application::Get().OpenFile("");
-						if (!filename.empty())
-						{
-							SharedRef<Texture2D> albedoMap =
-								Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8});
-							material.SetTexture2D("u_AlbedoTextures", albedoMap, 0);
-						}
-					}
-
-					ImGui::SameLine();
-					ImGui::BeginGroup();
-					bool useAlbedoMap = materialProperties.UseAlbedoMap > 0.5f;
-					if (ImGui::Checkbox("Use##AlbedoMap", &useAlbedoMap))
-					{
-						materialProperties.UseAlbedoMap = useAlbedoMap ? 1.f : 0.f;
-					}
-					ImGui::EndGroup();
-
-					ImGui::SameLine();
-					ImGui::ColorEdit3("Color##Albedo", glm::value_ptr(materialProperties.AlbedoColor),
-									  ImGuiColorEditFlags_NoInputs);
+					removeComponent = true;
 				}
 
-				if (ImGui::CollapsingHeader("Normals", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-					ImGui::Image(materialProperties.UseNormalMap > 0.5 ? material.GetTexture2D("u_NormalTextures")->GetRendererId()
-																	   : m_CheckerboardTex->GetRendererId(),
-								 ImVec2(64, 64));
-					ImGui::PopStyleVar();
+				ImGui::EndPopup();
+			}
 
-					if (ImGui::IsItemClicked())
-					{
-						std::string filename = Application::Get().OpenFile("");
-						if (!filename.empty())
-						{
-							SharedRef<Texture2D> normalMap =
-								Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8});
-							material.SetTexture2D("u_NormalTextures", normalMap, 0);
-							materialProperties.UseNormalMap = 1.f;
-						}
-					}
-
-					ImGui::SameLine();
-					ImGui::BeginGroup();
-					bool useNormalMap = materialProperties.UseNormalMap > 0.5f;
-					if (ImGui::Checkbox("Use##NormalMap", &useNormalMap))
-					{
-						materialProperties.UseNormalMap = useNormalMap ? 1.f : 0.f;
-					}
-					ImGui::EndGroup();
-				}
-
-				if (ImGui::CollapsingHeader("Metalness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-					ImGui::Image(materialProperties.UseMetalnessMap > 0.5
-									 ? material.GetTexture2D("u_MetalnessTextures")->GetRendererId()
-									 : m_CheckerboardTex->GetRendererId(),
-								 ImVec2(64, 64));
-					ImGui::PopStyleVar();
-
-					if (ImGui::IsItemClicked())
-					{
-						std::string filename = Application::Get().OpenFile("");
-						if (!filename.empty())
-						{
-							SharedRef<Texture2D> metalnessMap =
-								Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8});
-							material.SetTexture2D("u_MetalnessTextures", metalnessMap, 0);
-							materialProperties.UseMetalnessMap = 1.f;
-						}
-					}
-
-					ImGui::SameLine();
-					ImGui::BeginGroup();
-					bool useMetalnessMap = materialProperties.UseMetalnessMap > 0.5f;
-					if (ImGui::Checkbox("Use##MetalnessMap", &useMetalnessMap))
-					{
-						materialProperties.UseMetalnessMap = useMetalnessMap ? 1.f : 0.f;
-					}
-					ImGui::EndGroup();
-
-					ImGui::SameLine();
-					ImGui::SliderFloat("##MetalnessInput", &materialProperties.Metalness, 0.0f, 1.0f);
-				}
-
-				if (ImGui::CollapsingHeader("Roughness", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-					ImGui::Image(materialProperties.UseRoughnessMap > 0.5
-									 ? material.GetTexture2D("u_RoughnessTextures")->GetRendererId()
-									 : m_CheckerboardTex->GetRendererId(),
-								 ImVec2(64, 64));
-					ImGui::PopStyleVar();
-
-					if (ImGui::IsItemClicked())
-					{
-						std::string filename = Application::Get().OpenFile("");
-						if (!filename.empty())
-						{
-							SharedRef<Texture2D> roughnessMap =
-								Texture2D::Create(filename, {TextureUsageFlagBits::ShaderRead, TextureFormat::SRGBA8});
-							material.SetTexture2D("u_RoughnessTextures", roughnessMap, 0);
-							materialProperties.UseRoughnessMap = 1.f;
-						}
-					}
-
-					ImGui::SameLine();
-					ImGui::BeginGroup();
-					bool useRoughnessMap = materialProperties.UseRoughnessMap > 0.5f;
-					if (ImGui::Checkbox("Use##RoughnessMap", &useRoughnessMap))
-					{
-						materialProperties.UseRoughnessMap = useRoughnessMap ? 1.f : 0.f;
-					}
-					ImGui::EndGroup();
-
-					ImGui::SameLine();
-					ImGui::SliderFloat("##RoughnessInput", &materialProperties.Roughness, 0.0f, 1.0f);
-				}
-
+			if (open)
+			{
+				component->RenderGui();
 				ImGui::TreePop();
+			}
 
-				material.SetProperties(materialProperties);
+			if (removeComponent)
+			{
+				actor->RemoveComponent(component);
 			}
 
 			ImGui::Spacing();
-			ImGui::Spacing();
 		}
-
-		ImGui::TreePop();
 	}
 
 } // namespace Neon

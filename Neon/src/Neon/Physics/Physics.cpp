@@ -19,6 +19,13 @@ namespace Neon
 		return s_Physics->InternalGetPhysicsSDK();
 	}
 
+	void Physics::TickPhysics(float deltaSeconds)
+	{
+		NEO_CORE_ASSERT(s_Scene);
+
+		s_Scene->Tick(deltaSeconds);
+	}
+
 	void Physics::Initialize()
 	{
 		NEO_CORE_ASSERT(!s_Physics, "Physics already initialized!");

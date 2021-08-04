@@ -12,6 +12,8 @@ namespace Neon
 		SharedRef<Scene> ActiveScene = nullptr;
 		SharedRef<Actor> SelectedActor = {};
 
+		std::vector<Light> Lights;
+
 		struct SceneInfo
 		{
 			SceneRendererCamera SceneCamera;
@@ -212,6 +214,11 @@ namespace Neon
 		s_Data.MeshDrawList.push_back({mesh, transform});
 	}
 
+	void SceneRenderer::SubmitLight(const Light& light)
+	{
+		s_Data.Lights.push_back(light);
+	}
+
 	const SharedRef<RenderPass>& SceneRenderer::GetGeoPass()
 	{
 		return s_Data.GeoPass;
@@ -308,6 +315,7 @@ namespace Neon
 		GeometryPass();
 		PostProcessingPass();
 		s_Data.MeshDrawList.clear();
+		s_Data.Lights.clear();
 	}
 
 	void SceneRenderer::GeometryPass()
@@ -329,16 +337,15 @@ namespace Neon
 		} lightUBO = {};
 
 		uint32 i = 0;
-		for (auto actor : s_Data.ActiveScene->GetAllActorsWithComponent<LightComponent>())
+		for (auto& light : s_Data.Lights)
 		{
 			if (i >= 100)
 			{
 				NEO_CORE_ASSERT("Max number of light entities in the scene is {}", 100);
 			}
-			const auto& lightComponent = s_Data.ActiveScene->GetActorComponent<LightComponent>(actor);
-			lightUBO.Lights[i].Strength[0] = lightComponent.GetStrength();
-			lightUBO.Lights[i].Direction = lightComponent.GetDirection();
-			lightUBO.Lights[i].Radiance = lightComponent.GetRadiance();
+			lightUBO.Lights[i].Strength[0] = light.Strength;
+			lightUBO.Lights[i].Direction = light.Direction;
+			lightUBO.Lights[i].Radiance = light.Radiance;
 			i++;
 		}
 		lightUBO.Count[0] = i;

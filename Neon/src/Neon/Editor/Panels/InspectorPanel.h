@@ -6,17 +6,16 @@
 
 namespace Neon
 {
+	class Actor;
+
 	class InspectorPanel : public Panel
 	{
 	public:
-		InspectorPanel();
+		InspectorPanel() = default;
 
 		void Render() const override;
 
 	private:
-		void RenderMeshProperties(SharedRef<Mesh> mesh) const;
-
-	private:
-		SharedRef<Texture2D> m_CheckerboardTex;
+		void DrawActorComponents(SharedRef<Actor> actor) const;	
 	};
 } // namespace Neon

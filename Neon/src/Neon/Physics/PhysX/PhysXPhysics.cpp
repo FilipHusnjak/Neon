@@ -88,9 +88,37 @@ namespace Neon
 	{
 	}
 
+	physx::PxTransform PhysXUtils::ToPhysXTransform(const Transform& transform)
+	{
+		physx::PxQuat r = ToPhysXQuat(glm::quat(transform.Rotation));
+		physx::PxVec3 p = ToPhysXVector(transform.Translation);
+		return physx::PxTransform(p, r);
+	}
+
+	Transform PhysXUtils::FromPhysXTransform(const physx::PxTransform& physxTransform)
+	{
+		return Transform(PhysXUtils::FromPhysXVector(physxTransform.p),
+						 glm::eulerAngles(PhysXUtils::FromPhysXQuat(physxTransform.q)), glm::vec3(1.f));
+	}
+
 	const physx::PxVec3& PhysXUtils::ToPhysXVector(const glm::vec3& vector)
 	{
 		return *(physx::PxVec3*)&vector;
+	}
+
+	glm::vec3 PhysXUtils::FromPhysXVector(const physx::PxVec3& vector)
+	{
+		return *(glm::vec3*)&vector;
+	}
+
+	physx::PxQuat PhysXUtils::ToPhysXQuat(const glm::quat& quat)
+	{
+		return physx::PxQuat(quat.x, quat.y, quat.z, quat.w);
+	}
+
+	glm::quat PhysXUtils::FromPhysXQuat(const physx::PxQuat& quat)
+	{
+		return *(glm::quat*)&quat;
 	}
 
 	physx::PxBroadPhaseType::Enum PhysXUtils::NeonToPhysXBroadphaseType(BroadphaseType type)

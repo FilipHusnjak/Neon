@@ -1,18 +1,27 @@
 #include "neopch.h"
 
+#include "Neon/Physics/PhysX/PhysXPhysics.h"
 #include "Neon/Physics/PhysX/PhysXPhysicsBody.h"
 #include "Neon/Physics/PhysX/PhysXPhysicsMaterial.h"
 #include "Neon/Physics/PhysX/PhysXPhysicsPrimitives.h"
-#include "Neon/Physics/Physics.h"
 
 namespace Neon
 {
-	PhysXPhysicsBody::PhysXPhysicsBody()
+	PhysXPhysicsBody::PhysXPhysicsBody(PhysicsBodyType bodyType, const Transform& transform)
+		: PhysicsBody(bodyType, transform)
 	{
 		auto* sdk = static_cast<physx::PxPhysics*>(Physics::GetPhysicsSDK());
 		NEO_CORE_ASSERT(sdk);
 
-		m_RigidActor = sdk->createRigidStatic(physx::PxTransform(physx::PxIDENTITY::PxIdentity));
+		if (bodyType == PhysicsBodyType::Static)
+		{
+			m_RigidActor = sdk->createRigidStatic(PhysXUtils::ToPhysXTransform(transform));
+		}
+		else
+		{
+			m_RigidActor = sdk->createRigidDynamic(PhysXUtils::ToPhysXTransform(transform));
+			m_RigidActor->setActorFlag(physx::PxActorFlag::eDISABLE_GRAVITY, false);
+		}
 
 		SetMaterial(SharedRef<PhysXPhysicsMaterial>::Create(1.f, 0.7f, 0.5f));
 	}
@@ -29,4 +38,23 @@ namespace Neon
 	{
 		m_Spheres.emplace_back(CreateUnique<PhysXSpherePhysicsPrimitive>(*this, 10.f));
 	}
+
+	Transform PhysXPhysicsBody::GetBodyTransform() const
+	{
+		Transform transform = PhysXUtils::FromPhysXTransform(m_RigidActor->getGlobalPose());
+		return transform;
+	}
+
+	glm::vec3 PhysXPhysicsBody::GetBodyTranslation() const
+	{
+		Transform transform = PhysXUtils::FromPhysXTransform(m_RigidActor->getGlobalPose());
+		return transform.Translation;
+	}
+
+	glm::vec3 PhysXPhysicsBody::GetBodyRotation() const
+	{
+		Transform transform = PhysXUtils::FromPhysXTransform(m_RigidActor->getGlobalPose());
+		return transform.Rotation;
+	}
+
 } // namespace Neon

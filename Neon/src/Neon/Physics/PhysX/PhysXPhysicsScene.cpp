@@ -39,6 +39,22 @@ namespace Neon
 	{
 	}
 
+	void PhysXPhysicsScene::Tick(float deltaSeconds)
+	{
+		uint32 substepCount = GetNumSubsteps(deltaSeconds);
+
+		if (substepCount <= 0)
+		{
+			return;			
+		}
+
+		for (uint32_t i = 0; i < substepCount; i++)
+		{
+			m_PhysXScene->simulate(m_SubStepSize);
+			m_PhysXScene->fetchResults(true);
+		}
+	}
+
 	void PhysXPhysicsScene::Destroy()
 	{
 		PhysicsScene::Destroy();
@@ -49,9 +65,9 @@ namespace Neon
 		m_PhysXScene = nullptr;
 	}
 
-	SharedRef<PhysicsBody> PhysXPhysicsScene::InternalAddPhysicsBody()
+	SharedRef<PhysicsBody> PhysXPhysicsScene::InternalAddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
 	{
-		SharedRef<PhysicsBody> physicsBody = SharedRef<PhysXPhysicsBody>::Create();
+		SharedRef<PhysicsBody> physicsBody = SharedRef<PhysXPhysicsBody>::Create(physicsBodyType, transform);
 		NEO_CORE_ASSERT(physicsBody->GetHandle());
 		m_PhysXScene->addActor(*static_cast<physx::PxRigidActor*>(physicsBody->GetHandle()));
 		return physicsBody;

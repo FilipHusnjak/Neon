@@ -23,6 +23,8 @@ namespace Neon
 	public:
 		static void* GetPhysicsSDK();
 
+		static void TickPhysics(float deltaSeconds);
+
 		static void Initialize();
 		static void Shutdown();
 

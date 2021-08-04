@@ -4,10 +4,9 @@ namespace Neon
 {
 	class Actor;
 
-	class ActorComponent
+	class ActorComponent : public RefCounted
 	{
 	public:
-		ActorComponent() = default;
 		ActorComponent(Actor* owner);
 		virtual ~ActorComponent() = default;
 
@@ -19,7 +18,9 @@ namespace Neon
 			return m_Owner;
 		}
 
-	private:
+		virtual void RenderGui();
+
+	protected:
 		Actor* m_Owner = nullptr;
 	};
 } // namespace Neon

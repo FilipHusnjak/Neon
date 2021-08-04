@@ -2,6 +2,8 @@
 
 #include "Neon/Physics/Physics.h"
 #include "Neon/Renderer/RendererContext.h"
+#include "Neon/Renderer/SceneRenderer.h"
+#include "Neon/Scene/Actor.h"
 #include "Neon/Scene/Components/SkeletalMeshComponent.h"
 
 namespace Neon
@@ -17,8 +19,10 @@ namespace Neon
 		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_SkeletalMesh));
 	}
 
-	void SkeletalMeshComponent::CreatePhysicsBody(const std::string& boneName /*= std::string()*/)
+	void SkeletalMeshComponent::CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName /*= std::string()*/)
 	{
+		NEO_CORE_ASSERT(m_Owner);
+
 		if (m_PhysicsBodyMap.find(boneName) != m_PhysicsBodyMap.end())
 		{
 			SharedRef<PhysicsBody> body = m_PhysicsBodyMap[boneName];
@@ -27,11 +31,15 @@ namespace Neon
 				Physics::GetCurrentScene()->RemovePhysicsBody(body);
 			}
 		}
-		m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody();
+		m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+
+		SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
 	}
 
 	void SkeletalMeshComponent::TickComponent(float deltaSeconds)
 	{
+		PrimitiveComponent::TickComponent(deltaSeconds);
+
 		if (m_SkeletalMesh)
 		{
 			m_SkeletalMesh->TickAnimation(deltaSeconds);
