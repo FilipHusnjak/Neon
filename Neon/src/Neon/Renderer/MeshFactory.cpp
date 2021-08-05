@@ -89,17 +89,17 @@ namespace Neon
 		return SharedRef<StaticMesh>::Create("SphereMesh", vertices, indices);
 	}
 
-	static void CalculateRing(size_t segments, float radius, float y, float dy, float height, float actualRadius,
+	static void CalculateRing(size_t segments, float radius, float x, float dx, float height, float actualRadius,
 							  std::vector<StaticMesh::Vertex>& vertices)
 	{
 		float segIncr = 1.f / (float)(segments - 1);
 		for (size_t s = 0; s < segments; s++)
 		{
-			float x = glm::cos(float(M_PI * 2) * s * segIncr) * radius;
+			float y = glm::cos(float(M_PI * 2) * s * segIncr) * radius;
 			float z = glm::sin(float(M_PI * 2) * s * segIncr) * radius;
 
 			StaticMesh::Vertex& vertex = vertices.emplace_back();
-			vertex.Position = glm::vec3(actualRadius * x, actualRadius * y + height * dy, actualRadius * z);
+			vertex.Position = glm::vec3(actualRadius * x + height * dx, actualRadius * y, actualRadius * z);
 		}
 	}
 

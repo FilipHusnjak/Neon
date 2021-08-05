@@ -13,13 +13,19 @@ namespace Neon
 	SpherePhysicsPrimitive::SpherePhysicsPrimitive(const PhysicsBody& physicsBody, float radius)
 		: PhysicsPrimitive(physicsBody)
 		, m_Radius(radius)
-		, m_Offset(glm::vec3())
 	{
 	}
 
 	BoxPhysicsPrimitive::BoxPhysicsPrimitive(const PhysicsBody& physicsBody, glm::vec3 size)
 		: PhysicsPrimitive(physicsBody)
 		, m_Size(size)
+	{
+	}
+
+	CapsulePhysicsPrimitive::CapsulePhysicsPrimitive(const PhysicsBody& physicsBody, float radius, float height)
+		: PhysicsPrimitive(physicsBody)
+		, m_Radius(radius)
+		, m_Height(height)
 	{
 	}
 

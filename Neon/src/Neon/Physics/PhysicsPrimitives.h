@@ -27,7 +27,6 @@ namespace Neon
 		virtual ~SpherePhysicsPrimitive() = default;
 
 	private:
-		glm::vec3 m_Offset = glm::vec3();
 		float m_Radius = 1.f;
 	};
 
@@ -38,14 +37,18 @@ namespace Neon
 		virtual ~BoxPhysicsPrimitive() = default;
 
 	private:
-		glm::vec3 m_Offset = glm::vec3();
 		glm::vec3 m_Size = glm::vec3(1.f);
 	};
 
 	class CapsulePhysicsPrimitive : public PhysicsPrimitive
 	{
 	public:
+		CapsulePhysicsPrimitive(const PhysicsBody& physicsBody, float radius, float height);
 		virtual ~CapsulePhysicsPrimitive() = default;
+
+	private:
+		float m_Radius = 1.f;
+		float m_Height = 1.f;
 	};
 
 	class ConvexPhysicsPrimitive : public PhysicsPrimitive

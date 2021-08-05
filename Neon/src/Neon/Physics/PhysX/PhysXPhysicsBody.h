@@ -15,6 +15,7 @@ namespace Neon
 
 		virtual void AddSpherePrimitive(float radius = 1.f) override;
 		virtual void AddBoxPrimitive(glm::vec3 size = glm::vec3(1.f)) override;
+		virtual void AddCapsulePrimitive(float radius, float height) override;
 
 		virtual Transform GetBodyTransform() const override;
 

@@ -41,7 +41,31 @@ namespace Neon
 		}
 
 		{
-			auto& sphere = m_EditorScene->CreateActor(1, "SphereGenerated");
+			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
+			cube->SetTranslation(glm::vec3(0.f, 30.f, 0.f));
+			auto& cubeStaticMeshComp = cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f)));
+			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f));
+		}
+
+		{
+			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
+			cube->SetTranslation(glm::vec3(0.f, 50.f, 0.f));
+			auto& cubeStaticMeshComp = cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f)));
+			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f));
+		}
+
+		{
+			auto& capsule = m_EditorScene->CreateActor(1, "CapsuleGenerated");
+			capsule->SetTranslation(glm::vec3(0.5f, 40.f, 0.f));
+			auto& capsuleStaticMeshComp = capsule->AddComponent<StaticMeshComponent>(capsule.Ptr(), MeshFactory::CreateCapsule(1.f, 5.f));
+			capsuleStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			capsuleStaticMeshComp->GetPhysicsBody()->AddCapsulePrimitive(1.f, 5.f);
+		}
+
+		{
+			auto& sphere = m_EditorScene->CreateActor(2, "SphereGenerated");
 			sphere->SetTranslation(glm::vec3(0.5f, 25.f, 0.f));
 			auto& sphereStaticMeshComp = sphere->AddComponent<StaticMeshComponent>(sphere.Ptr(), MeshFactory::CreateSphere(1.f));
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
@@ -49,11 +73,11 @@ namespace Neon
 		}
 
 		{
-			auto& plane = m_EditorScene->CreateActor(2, "PlaneGenerated");
+			auto& plane = m_EditorScene->CreateActor(3, "PlaneGenerated");
 			auto& planeStaticMeshComp =
-				plane->AddComponent<StaticMeshComponent>(plane.Ptr(), MeshFactory::CreateBox(glm::vec3(10.f, 1.f, 10.f)));
+				plane->AddComponent<StaticMeshComponent>(plane.Ptr(), MeshFactory::CreateBox(glm::vec3(30.f, 1.f, 30.f)));
 			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static);
-			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(10.f, 1.f, 10.f));
+			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(30.f, 1.f, 30.f));
 		}
 
 		{
@@ -64,7 +88,7 @@ namespace Neon
 		}
 
 		{
-			auto& light = m_EditorScene->CreateActor(3, "DirectionalLight");
+			auto& light = m_EditorScene->CreateActor(4, "DirectionalLight");
 			light->AddComponent<LightComponent>(light.Ptr(), glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
 		}
 

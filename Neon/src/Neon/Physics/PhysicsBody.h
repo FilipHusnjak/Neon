@@ -41,6 +41,7 @@ namespace Neon
 
 		virtual void AddSpherePrimitive(float radius = 1.f) = 0;
 		virtual void AddBoxPrimitive(glm::vec3 size = glm::vec3(1.f)) = 0;
+		virtual void AddCapsulePrimitive(float radius, float height) = 0;
 
 		virtual Transform GetBodyTransform() const = 0;
 
@@ -60,6 +61,7 @@ namespace Neon
 	protected:
 		std::vector<UniqueRef<SpherePhysicsPrimitive>> m_Spheres;
 		std::vector<UniqueRef<BoxPhysicsPrimitive>> m_Boxes;
+		std::vector<UniqueRef<CapsulePhysicsPrimitive>> m_Capsules;
 		SharedRef<PhysicsMaterial> m_Material;
 
 		float m_Mass = 1.f;

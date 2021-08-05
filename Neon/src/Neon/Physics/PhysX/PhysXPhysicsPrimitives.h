@@ -18,4 +18,10 @@ namespace Neon
 	public:
 		PhysXBoxPhysicsPrimitive(const PhysicsBody& physicsBody, glm::vec3 size);
 	};
+
+	class PhysXCapsulePhysicsPrimitive : public CapsulePhysicsPrimitive
+	{
+	public:
+		PhysXCapsulePhysicsPrimitive(const PhysicsBody& physicsBody, float radius, float height);
+	};
 } // namespace Neon

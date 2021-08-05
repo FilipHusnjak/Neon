@@ -44,6 +44,11 @@ namespace Neon
 		m_Boxes.emplace_back(CreateUnique<PhysXBoxPhysicsPrimitive>(*this, size));
 	}
 
+	void PhysXPhysicsBody::AddCapsulePrimitive(float radius, float height)
+	{
+		m_Capsules.emplace_back(CreateUnique<PhysXCapsulePhysicsPrimitive>(*this, radius, height));
+	}
+
 	Transform PhysXPhysicsBody::GetBodyTransform() const
 	{
 		Transform transform = PhysXUtils::FromPhysXTransform(m_RigidActor->getGlobalPose());
