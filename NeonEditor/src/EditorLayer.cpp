@@ -7,6 +7,7 @@
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Editor/Panels/SceneRendererPanel.h>
 #include <Neon/Physics/Physics.h>
+#include <Neon/Renderer/MeshFactory.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Renderer/SceneRenderer.h>
 #include <Neon/Scene/Actor.h>
@@ -31,33 +32,41 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		auto& mesh = m_EditorScene->CreateStaticMesh("assets/models/cube/cube.obj", 0, "Cube");
-		mesh->SetTranslation(glm::vec3(0.f, 5.f, 0.f));
-		auto& staticMeshComponent = mesh->GetRootComponent<StaticMeshComponent>();
-		staticMeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-		staticMeshComponent->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(0.5f, 0.5f, 0.5f));
+		{
+			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
+			cube->SetTranslation(glm::vec3(0.f, 20.f, 0.f));
+			auto& cubeStaticMeshComp = cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f)));
+			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f));
+		}
 
-		auto& mesh2 = m_EditorScene->CreateStaticMesh("assets/models/cube/cube.obj", 0, "Cube");
-		mesh2->SetTranslation(glm::vec3(0.5f, 8.f, 0.f));
-		auto& staticMeshComponent3 = mesh2->GetRootComponent<StaticMeshComponent>();
-		staticMeshComponent3->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-		staticMeshComponent3->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(0.5f, 0.5f, 0.5f));
+		{
+			auto& sphere = m_EditorScene->CreateActor(1, "SphereGenerated");
+			sphere->SetTranslation(glm::vec3(0.5f, 25.f, 0.f));
+			auto& sphereStaticMeshComp = sphere->AddComponent<StaticMeshComponent>(sphere.Ptr(), MeshFactory::CreateSphere(1.f));
+			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
+		}
 
-		auto& plane = m_EditorScene->CreateStaticMesh("assets/models/plane/plane.obj", 1, "Plane");
-		auto& staticMeshComponent2 = plane->GetRootComponent<StaticMeshComponent>();
-		staticMeshComponent2->CreatePhysicsBody(PhysicsBodyType::Static);
-		staticMeshComponent2->GetPhysicsBody()->AddBoxPrimitive({20.f, 0.001f, 20.f});
+		{
+			auto& plane = m_EditorScene->CreateActor(2, "PlaneGenerated");
+			auto& planeStaticMeshComp =
+				plane->AddComponent<StaticMeshComponent>(plane.Ptr(), MeshFactory::CreateBox(glm::vec3(10.f, 1.f, 10.f)));
+			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static);
+			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(10.f, 1.f, 10.f));
+		}
 
-		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
-		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};
+		{
+			//auto& ocean = m_EditorScene->CreateEntity("Ocean");
+			//ocean.AddComponent<OceanComponent>(512);
+			//auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
+			//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
+		}
 
-		//auto& ocean = m_EditorScene->CreateEntity("Ocean");
-		//ocean.AddComponent<OceanComponent>(512);
-		//auto& oceanTransformComponent = ocean.GetComponent<TransformComponent>();
-		//oceanTransformComponent.Translation = glm::vec3(-500.f, 0, -500.f);
-
-		auto lightEntity = m_EditorScene->CreateActor(2, "DirectionalLight");
-		lightEntity->AddComponent<LightComponent>(lightEntity.Ptr(), glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
+		{
+			auto& light = m_EditorScene->CreateActor(3, "DirectionalLight");
+			light->AddComponent<LightComponent>(light.Ptr(), glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
+		}
 
 		m_Panels.emplace_back(SharedRef<SceneHierarchyPanel>::Create());
 		m_Panels.emplace_back(SharedRef<InspectorPanel>::Create());

@@ -53,6 +53,7 @@ namespace Neon
 		//static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
 		//										GraphicsPipelineSpecification& pipelineSpec);
 
+		Mesh(const std::string& name, const std::vector<Index>& indices);
 		Mesh(const std::string& filename);
 		virtual ~Mesh() = default;
 
@@ -108,12 +109,12 @@ namespace Neon
 											 ShaderSpecification& wireframeShaderSpecification);
 
 	protected:
-		const aiScene* m_Scene;
+		const aiScene* m_Scene = nullptr;
 		std::vector<Submesh> m_Submeshes;
 
 		UniqueRef<Assimp::Importer> m_Importer;
 
-		glm::mat4 m_InverseTransform;
+		glm::mat4 m_InverseTransform = glm::mat4(1.f);
 
 		SharedRef<VertexBuffer> m_VertexBuffer;
 		SharedRef<IndexBuffer> m_IndexBuffer;
@@ -127,6 +128,6 @@ namespace Neon
 
 		std::vector<Material> m_Materials;
 
-		std::string m_FilePath;
+		std::string m_FilePath = std::string();
 	};
 } // namespace Neon

@@ -120,6 +120,24 @@ namespace Neon
 		return result;
 	}
 
+	Mesh::Mesh(const std::string& name, const std::vector<Index>& indices)
+	{
+		NEO_CORE_INFO("Generating mesh: {0}", name);
+
+		NEO_CORE_ASSERT(!indices.empty());
+
+		m_Indices = indices;
+
+		m_IndexBuffer = IndexBuffer::Create(m_Indices.data(), static_cast<uint32>(m_Indices.size()) * sizeof(Index));
+
+		Submesh& submesh = m_Submeshes.emplace_back();
+		submesh.BaseVertex = 0;
+		submesh.BaseIndex = 0;
+		submesh.MaterialIndex = 0;
+		submesh.IndexCount = static_cast<uint32>(indices.size()) * 3;
+		submesh.MeshName = name;
+	}
+
 	Mesh::Mesh(const std::string& filename)
 		: m_FilePath(filename)
 	{
@@ -202,7 +220,7 @@ namespace Neon
 		m_WireframeMeshGraphicsPipeline = GraphicsPipeline::Create(m_WireframeMeshShader, graphicsPipelineSpecification);
 
 		// Materials
-		if (m_Scene->HasMaterials())
+		if (m_Scene && m_Scene->HasMaterials())
 		{
 			NEO_MESH_LOG("---- Materials - {0} ----", m_FilePath);
 
@@ -335,6 +353,39 @@ namespace Neon
 				m_Materials[i].SetProperties(materialProperties);
 			}
 		}
+		else
+		{
+			NEO_MESH_LOG("---- Creating Default Material ----");
+
+			m_Materials.resize(1);
+			m_Materials[0] = Material(0, m_MeshShader);
+
+			MaterialProperties materialProperties;
+
+			float shininess = 80.f;
+			float metalness = 0.f;
+			float roughness = 1.0f - glm::sqrt(shininess / 100.f);
+
+			m_Materials[0].LoadDefaultTexture2D("u_AlbedoTextures", 0);
+			materialProperties.AlbedoColor = glm::vec4{1.f};
+			materialProperties.UseAlbedoMap = 0.f;
+
+			m_Materials[0].LoadDefaultTexture2D("u_NormalTextures", 0);
+			materialProperties.UseNormalMap = 0.f;
+
+			m_Materials[0].LoadDefaultTexture2D("u_RoughnessTextures", 0);
+			materialProperties.Roughness = roughness;
+			materialProperties.UseRoughnessMap = 0.f;
+
+			m_Materials[0].LoadDefaultTexture2D("u_MetalnessTextures", 0);
+			materialProperties.Metalness = metalness;
+			materialProperties.UseMetalnessMap = 0.f;
+
+			NEO_MESH_LOG("------------------------");
+
+			m_Materials[0].SetProperties(materialProperties);
+		}
+		
 
 		m_MeshShader->SetTextureCube("u_EnvRadianceTex", 0, SceneRenderer::GetRadianceTex(), 0);
 		m_MeshShader->SetTextureCube("u_EnvIrradianceTex", 0, SceneRenderer::GetIrradianceTex(), 0);

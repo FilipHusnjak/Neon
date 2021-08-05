@@ -13,6 +13,14 @@
 
 namespace Neon
 {
+	StaticMesh::StaticMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
+		: Mesh(name, indices)
+	{
+		m_Vertices = vertices;
+		
+		SetupBuffers();
+	}
+
 	StaticMesh::StaticMesh(const std::string& filename)
 		: Mesh(filename)
 	{
@@ -46,22 +54,39 @@ namespace Neon
 			}
 		}
 
+		SetupBuffers();
+	}
+
+	void StaticMesh::SetupBuffers()
+	{
 		ShaderSpecification shaderSpecification;
+		if (m_Scene && m_Scene->HasMaterials())
+		{
+			shaderSpecification.ShaderVariableCounts["MaterialUBO"] = m_Scene->mNumMaterials;
+			shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = m_Scene->mNumMaterials;
+			shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = m_Scene->mNumMaterials;
+			shaderSpecification.ShaderVariableCounts["u_RoughnessTextures"] = m_Scene->mNumMaterials;
+			shaderSpecification.ShaderVariableCounts["u_MetalnessTextures"] = m_Scene->mNumMaterials;
+		}
+		else
+		{
+			shaderSpecification.ShaderVariableCounts["MaterialUBO"] = 1;
+			shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = 1;
+			shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = 1;
+			shaderSpecification.ShaderVariableCounts["u_RoughnessTextures"] = 1;
+			shaderSpecification.ShaderVariableCounts["u_MetalnessTextures"] = 1;
+		}
+
 		shaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Pbr_Frag.glsl";
 		shaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PbrStatic_Vert.glsl";
-		shaderSpecification.ShaderVariableCounts["MaterialUBO"] = m_Scene->mNumMaterials;
-		shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = m_Scene->mNumMaterials;
-		shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = m_Scene->mNumMaterials;
-		shaderSpecification.ShaderVariableCounts["u_RoughnessTextures"] = m_Scene->mNumMaterials;
-		shaderSpecification.ShaderVariableCounts["u_MetalnessTextures"] = m_Scene->mNumMaterials;
 
 		std::vector<VertexBufferElement> elements = {{ShaderDataType::Float3}, {ShaderDataType::Float3}, {ShaderDataType::Float3},
 													 {ShaderDataType::Float3}, {ShaderDataType::UInt},	 {ShaderDataType::Float2}};
 
 		VertexBufferLayout vertexBufferLayout = elements;
-		m_VertexBuffer = VertexBuffer::Create(m_Vertices.data(), static_cast<uint32>(m_Vertices.size()) * sizeof(Vertex),
-											  vertexBufferLayout);
-		
+		m_VertexBuffer =
+			VertexBuffer::Create(m_Vertices.data(), static_cast<uint32>(m_Vertices.size()) * sizeof(Vertex), vertexBufferLayout);
+
 		shaderSpecification.VBLayout = vertexBufferLayout;
 
 		ShaderSpecification wireframeShaderSpecification;

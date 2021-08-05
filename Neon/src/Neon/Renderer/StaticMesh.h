@@ -18,8 +18,12 @@ namespace Neon
 		};
 
 	public:
+		StaticMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 		StaticMesh(const std::string& filename);
 		virtual ~StaticMesh() = default;
+
+	private:
+		void SetupBuffers();
 
 	private:
 		std::vector<Vertex> m_Vertices;
