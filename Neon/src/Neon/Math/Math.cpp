@@ -3,8 +3,9 @@
 #include "Math.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/euler_angles.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Neon
 {
@@ -18,7 +19,6 @@ namespace Neon
 
 	glm::mat4 Transform::GetMatrix() const
 	{
-		return glm::translate(glm::mat4(1.f), Translation) * glm::eulerAngleXYZ(Rotation.x, Rotation.y, Rotation.z) *
-			   glm::scale(glm::mat4(1.f), glm::abs(Scale));
+		return glm::translate(glm::mat4(1.f), Translation) * glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.f), glm::abs(Scale));
 	}
 } // namespace Neon

@@ -32,8 +32,6 @@ namespace Neon
 			}
 		}
 		m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
-
-		SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
 	}
 
 	void SkeletalMeshComponent::TickComponent(float deltaSeconds)

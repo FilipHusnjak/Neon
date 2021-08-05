@@ -35,9 +35,10 @@ namespace Neon
 		{
 			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
 			cube->SetTranslation(glm::vec3(0.f, 20.f, 0.f));
-			auto& cubeStaticMeshComp = cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f)));
+			auto& cubeStaticMeshComp =
+				cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f, 10.f, 1.f)));
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f));
+			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
 		}
 
 		{

@@ -30,6 +30,9 @@ namespace Neon
 	class PhysXPhysics : public Physics
 	{
 	public:
+		static physx::PxFoundation& GetFoundation();
+
+	public:
 		PhysXPhysics() = default;
 		virtual ~PhysXPhysics() = default;
 

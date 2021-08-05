@@ -2,6 +2,7 @@
 
 #include "Neon/Physics/PhysX/PhysXErrorCallback.h"
 #include "Neon/Physics/PhysX/PhysXPhysics.h"
+#include "Neon/Physics/PhysX/PhysXPhysicsDebugger.h"
 #include "Neon/Physics/PhysX/PhysXPhysicsScene.h"
 
 #include <PhysX/PxPhysicsAPI.h>
@@ -11,11 +12,17 @@ namespace Neon
 	static PhysXErrorCallback s_ErrorCallback;
 	static physx::PxDefaultAllocator s_Allocator;
 	static physx::PxFoundation* s_Foundation = nullptr;
-	static physx::PxPvd* s_PVD = nullptr;
 	static physx::PxPhysics* s_Physics = nullptr;
 	static physx::PxCooking* s_CookingFactory = nullptr;
 	static physx::PxOverlapHit s_OverlapBuffer[OVERLAP_MAX_COLLIDERS];
 	static physx::PxDefaultCpuDispatcher* s_CPUDispatcher = nullptr;
+
+	physx::PxFoundation& PhysXPhysics::GetFoundation()
+	{
+		NEO_CORE_ASSERT(s_Foundation);
+
+		return *s_Foundation;
+	}
 
 	physx::PxDefaultCpuDispatcher* PhysXPhysics::GetCPUDispatcher() const
 	{
@@ -46,10 +53,12 @@ namespace Neon
 		static bool s_TrackMemoryAllocations = false;
 #endif
 
-		s_Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_Foundation, scale, s_TrackMemoryAllocations, s_PVD);
+		PhysXPhysicsDebugger::Initialize();
+
+		s_Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_Foundation, scale, s_TrackMemoryAllocations, PhysXPhysicsDebugger::GetDebugger());
 		NEO_CORE_ASSERT(s_Physics, "PxCreatePhysics failed.");
 
-		bool extentionsLoaded = PxInitExtensions(*s_Physics, s_PVD);
+		bool extentionsLoaded = PxInitExtensions(*s_Physics, PhysXPhysicsDebugger::GetDebugger());
 		NEO_CORE_ASSERT(extentionsLoaded, "Failed to initialize PhysX Extensions.");
 
 		s_CPUDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
@@ -70,9 +79,13 @@ namespace Neon
 
 		PxCloseExtensions();
 
+		PhysXPhysicsDebugger::StopDebugging();
+
 		if (s_Physics)
 			s_Physics->release();
 		s_Physics = nullptr;
+
+		PhysXPhysicsDebugger::StopDebugging();
 
 		if (s_Foundation)
 			s_Foundation->release();
@@ -82,6 +95,8 @@ namespace Neon
 	void PhysXPhysics::InternalCreateScene()
 	{
 		s_Scene = SharedRef<PhysXPhysicsScene>::Create(s_Settings);
+
+		PhysXPhysicsDebugger::StartDebugging();
 	}
 
 	void PhysXPhysics::InternalDestroyScene()

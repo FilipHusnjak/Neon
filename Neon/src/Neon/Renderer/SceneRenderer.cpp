@@ -57,7 +57,7 @@ namespace Neon
 		float CurrentTime = 0;
 	};
 
-	static SceneRendererData s_Data;
+	static SceneRendererData s_DebuggerData;
 
 	void SceneRenderer::Init()
 	{
@@ -74,12 +74,12 @@ namespace Neon
 			geoRenderPassSpec.Attachments.push_back(
 				{4, TextureFormat::Depth, AttachmentLoadOp::Clear, AttachmentStoreOp::DontCare, false});
 			geoRenderPassSpec.Subpasses.push_back({true, {}, {0}, {1}});
-			s_Data.GeoPass = RenderPass::Create(geoRenderPassSpec);
+			s_DebuggerData.GeoPass = RenderPass::Create(geoRenderPassSpec);
 			FramebufferSpecification geoFramebufferSpec;
 			geoFramebufferSpec.Width = width;
 			geoFramebufferSpec.Height = height;
-			geoFramebufferSpec.Pass = s_Data.GeoPass.Ptr();
-			s_Data.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
+			geoFramebufferSpec.Pass = s_DebuggerData.GeoPass.Ptr();
+			s_DebuggerData.GeoPass->SetTargetFramebuffer(Framebuffer::Create(geoFramebufferSpec));
 		}
 
 		{
@@ -88,12 +88,12 @@ namespace Neon
 			postProcessingPassSpec.Attachments.push_back(
 				{1, TextureFormat::RGBA8, AttachmentLoadOp::Clear, AttachmentStoreOp::Store, true});
 			postProcessingPassSpec.Subpasses.push_back({false, {}, {0}, {}});
-			s_Data.PostProcessingPass = RenderPass::Create(postProcessingPassSpec);
+			s_DebuggerData.PostProcessingPass = RenderPass::Create(postProcessingPassSpec);
 			FramebufferSpecification postProcessingFramebufferSpec;
 			postProcessingFramebufferSpec.Width = width;
 			postProcessingFramebufferSpec.Height = height;
-			postProcessingFramebufferSpec.Pass = s_Data.PostProcessingPass.Ptr();
-			s_Data.PostProcessingPass->SetTargetFramebuffer(Framebuffer::Create(postProcessingFramebufferSpec));
+			postProcessingFramebufferSpec.Pass = s_DebuggerData.PostProcessingPass.Ptr();
+			s_DebuggerData.PostProcessingPass->SetTargetFramebuffer(Framebuffer::Create(postProcessingFramebufferSpec));
 		}
 
 		{
@@ -101,41 +101,41 @@ namespace Neon
 			postProcessingShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PostProcess_Vert.glsl";
 			postProcessingShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/PostProcess_Frag.glsl";
 			postProcessingShaderSpecification.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-			s_Data.PostProcessingShader = Shader::Create(postProcessingShaderSpecification);
+			s_DebuggerData.PostProcessingShader = Shader::Create(postProcessingShaderSpecification);
 			GraphicsPipelineSpecification postProcessingPipelineSpecification;
-			postProcessingPipelineSpecification.Pass = s_Data.PostProcessingPass;
-			s_Data.PostProcessingPipeline =
-				GraphicsPipeline::Create(s_Data.PostProcessingShader, postProcessingPipelineSpecification);
+			postProcessingPipelineSpecification.Pass = s_DebuggerData.PostProcessingPass;
+			s_DebuggerData.PostProcessingPipeline =
+				GraphicsPipeline::Create(s_DebuggerData.PostProcessingShader, postProcessingPipelineSpecification);
 		}
 
 		{
 			ShaderSpecification envUnfilteredComputeShaderSpecification;
 			envUnfilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
 				"assets/shaders/EquirectangularToCubeMap_Compute.glsl";
-			s_Data.EnvUnfilteredComputeShader = Shader::Create(envUnfilteredComputeShaderSpecification);
+			s_DebuggerData.EnvUnfilteredComputeShader = Shader::Create(envUnfilteredComputeShaderSpecification);
 			ComputePipelineSpecification envUnfilteredPipelineSpecification;
-			s_Data.EnvUnfilteredComputePipeline =
-				ComputePipeline::Create(s_Data.EnvUnfilteredComputeShader, envUnfilteredPipelineSpecification);
+			s_DebuggerData.EnvUnfilteredComputePipeline =
+				ComputePipeline::Create(s_DebuggerData.EnvUnfilteredComputeShader, envUnfilteredPipelineSpecification);
 		}
 
 		{
 			ShaderSpecification envFilteredComputeShaderSpecification;
 			envFilteredComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
 				"assets/shaders/EnvironmentMipFilter_Compute.glsl";
-			s_Data.EnvFilteredComputeShader = Shader::Create(envFilteredComputeShaderSpecification);
+			s_DebuggerData.EnvFilteredComputeShader = Shader::Create(envFilteredComputeShaderSpecification);
 			ComputePipelineSpecification envFilteredComputePipelineSpecification;
-			s_Data.EnvFilteredComputePipeline =
-				ComputePipeline::Create(s_Data.EnvFilteredComputeShader, envFilteredComputePipelineSpecification);
+			s_DebuggerData.EnvFilteredComputePipeline =
+				ComputePipeline::Create(s_DebuggerData.EnvFilteredComputeShader, envFilteredComputePipelineSpecification);
 		}
 
 		{
 			ShaderSpecification irradianceComputeShaderSpecification;
 			irradianceComputeShaderSpecification.ShaderPaths[ShaderType::Compute] =
 				"assets/shaders/EnvironmentIrradiance_Compute.glsl";
-			s_Data.IrradianceComputeShader = Shader::Create(irradianceComputeShaderSpecification);
+			s_DebuggerData.IrradianceComputeShader = Shader::Create(irradianceComputeShaderSpecification);
 			ComputePipelineSpecification irradianceComputePipelineSpecification;
-			s_Data.IrradianceComputePipeline =
-				ComputePipeline::Create(s_Data.IrradianceComputeShader, irradianceComputePipelineSpecification);
+			s_DebuggerData.IrradianceComputePipeline =
+				ComputePipeline::Create(s_DebuggerData.IrradianceComputeShader, irradianceComputePipelineSpecification);
 		}
 	}
 
@@ -143,9 +143,9 @@ namespace Neon
 	{
 		NEO_CORE_ASSERT(scene);
 
-		s_Data.SceneData = {};
+		s_DebuggerData.SceneData = {};
 
-		s_Data.ActiveScene = scene;
+		s_DebuggerData.ActiveScene = scene;
 
 		CreateEnvironmentMap(scene->m_EnvironmentPath);
 
@@ -153,41 +153,41 @@ namespace Neon
 		skyboxShaderSpec.ShaderPaths[ShaderType::Vertex] = "assets/shaders/Skybox_Vert.glsl";
 		skyboxShaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Skybox_Frag.glsl";
 		skyboxShaderSpec.VBLayout = std::vector<VertexBufferElement>{{ShaderDataType::Float2}};
-		s_Data.SkyboxMaterial = Material(0, Shader::Create(skyboxShaderSpec));
-		s_Data.SkyboxMaterial.SetTextureCube("u_Cubemap", s_Data.EnvFilteredTextureCube, 0);
+		s_DebuggerData.SkyboxMaterial = Material(0, Shader::Create(skyboxShaderSpec));
+		s_DebuggerData.SkyboxMaterial.SetTextureCube("u_Cubemap", s_DebuggerData.EnvFilteredTextureCube, 0);
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
-		skyboxGraphicsPipelineSpec.Pass = s_Data.GeoPass;
-		s_Data.SkyboxGraphicsPipeline = GraphicsPipeline::Create(s_Data.SkyboxMaterial.GetShader(), skyboxGraphicsPipelineSpec);
+		skyboxGraphicsPipelineSpec.Pass = s_DebuggerData.GeoPass;
+		s_DebuggerData.SkyboxGraphicsPipeline = GraphicsPipeline::Create(s_DebuggerData.SkyboxMaterial.GetShader(), skyboxGraphicsPipelineSpec);
 	}
 
 	const SharedRef<Scene>& SceneRenderer::GetActiveScene()
 	{
-		return s_Data.ActiveScene;
+		return s_DebuggerData.ActiveScene;
 	}
 
 	void SceneRenderer::SetSelectedActor(SharedRef<Actor> actor)
 	{
-		s_Data.SelectedActor = actor;
+		s_DebuggerData.SelectedActor = actor;
 	}
 
 	SharedRef<Actor> SceneRenderer::GetSelectedActor()
 	{
-		return s_Data.SelectedActor;
+		return s_DebuggerData.SelectedActor;
 	}
 
 	SharedRef<Actor> SceneRenderer::CreateActor(UUID uuid, const std::string& name /*= "Actor"*/)
 	{
-		NEO_CORE_ASSERT(s_Data.ActiveScene);
+		NEO_CORE_ASSERT(s_DebuggerData.ActiveScene);
 
-		return s_Data.ActiveScene->CreateActor(uuid, name);
+		return s_DebuggerData.ActiveScene->CreateActor(uuid, name);
 	}
 
 	void SceneRenderer::DestroyActor(SharedRef<Actor> actor)
 	{
-		NEO_CORE_ASSERT(s_Data.ActiveScene);
+		NEO_CORE_ASSERT(s_DebuggerData.ActiveScene);
 
-		s_Data.ActiveScene->DestroyActor(actor);
+		s_DebuggerData.ActiveScene->DestroyActor(actor);
 	}
 
 	void SceneRenderer::SetViewportSize(uint32 width, uint32 height)
@@ -197,56 +197,56 @@ namespace Neon
 
 	void SceneRenderer::BeginScene(const SceneRendererCamera& camera)
 	{
-		NEO_CORE_ASSERT(s_Data.ActiveScene, "Scene not initialized!");
+		NEO_CORE_ASSERT(s_DebuggerData.ActiveScene, "Scene not initialized!");
 
-		s_Data.SceneData.SceneCamera = camera;
+		s_DebuggerData.SceneData.SceneCamera = camera;
 	}
 
 	void SceneRenderer::EndScene()
 	{
-		NEO_CORE_ASSERT(s_Data.ActiveScene, "");
+		NEO_CORE_ASSERT(s_DebuggerData.ActiveScene, "");
 
 		FlushDrawList();
 	}
 
 	void SceneRenderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/)
 	{
-		s_Data.MeshDrawList.push_back({mesh, transform});
+		s_DebuggerData.MeshDrawList.push_back({mesh, transform});
 	}
 
 	void SceneRenderer::SubmitLight(const Light& light)
 	{
-		s_Data.Lights.push_back(light);
+		s_DebuggerData.Lights.push_back(light);
 	}
 
 	const SharedRef<RenderPass>& SceneRenderer::GetGeoPass()
 	{
-		return s_Data.GeoPass;
+		return s_DebuggerData.GeoPass;
 	}
 
 	const SharedRef<TextureCube>& SceneRenderer::GetRadianceTex()
 	{
-		return s_Data.EnvFilteredTextureCube;
+		return s_DebuggerData.EnvFilteredTextureCube;
 	}
 
 	const SharedRef<TextureCube>& SceneRenderer::GetIrradianceTex()
 	{
-		return s_Data.IrradianceTextureCube;
+		return s_DebuggerData.IrradianceTextureCube;
 	}
 
 	const SharedRef<Texture2D>& SceneRenderer::GetBRDFLUTTex()
 	{
-		return s_Data.BRDFLUT;
+		return s_DebuggerData.BRDFLUT;
 	}
 
 	void SceneRenderer::SetFocusPoint(const glm::vec2& point)
 	{
-		s_Data.FocusPoint = point;
+		s_DebuggerData.FocusPoint = point;
 	}
 
 	void* SceneRenderer::GetFinalImageId()
 	{
-		return s_Data.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
+		return s_DebuggerData.PostProcessingPass->GetTargetFramebuffer()->GetSampledImageId();
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -261,68 +261,68 @@ namespace Neon
 		SharedRef<Texture2D> envMap =
 			Texture2D::Create(filepath, {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F, TextureWrap::Clamp});
 		NEO_CORE_ASSERT(envMap->GetFormat() == TextureFormat::RGBA16F, "Image has to be HDR!");
-		s_Data.EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap, 0);
+		s_DebuggerData.EnvUnfilteredComputeShader->SetTexture2D("u_EquirectangularTex", 0, envMap, 0);
 
-		s_Data.EnvUnfilteredTextureCube =
+		s_DebuggerData.EnvUnfilteredTextureCube =
 			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
 								 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, true, faceSize, faceSize});
-		s_Data.EnvFilteredTextureCube =
+		s_DebuggerData.EnvFilteredTextureCube =
 			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
 								 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, true, faceSize, faceSize});
 
-		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvUnfilteredTextureCube, 0);
-		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
-		s_Data.EnvUnfilteredTextureCube->RegenerateMipMaps();
+		s_DebuggerData.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_DebuggerData.EnvUnfilteredTextureCube, 0);
+		Renderer::DispatchCompute(s_DebuggerData.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
+		s_DebuggerData.EnvUnfilteredTextureCube->RegenerateMipMaps();
 
-		s_Data.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_Data.EnvFilteredTextureCube, 0);
-		Renderer::DispatchCompute(s_Data.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
-		s_Data.EnvFilteredTextureCube->RegenerateMipMaps();
+		s_DebuggerData.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_DebuggerData.EnvFilteredTextureCube, 0);
+		Renderer::DispatchCompute(s_DebuggerData.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
+		s_DebuggerData.EnvFilteredTextureCube->RegenerateMipMaps();
 
-		s_Data.EnvFilteredComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvUnfilteredTextureCube, 0);
-		for (uint32 level = 1, size = faceSize; level < s_Data.EnvUnfilteredTextureCube->GetMipLevelCount(); level++, size /= 2)
+		s_DebuggerData.EnvFilteredComputeShader->SetTextureCube("u_InputCubemap", 0, s_DebuggerData.EnvUnfilteredTextureCube, 0);
+		for (uint32 level = 1, size = faceSize; level < s_DebuggerData.EnvUnfilteredTextureCube->GetMipLevelCount(); level++, size /= 2)
 		{
-			uint32 test = s_Data.EnvFilteredTextureCube->GetMipLevelCount();
+			uint32 test = s_DebuggerData.EnvFilteredTextureCube->GetMipLevelCount();
 			const uint32 numGroups = glm::max(1u, size / 32);
 			struct
 			{
 				float MipCount;
 				float MipLevel;
-			} pc = {static_cast<float>(s_Data.EnvFilteredTextureCube->GetMipLevelCount()), static_cast<float>(level)};
-			s_Data.EnvFilteredComputeShader->SetPushConstant("u_PushConstant", &pc);
-			s_Data.EnvFilteredComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.EnvFilteredTextureCube, level);
-			Renderer::DispatchCompute(s_Data.EnvFilteredComputePipeline, numGroups, numGroups, 6);
+			} pc = {static_cast<float>(s_DebuggerData.EnvFilteredTextureCube->GetMipLevelCount()), static_cast<float>(level)};
+			s_DebuggerData.EnvFilteredComputeShader->SetPushConstant("u_PushConstant", &pc);
+			s_DebuggerData.EnvFilteredComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_DebuggerData.EnvFilteredTextureCube, level);
+			Renderer::DispatchCompute(s_DebuggerData.EnvFilteredComputePipeline, numGroups, numGroups, 6);
 		}
 
-		s_Data.IrradianceTextureCube = TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead,
+		s_DebuggerData.IrradianceTextureCube = TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead,
 															TextureFormat::RGBA16F, TextureWrap::Clamp, TextureMinMagFilter::Linear,
 															true, 1, true, irradianceMapSize, irradianceMapSize});
-		s_Data.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_Data.EnvFilteredTextureCube, 0);
-		s_Data.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_Data.IrradianceTextureCube, 0);
-		Renderer::DispatchCompute(s_Data.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
-		s_Data.IrradianceTextureCube->RegenerateMipMaps();
+		s_DebuggerData.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_DebuggerData.EnvFilteredTextureCube, 0);
+		s_DebuggerData.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_DebuggerData.IrradianceTextureCube, 0);
+		Renderer::DispatchCompute(s_DebuggerData.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
+		s_DebuggerData.IrradianceTextureCube->RegenerateMipMaps();
 
-		s_Data.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga",
+		s_DebuggerData.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga",
 										   {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8, TextureWrap::Clamp});
 	}
 
 	void SceneRenderer::Shutdown()
 	{
-		s_Data = {};
+		s_DebuggerData = {};
 	}
 
 	void SceneRenderer::FlushDrawList()
 	{
 		GeometryPass();
 		PostProcessingPass();
-		s_Data.MeshDrawList.clear();
-		s_Data.Lights.clear();
+		s_DebuggerData.MeshDrawList.clear();
+		s_DebuggerData.Lights.clear();
 	}
 
 	void SceneRenderer::GeometryPass()
 	{
-		Renderer::BeginRenderPass(s_Data.GeoPass);
+		Renderer::BeginRenderPass(s_DebuggerData.GeoPass);
 
-		auto& sceneCamera = s_Data.SceneData.SceneCamera;
+		auto& sceneCamera = s_DebuggerData.SceneData.SceneCamera;
 
 		// Using vec4 for shader alignment!
 		struct
@@ -337,7 +337,7 @@ namespace Neon
 		} lightUBO = {};
 
 		uint32 i = 0;
-		for (auto& light : s_Data.Lights)
+		for (auto& light : s_DebuggerData.Lights)
 		{
 			if (i >= 100)
 			{
@@ -362,7 +362,7 @@ namespace Neon
 		cameraUBO.CameraPosition = glm::vec4(sceneCamera.Camera.GetPosition(), 1.f);
 
 		// Render meshes
-		for (auto& dc : s_Data.MeshDrawList)
+		for (auto& dc : s_DebuggerData.MeshDrawList)
 		{
 			cameraUBO.Model = dc.Transform;
 
@@ -386,17 +386,17 @@ namespace Neon
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;
 		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
-		s_Data.SkyboxMaterial.GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
-		Renderer::SubmitFullscreenQuad(s_Data.SkyboxGraphicsPipeline);
+		s_DebuggerData.SkyboxMaterial.GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
+		Renderer::SubmitFullscreenQuad(s_DebuggerData.SkyboxGraphicsPipeline);
 
 		Renderer::EndRenderPass();
 	}
 
 	void SceneRenderer::PostProcessingPass()
 	{
-		Renderer::BeginRenderPass(s_Data.PostProcessingPass);
-		s_Data.PostProcessingShader->SetTexture2D("u_Texture", 0, s_Data.GeoPass->GetTargetFramebuffer()->GetSampledImage(), 0);
-		Renderer::SubmitFullscreenQuad(s_Data.PostProcessingPipeline);
+		Renderer::BeginRenderPass(s_DebuggerData.PostProcessingPass);
+		s_DebuggerData.PostProcessingShader->SetTexture2D("u_Texture", 0, s_DebuggerData.GeoPass->GetTargetFramebuffer()->GetSampledImage(), 0);
+		Renderer::SubmitFullscreenQuad(s_DebuggerData.PostProcessingPipeline);
 		Renderer::EndRenderPass();
 	}
 
