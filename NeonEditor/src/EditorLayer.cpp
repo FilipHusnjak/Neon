@@ -32,13 +32,15 @@ namespace Neon
 		m_EditorScene->Init();
 
 		auto& mesh = m_EditorScene->CreateStaticMesh("assets/models/cube/cube.obj", 0, "Cube");
-		mesh->SetTranslation(glm::vec3(10.f, 50.f, 0.f));
+		mesh->SetTranslation(glm::vec3(0.f, 5.f, 0.f));
 		auto& staticMeshComponent = mesh->GetRootComponent<StaticMeshComponent>();
 		staticMeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+		staticMeshComponent->GetPhysicsBody()->AddSpherePrimitive();
 
 		auto& plane = m_EditorScene->CreateStaticMesh("assets/models/plane/plane.obj", 1, "Plane");
 		auto& staticMeshComponent2 = plane->GetRootComponent<StaticMeshComponent>();
 		staticMeshComponent2->CreatePhysicsBody(PhysicsBodyType::Static);
+		staticMeshComponent2->GetPhysicsBody()->AddBoxPrimitive({1.f, 0.01f, 1.f});
 
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};

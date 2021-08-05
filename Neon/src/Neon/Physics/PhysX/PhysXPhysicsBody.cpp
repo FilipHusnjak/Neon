@@ -36,7 +36,12 @@ namespace Neon
 
 	void PhysXPhysicsBody::AddSpherePrimitive(float radius /*= 1.f*/)
 	{
-		m_Spheres.emplace_back(CreateUnique<PhysXSpherePhysicsPrimitive>(*this, 10.f));
+		m_Spheres.emplace_back(CreateUnique<PhysXSpherePhysicsPrimitive>(*this, radius));
+	}
+
+	void PhysXPhysicsBody::AddBoxPrimitive(glm::vec3 size)
+	{
+		m_Boxes.emplace_back(CreateUnique<PhysXBoxPhysicsPrimitive>(*this, size));
 	}
 
 	Transform PhysXPhysicsBody::GetBodyTransform() const

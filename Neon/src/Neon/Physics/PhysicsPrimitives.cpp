@@ -16,4 +16,11 @@ namespace Neon
 		, m_Offset(glm::vec3())
 	{
 	}
+
+	BoxPhysicsPrimitive::BoxPhysicsPrimitive(const PhysicsBody& physicsBody, glm::vec3 size)
+		: PhysicsPrimitive(physicsBody)
+		, m_Size(size)
+	{
+	}
+
 } // namespace Neon

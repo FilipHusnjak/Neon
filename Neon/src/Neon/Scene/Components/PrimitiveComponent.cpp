@@ -37,7 +37,6 @@ namespace Neon
 			Physics::GetCurrentScene()->RemovePhysicsBody(m_PhysicsBody);
 		}
 		m_PhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
-		m_PhysicsBody->AddSpherePrimitive(1.f);
 	}
 
 	void PrimitiveComponent::RenderGui()

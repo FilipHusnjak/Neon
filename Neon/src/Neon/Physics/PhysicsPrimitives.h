@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Neon/Renderer/Mesh.h"
+#include "Neon/Renderer/StaticMesh.h"
 
 #include <glm/glm.hpp>
 
@@ -17,7 +17,7 @@ namespace Neon
 	protected:
 		void* m_InternalShape = nullptr;
 		bool m_IsTrigger = false;
-		SharedRef<Mesh> m_DebugMesh;
+		SharedRef<StaticMesh> m_DebugMesh;
 	};
 
 	class SpherePhysicsPrimitive : public PhysicsPrimitive
@@ -34,7 +34,12 @@ namespace Neon
 	class BoxPhysicsPrimitive : public PhysicsPrimitive
 	{
 	public:
+		BoxPhysicsPrimitive(const PhysicsBody& physicsBody, glm::vec3 size);
 		virtual ~BoxPhysicsPrimitive() = default;
+
+	private:
+		glm::vec3 m_Offset = glm::vec3();
+		glm::vec3 m_Size = glm::vec3(1.f);
 	};
 
 	class CapsulePhysicsPrimitive : public PhysicsPrimitive

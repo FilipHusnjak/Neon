@@ -17,6 +17,11 @@ namespace Neon
 
 		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string());
 
+		virtual SharedRef<PhysicsBody> GetPhysicsBody(const std::string& boneName = std::string()) const
+		{
+			return m_PhysicsBody;
+		}
+
 		virtual void LoadMesh(const std::string& filename) = 0;
 
 		virtual SharedRef<Mesh> GetMesh() const = 0;
