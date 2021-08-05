@@ -64,13 +64,13 @@ namespace Neon
 
 		inline static FramebufferPool& Get()
 		{
-			return *s_Instance;
+			return s_Instance;
 		}
 
 	private:
 		// Use weak ref here
 		std::vector<Framebuffer*> m_Framebuffers;
 
-		static FramebufferPool* s_Instance;
+		static FramebufferPool s_Instance;
 	};
 } // namespace Neon

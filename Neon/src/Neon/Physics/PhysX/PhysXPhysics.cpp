@@ -85,7 +85,7 @@ namespace Neon
 			s_Physics->release();
 		s_Physics = nullptr;
 
-		PhysXPhysicsDebugger::StopDebugging();
+		PhysXPhysicsDebugger::Shutdown();
 
 		if (s_Foundation)
 			s_Foundation->release();

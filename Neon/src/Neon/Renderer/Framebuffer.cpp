@@ -37,6 +37,6 @@ namespace Neon
 		m_Framebuffers.push_back(framebuffer);
 	}
 
-	FramebufferPool* FramebufferPool::s_Instance = new FramebufferPool;
+	FramebufferPool FramebufferPool::s_Instance = FramebufferPool();
 
 } // namespace Neon
