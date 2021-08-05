@@ -29,7 +29,10 @@ namespace Neon
 			m_Owner->SetRotation(m_PhysicsBody->GetBodyRotation());
 		}
 
-		SceneRenderer::SubmitMesh(m_StaticMesh, m_Owner->GetTransform().GetMatrix());
+		if (m_StaticMesh)
+		{
+			SceneRenderer::SubmitMesh(m_StaticMesh, m_Owner->GetTransform().GetMatrix());
+		}
 	}
 
 	void StaticMeshComponent::LoadMesh(const std::string& filename)

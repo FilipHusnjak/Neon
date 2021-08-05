@@ -189,12 +189,10 @@ namespace Neon
 		}
 	}
 
-	void Mesh::CreateShaderAndGraphicsPipeline(ShaderSpecification& shaderSpecification)
+	void Mesh::CreateShaderAndGraphicsPipeline(ShaderSpecification& shaderSpecification, ShaderSpecification& wireframeShaderSpecification)
 	{
 		m_MeshShader = Shader::Create(shaderSpecification);
-
-		shaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
-		m_WireframeMeshShader = Shader::Create(shaderSpecification);
+		m_WireframeMeshShader = Shader::Create(wireframeShaderSpecification);
 
 		GraphicsPipelineSpecification graphicsPipelineSpecification;
 		graphicsPipelineSpecification.Pass = SceneRenderer::GetGeoPass();

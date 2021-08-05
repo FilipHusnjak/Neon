@@ -104,7 +104,8 @@ namespace Neon
 
 	protected:
 		void TraverseNodes(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32 level = 0);
-		void CreateShaderAndGraphicsPipeline(ShaderSpecification& shaderSpecification);
+		void CreateShaderAndGraphicsPipeline(ShaderSpecification& shaderSpecification,
+											 ShaderSpecification& wireframeShaderSpecification);
 
 	protected:
 		const aiScene* m_Scene;

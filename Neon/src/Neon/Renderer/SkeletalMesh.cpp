@@ -140,7 +140,13 @@ namespace Neon
 		shaderSpecification.VBLayout = vertexBufferLayout;
 		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
 
-		CreateShaderAndGraphicsPipeline(shaderSpecification);
+		ShaderSpecification wireframeShaderSpecification;
+		wireframeShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
+		wireframeShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/WireframeAnim_Vert.glsl";
+		wireframeShaderSpecification.VBLayout = vertexBufferLayout;
+		wireframeShaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
+
+		CreateShaderAndGraphicsPipeline(shaderSpecification, wireframeShaderSpecification);
 
 		UpdateBoneTransforms();
 	}

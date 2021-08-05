@@ -35,12 +35,18 @@ namespace Neon
 		mesh->SetTranslation(glm::vec3(0.f, 5.f, 0.f));
 		auto& staticMeshComponent = mesh->GetRootComponent<StaticMeshComponent>();
 		staticMeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-		staticMeshComponent->GetPhysicsBody()->AddSpherePrimitive();
+		staticMeshComponent->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(0.5f, 0.5f, 0.5f));
+
+		auto& mesh2 = m_EditorScene->CreateStaticMesh("assets/models/cube/cube.obj", 0, "Cube");
+		mesh2->SetTranslation(glm::vec3(0.5f, 8.f, 0.f));
+		auto& staticMeshComponent3 = mesh2->GetRootComponent<StaticMeshComponent>();
+		staticMeshComponent3->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+		staticMeshComponent3->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(0.5f, 0.5f, 0.5f));
 
 		auto& plane = m_EditorScene->CreateStaticMesh("assets/models/plane/plane.obj", 1, "Plane");
 		auto& staticMeshComponent2 = plane->GetRootComponent<StaticMeshComponent>();
 		staticMeshComponent2->CreatePhysicsBody(PhysicsBodyType::Static);
-		staticMeshComponent2->GetPhysicsBody()->AddBoxPrimitive({1.f, 0.01f, 1.f});
+		staticMeshComponent2->GetPhysicsBody()->AddBoxPrimitive({20.f, 0.001f, 20.f});
 
 		//auto& transformComponent = mesh.GetComponent<TransformComponent>();
 		//transformComponent.Rotation = {-PI / 2.f, 0.f, 0.f};

@@ -44,6 +44,11 @@ namespace Neon
 		{
 			m_SkeletalMesh->TickAnimation(deltaSeconds);
 		}
+
+		if (m_SkeletalMesh)
+		{
+			SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
+		}
 	}
 
 	void SkeletalMeshComponent::LoadMesh(const std::string& filename)

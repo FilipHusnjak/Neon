@@ -64,7 +64,12 @@ namespace Neon
 		
 		shaderSpecification.VBLayout = vertexBufferLayout;
 
-		CreateShaderAndGraphicsPipeline(shaderSpecification);
+		ShaderSpecification wireframeShaderSpecification;
+		wireframeShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
+		wireframeShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/WireframeStatic_Vert.glsl";
+		wireframeShaderSpecification.VBLayout = vertexBufferLayout;
+
+		CreateShaderAndGraphicsPipeline(shaderSpecification, wireframeShaderSpecification);
 	}
 
 } // namespace Neon

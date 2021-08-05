@@ -59,7 +59,7 @@ namespace Neon
 		rasterizationState.depthClampEnable = VK_FALSE;
 		rasterizationState.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationState.depthBiasEnable = VK_FALSE;
-		rasterizationState.lineWidth = 1.0f;
+		rasterizationState.lineWidth = 3.f;
 
 		// Color blend state describes how blend factors are calculated (if used)
 		// We need one blend attachment state per color attachment (even if blending is not used)
