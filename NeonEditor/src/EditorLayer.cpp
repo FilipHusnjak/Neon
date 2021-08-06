@@ -32,12 +32,15 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
+		SharedRef<PhysicsBody> body0;
+		SharedRef<PhysicsBody> body1;
 		{
 			auto& cube = m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube1", glm::vec3(1.f, 10.f, 1.f));
 			cube->SetTranslation(glm::vec3(0.f, 20.f, 0.f));
 			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
+			body0 = cubeStaticMeshComp->GetPhysicsBody();
 		}
 
 		{
@@ -47,9 +50,12 @@ namespace Neon
 			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
+			body1 = cubeStaticMeshComp->GetPhysicsBody();
 		}
 
-		{
+		Physics::GetCurrentScene()->AddPhysicsConstraint(body0, body1);
+
+	/*	{
 			auto& cube =
 				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube3", glm::vec3(1.f, 10.f, 1.f));
 			cube->SetTranslation(glm::vec3(0.f, 60.f, 0.f));
@@ -65,7 +71,7 @@ namespace Neon
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
-		}
+		}*/
 
 		{
 			auto& plane =

@@ -31,6 +31,8 @@ namespace Neon
 		static void CreateScene();
 		static void DestroyScene();
 
+		static PhysicsEngine GetCurrentEngine();
+
 		static SharedRef<PhysicsScene> GetCurrentScene();
 
 		static const SharedRef<Physics> Get();

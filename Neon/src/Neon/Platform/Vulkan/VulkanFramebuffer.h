@@ -36,8 +36,6 @@ namespace Neon
 
 		std::vector<SharedRef<Texture2D>> m_Textures;
 
-		vk::UniqueDescriptorPool m_ImGuiDescPool;
-
 		int32 m_SampledImageIndex = -1;
 	};
 } // namespace Neon

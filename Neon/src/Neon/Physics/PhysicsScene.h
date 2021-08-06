@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Neon/Physics/PhysicsBody.h"
+#include "Neon/Physics/PhysicsConstraint.h"
 #include "Neon/Physics/PhysicsSettings.h"
 
 namespace Neon
@@ -15,16 +16,17 @@ namespace Neon
 
 		uint32 GetNumSubsteps(float deltaSeconds);
 
-		SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform);
-		void RemovePhysicsBody(SharedRef<PhysicsBody> physicsBody);
+		virtual SharedRef<PhysicsConstraint> AddPhysicsConstraint(const SharedRef<PhysicsBody>& body0,
+																  const SharedRef<PhysicsBody>& body1);
+		virtual void RemovePhysicsConstraint(SharedRef<PhysicsConstraint>& physicsConstraint);
+
+		virtual SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform);
+		virtual void RemovePhysicsBody(SharedRef<PhysicsBody>& physicsBody);
 
 		virtual void Destroy();
 
 	protected:
-		virtual SharedRef<PhysicsBody> InternalAddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform) = 0;
-		virtual void InternalRemovePhysicsBody(SharedRef<PhysicsBody> physicsBody) = 0;
-
-	protected:
+		std::vector<SharedRef<PhysicsConstraint>> m_PhysicsConstraints;
 		std::vector<SharedRef<PhysicsBody>> m_PhysicsBodies;
 
 		float m_SubStepSize;

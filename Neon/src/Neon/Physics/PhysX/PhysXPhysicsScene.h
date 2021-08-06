@@ -16,8 +16,12 @@ namespace Neon
 
 		virtual void Destroy() override;
 
-		virtual SharedRef<PhysicsBody> InternalAddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform) override;
-		virtual void InternalRemovePhysicsBody(SharedRef<PhysicsBody> actor) override;
+		virtual SharedRef<PhysicsConstraint> AddPhysicsConstraint(const SharedRef<PhysicsBody>& body0,
+																  const SharedRef<PhysicsBody>& body1) override;
+		virtual void RemovePhysicsConstraint(SharedRef<PhysicsConstraint>& physicsConstraint);
+
+		virtual SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform) override;
+		virtual void RemovePhysicsBody(SharedRef<PhysicsBody>& physicsBody) override;
 
 	private:
 		physx::PxScene* m_PhysXScene;

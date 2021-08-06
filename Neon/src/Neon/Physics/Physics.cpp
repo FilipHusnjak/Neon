@@ -65,6 +65,11 @@ namespace Neon
 		s_Scene->Destroy();
 	}
 
+	PhysicsEngine Physics::GetCurrentEngine()
+	{
+		return s_PE;
+	}
+
 	SharedRef<PhysicsScene> Physics::GetCurrentScene()
 	{
 		NEO_CORE_ASSERT(s_Scene, "Scene not created!");

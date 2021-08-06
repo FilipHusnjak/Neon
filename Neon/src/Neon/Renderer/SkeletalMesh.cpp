@@ -78,7 +78,7 @@ namespace Neon
 
 		ShaderSpecification shaderSpecification;
 		shaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Pbr_Frag.glsl";
-		shaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PbrAnim_Vert.glsl";
+		shaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/PbrSkeletal_Vert.glsl";
 		shaderSpecification.ShaderVariableCounts["MaterialUBO"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_AlbedoTextures"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_NormalTextures"] = m_Scene->mNumMaterials;

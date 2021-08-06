@@ -1,6 +1,9 @@
 #include "neopch.h"
 
-#include "PhysicsScene.h"
+#include "Neon/Physics/PhysX/PhysXPhysicsBody.h"
+#include "Neon/Physics/PhysX/PhysXPhysicsConstraint.h"
+#include "Neon/Physics/Physics.h"
+#include "Neon/Physics/PhysicsScene.h"
 
 namespace Neon
 {
@@ -31,17 +34,55 @@ namespace Neon
 		return substepCount;
 	}
 
-	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	SharedRef<PhysicsConstraint> PhysicsScene::AddPhysicsConstraint(const SharedRef<PhysicsBody>& body0,
+																	const SharedRef<PhysicsBody>& body1)
 	{
-		SharedRef<PhysicsBody> physicsBody = InternalAddPhysicsBody(physicsBodyType, transform);
-		m_PhysicsBodies.emplace_back(physicsBody);
-		return physicsBody;
+		switch (Physics::GetCurrentEngine())
+		{
+			case PhysicsEngine::PhysX:
+			{
+				return m_PhysicsConstraints.emplace_back(SharedRef<PhysXPhysicsConstraint>::Create(body0, body1));
+			}
+			default:
+			{
+				NEO_CORE_ASSERT(false, "Unknown physics engine!");
+				return nullptr;
+			}
+		}
 	}
 
-	void PhysicsScene::RemovePhysicsBody(SharedRef<PhysicsBody> physicsBody)
+	void PhysicsScene::RemovePhysicsConstraint(SharedRef<PhysicsConstraint>& physicsConstraint)
 	{
-		InternalRemovePhysicsBody(physicsBody);
+		physicsConstraint->Destroy();
+		for (auto it = m_PhysicsConstraints.begin(); it != m_PhysicsConstraints.end(); it++)
+		{
+			if (it->Ptr() == physicsConstraint.Ptr())
+			{
+				m_PhysicsConstraints.erase(it);
+				break;
+			}
+		}
+	}
 
+	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	{
+		switch (Physics::GetCurrentEngine())
+		{
+			case PhysicsEngine::PhysX:
+			{
+				return m_PhysicsBodies.emplace_back(SharedRef<PhysXPhysicsBody>::Create(physicsBodyType, transform));
+			}
+			default:
+			{
+				NEO_CORE_ASSERT(false, "Unknown physics engine!");
+				return nullptr;
+			}
+		}
+	}
+
+	void PhysicsScene::RemovePhysicsBody(SharedRef<PhysicsBody>& physicsBody)
+	{
+		physicsBody->Destroy();
 		for (auto it = m_PhysicsBodies.begin(); it != m_PhysicsBodies.end(); it++)
 		{
 			if (it->Ptr() == physicsBody.Ptr())
@@ -54,11 +95,17 @@ namespace Neon
 
 	void PhysicsScene::Destroy()
 	{
-		for (auto it = m_PhysicsBodies.begin(); it != m_PhysicsBodies.end();)
+		for (auto& constraint : m_PhysicsConstraints)
 		{
-			InternalRemovePhysicsBody(*it);
-			it = m_PhysicsBodies.erase(it);
+			constraint->Destroy();
 		}
+		m_PhysicsConstraints.clear();
+
+		for (auto& body : m_PhysicsBodies)
+		{
+			body->Destroy();
+		}
+		m_PhysicsBodies.clear();
 	}
 
 } // namespace Neon

@@ -57,28 +57,49 @@ namespace Neon
 
 	void PhysXPhysicsScene::Destroy()
 	{
-		PhysicsScene::Destroy();
+		for (auto& physicsBody : m_PhysicsBodies)
+		{
+			m_PhysXScene->removeActor(*static_cast<physx::PxRigidActor*>(physicsBody->GetHandle()));
+		}
 
 		NEO_CORE_ASSERT(m_PhysXScene);
 
 		m_PhysXScene->release();
 		m_PhysXScene = nullptr;
+
+		PhysicsScene::Destroy();
 	}
 
-	SharedRef<PhysicsBody> PhysXPhysicsScene::InternalAddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	SharedRef<PhysicsConstraint> PhysXPhysicsScene::AddPhysicsConstraint(const SharedRef<PhysicsBody>& body0,
+																					 const SharedRef<PhysicsBody>& body1)
 	{
-		SharedRef<PhysicsBody> physicsBody = SharedRef<PhysXPhysicsBody>::Create(physicsBodyType, transform);
+		return PhysicsScene::AddPhysicsConstraint(body0, body1);
+	}
+
+	void PhysXPhysicsScene::RemovePhysicsConstraint(SharedRef<PhysicsConstraint>& physicsConstraint)
+	{
+		NEO_CORE_ASSERT(physicsConstraint);
+		NEO_CORE_ASSERT(physicsConstraint->GetHandle());
+		PhysicsScene::RemovePhysicsConstraint(physicsConstraint);
+	}
+
+	SharedRef<PhysicsBody> PhysXPhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	{
+		SharedRef<PhysicsBody> physicsBody = PhysicsScene::AddPhysicsBody(physicsBodyType, transform);
+
+		NEO_CORE_ASSERT(physicsBody);
 		NEO_CORE_ASSERT(physicsBody->GetHandle());
 		m_PhysXScene->addActor(*static_cast<physx::PxRigidActor*>(physicsBody->GetHandle()));
 		return physicsBody;
 	}
 
-	void PhysXPhysicsScene::InternalRemovePhysicsBody(SharedRef<PhysicsBody> physicsBody)
+	void PhysXPhysicsScene::RemovePhysicsBody(SharedRef<PhysicsBody>& physicsBody)
 	{
 		NEO_CORE_ASSERT(physicsBody);
 		NEO_CORE_ASSERT(physicsBody->GetHandle());
 		m_PhysXScene->removeActor(*static_cast<physx::PxRigidActor*>(physicsBody->GetHandle()));
-		physicsBody->Destroy();
+
+		PhysicsScene::RemovePhysicsBody(physicsBody);
 	}
 
 } // namespace Neon

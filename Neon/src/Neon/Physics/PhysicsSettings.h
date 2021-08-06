@@ -26,11 +26,11 @@ namespace Neon
 
 	struct PhysicsSettings
 	{
-		float FixedTimestep = 1.0f / 50.0f;
-		glm::vec3 Gravity = {0.0f, -9.81f, 0.0f};
+		float FixedTimestep = 1.0f / 60.f;
+		glm::vec3 Gravity = {0.f, -9.81f, 0.f};
 		BroadphaseType BroadphaseAlgorithm = BroadphaseType::AutomaticBoxPrune;
-		glm::vec3 WorldBoundsMin = glm::vec3(0.0f);
-		glm::vec3 WorldBoundsMax = glm::vec3(1.0f);
+		glm::vec3 WorldBoundsMin = glm::vec3(0.f);
+		glm::vec3 WorldBoundsMax = glm::vec3(1.f);
 		uint32_t WorldBoundsSubdivisions = 2;
 		FrictionType FrictionModel = FrictionType::Patch;
 		uint32_t SolverIterations = 6;
