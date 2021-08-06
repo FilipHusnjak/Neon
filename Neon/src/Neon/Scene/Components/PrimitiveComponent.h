@@ -15,6 +15,8 @@ namespace Neon
 		PrimitiveComponent(const PrimitiveComponent& other) = default;
 		virtual ~PrimitiveComponent();
 
+		virtual void TickComponent(float deltaSeconds) override;
+
 		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string());
 
 		virtual SharedRef<PhysicsBody> GetPhysicsBody(const std::string& boneName = std::string()) const

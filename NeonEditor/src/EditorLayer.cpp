@@ -33,50 +33,44 @@ namespace Neon
 		m_EditorScene->Init();
 
 		{
-			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
+			auto& cube = m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube1", glm::vec3(1.f, 10.f, 1.f));
 			cube->SetTranslation(glm::vec3(0.f, 20.f, 0.f));
-			auto& cubeStaticMeshComp =
-				cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f, 10.f, 1.f)));
+			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
 		}
 
 		{
-			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
-			cube->SetTranslation(glm::vec3(0.f, 30.f, 0.f));
-			auto& cubeStaticMeshComp = cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f)));
+			auto& cube =
+				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube2", glm::vec3(1.f, 10.f, 1.f));
+			cube->SetTranslation(glm::vec3(0.f, 40.f, 0.f));
+			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f));
+			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
 		}
 
 		{
-			auto& cube = m_EditorScene->CreateActor(0, "CubeGenerated");
-			cube->SetTranslation(glm::vec3(0.f, 50.f, 0.f));
-			auto& cubeStaticMeshComp = cube->AddComponent<StaticMeshComponent>(cube.Ptr(), MeshFactory::CreateBox(glm::vec3(1.f)));
+			auto& cube =
+				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube3", glm::vec3(1.f, 10.f, 1.f));
+			cube->SetTranslation(glm::vec3(0.f, 60.f, 0.f));
+			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f));
+			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
 		}
 
 		{
-			auto& capsule = m_EditorScene->CreateActor(1, "CapsuleGenerated");
-			capsule->SetTranslation(glm::vec3(0.5f, 40.f, 0.f));
-			auto& capsuleStaticMeshComp = capsule->AddComponent<StaticMeshComponent>(capsule.Ptr(), MeshFactory::CreateCapsule(1.f, 5.f));
-			capsuleStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			capsuleStaticMeshComp->GetPhysicsBody()->AddCapsulePrimitive(1.f, 5.f);
-		}
-
-		{
-			auto& sphere = m_EditorScene->CreateActor(2, "SphereGenerated");
-			sphere->SetTranslation(glm::vec3(0.5f, 25.f, 0.f));
-			auto& sphereStaticMeshComp = sphere->AddComponent<StaticMeshComponent>(sphere.Ptr(), MeshFactory::CreateSphere(1.f));
+			auto& sphere =
+				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
+			sphere->SetTranslation(glm::vec3(0.5f, 10.f, 0.f));
+			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
 		}
 
 		{
-			auto& plane = m_EditorScene->CreateActor(3, "PlaneGenerated");
-			auto& planeStaticMeshComp =
-				plane->AddComponent<StaticMeshComponent>(plane.Ptr(), MeshFactory::CreateBox(glm::vec3(30.f, 1.f, 30.f)));
+			auto& plane =
+				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Plane", glm::vec3(30.f, 1.f, 30.f));
+			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();
 			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static);
 			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(30.f, 1.f, 30.f));
 		}

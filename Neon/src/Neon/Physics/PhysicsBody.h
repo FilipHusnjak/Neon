@@ -39,6 +39,8 @@ namespace Neon
 
 		void SetMaterial(const SharedRef<PhysicsMaterial>& material);
 
+		void RenderCollision();
+
 		virtual void AddSpherePrimitive(float radius = 1.f) = 0;
 		virtual void AddBoxPrimitive(glm::vec3 size = glm::vec3(1.f)) = 0;
 		virtual void AddCapsulePrimitive(float radius, float height) = 0;

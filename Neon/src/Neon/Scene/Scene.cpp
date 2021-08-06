@@ -59,11 +59,11 @@ namespace Neon
 		return m_Actors.emplace_back(SharedRef<Actor>::Create(this, name, uuid));
 	}
 
-	SharedRef<Actor> Scene::CreateStaticMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/)
+	SharedRef<Actor> Scene::CreateStaticMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/, const glm::vec3& scale)
 	{
 		auto actor = CreateActor(uuid, name);
 
-		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path);
+		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path, scale);
 		actor->AddRootComponent<StaticMeshComponent>(actor.Ptr(), staticMesh);
 
 		return actor;

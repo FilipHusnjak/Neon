@@ -19,7 +19,7 @@ namespace Neon
 
 	public:
 		StaticMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
-		StaticMesh(const std::string& filename);
+		StaticMesh(const std::string& filename, glm::vec3 scale = glm::vec3(1.f));
 		virtual ~StaticMesh() = default;
 
 	private:

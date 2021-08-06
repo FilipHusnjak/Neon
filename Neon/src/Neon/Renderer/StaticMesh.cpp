@@ -21,9 +21,11 @@ namespace Neon
 		SetupBuffers();
 	}
 
-	StaticMesh::StaticMesh(const std::string& filename)
+	StaticMesh::StaticMesh(const std::string& filename, glm::vec3 scale /*= glm::vec3(1.f)*/)
 		: Mesh(filename)
 	{
+		glm::mat3 scaleMat = glm::scale(glm::mat4(1.f), scale);
+
 		for (uint32 m = 0; m < m_Scene->mNumMeshes; m++)
 		{
 			aiMesh* mesh = m_Scene->mMeshes[m];
@@ -35,13 +37,13 @@ namespace Neon
 			for (uint32 i = 0; i < mesh->mNumVertices; i++)
 			{
 				Vertex vertex;
-				vertex.Position = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
-				vertex.Normal = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
+				vertex.Position = scaleMat * glm::vec3{mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
+				vertex.Normal = scaleMat * glm::vec3{mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
 
 				if (mesh->HasTangentsAndBitangents())
 				{
-					vertex.Tangent = {mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z};
-					vertex.Binormal = {mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z};
+					vertex.Tangent = scaleMat * glm::vec3{mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z};
+					vertex.Binormal = scaleMat * glm::vec3{mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z};
 				}
 
 				vertex.MaterialIndex = mesh->mMaterialIndex;

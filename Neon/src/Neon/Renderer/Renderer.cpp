@@ -33,11 +33,11 @@ namespace Neon
 		s_SelectedCommandBuffer->BeginRenderPass(renderPass);
 	}
 
-	void Renderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform)
+	void Renderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform, bool wireframe)
 	{
 		NEO_CORE_ASSERT(s_SelectedCommandBuffer);
 
-		if (s_DrawWireframe)
+		if (s_DrawWireframe || wireframe)
 		{
 			s_SelectedCommandBuffer->BindPipeline(mesh->GetWireframeGraphicsPipeline());
 		}

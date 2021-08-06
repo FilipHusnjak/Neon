@@ -36,6 +36,7 @@ namespace Neon
 		{
 			SharedRef<Mesh> Mesh;
 			glm::mat4 Transform;
+			bool Wireframe;
 		};
 
 		std::vector<MeshDrawCommand> MeshDrawList;
@@ -158,7 +159,8 @@ namespace Neon
 
 		GraphicsPipelineSpecification skyboxGraphicsPipelineSpec;
 		skyboxGraphicsPipelineSpec.Pass = s_DebuggerData.GeoPass;
-		s_DebuggerData.SkyboxGraphicsPipeline = GraphicsPipeline::Create(s_DebuggerData.SkyboxMaterial.GetShader(), skyboxGraphicsPipelineSpec);
+		s_DebuggerData.SkyboxGraphicsPipeline =
+			GraphicsPipeline::Create(s_DebuggerData.SkyboxMaterial.GetShader(), skyboxGraphicsPipelineSpec);
 	}
 
 	const SharedRef<Scene>& SceneRenderer::GetActiveScene()
@@ -209,9 +211,10 @@ namespace Neon
 		FlushDrawList();
 	}
 
-	void SceneRenderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/)
+	void SceneRenderer::SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform /*= glm::mat4(1.0f)*/,
+								   bool wireframe /*=false*/)
 	{
-		s_DebuggerData.MeshDrawList.push_back({mesh, transform});
+		s_DebuggerData.MeshDrawList.push_back({mesh, transform, wireframe});
 	}
 
 	void SceneRenderer::SubmitLight(const Light& light)
@@ -270,7 +273,8 @@ namespace Neon
 			TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F,
 								 TextureWrap::Clamp, TextureMinMagFilter::Linear, true, 1, true, faceSize, faceSize});
 
-		s_DebuggerData.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_DebuggerData.EnvUnfilteredTextureCube, 0);
+		s_DebuggerData.EnvUnfilteredComputeShader->SetStorageTextureCube("o_CubeMap", 0, s_DebuggerData.EnvUnfilteredTextureCube,
+																		 0);
 		Renderer::DispatchCompute(s_DebuggerData.EnvUnfilteredComputePipeline, faceSize / 32, faceSize / 32, 6);
 		s_DebuggerData.EnvUnfilteredTextureCube->RegenerateMipMaps();
 
@@ -279,7 +283,8 @@ namespace Neon
 		s_DebuggerData.EnvFilteredTextureCube->RegenerateMipMaps();
 
 		s_DebuggerData.EnvFilteredComputeShader->SetTextureCube("u_InputCubemap", 0, s_DebuggerData.EnvUnfilteredTextureCube, 0);
-		for (uint32 level = 1, size = faceSize; level < s_DebuggerData.EnvUnfilteredTextureCube->GetMipLevelCount(); level++, size /= 2)
+		for (uint32 level = 1, size = faceSize; level < s_DebuggerData.EnvUnfilteredTextureCube->GetMipLevelCount();
+			 level++, size /= 2)
 		{
 			uint32 test = s_DebuggerData.EnvFilteredTextureCube->GetMipLevelCount();
 			const uint32 numGroups = glm::max(1u, size / 32);
@@ -289,20 +294,22 @@ namespace Neon
 				float MipLevel;
 			} pc = {static_cast<float>(s_DebuggerData.EnvFilteredTextureCube->GetMipLevelCount()), static_cast<float>(level)};
 			s_DebuggerData.EnvFilteredComputeShader->SetPushConstant("u_PushConstant", &pc);
-			s_DebuggerData.EnvFilteredComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_DebuggerData.EnvFilteredTextureCube, level);
+			s_DebuggerData.EnvFilteredComputeShader->SetStorageTextureCube("o_OutputCubemap", 0,
+																		   s_DebuggerData.EnvFilteredTextureCube, level);
 			Renderer::DispatchCompute(s_DebuggerData.EnvFilteredComputePipeline, numGroups, numGroups, 6);
 		}
 
-		s_DebuggerData.IrradianceTextureCube = TextureCube::Create({TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead,
-															TextureFormat::RGBA16F, TextureWrap::Clamp, TextureMinMagFilter::Linear,
-															true, 1, true, irradianceMapSize, irradianceMapSize});
+		s_DebuggerData.IrradianceTextureCube = TextureCube::Create(
+			{TextureUsageFlagBits::ShaderWrite | TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA16F, TextureWrap::Clamp,
+			 TextureMinMagFilter::Linear, true, 1, true, irradianceMapSize, irradianceMapSize});
 		s_DebuggerData.IrradianceComputeShader->SetTextureCube("u_InputCubemap", 0, s_DebuggerData.EnvFilteredTextureCube, 0);
-		s_DebuggerData.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_DebuggerData.IrradianceTextureCube, 0);
+		s_DebuggerData.IrradianceComputeShader->SetStorageTextureCube("o_OutputCubemap", 0, s_DebuggerData.IrradianceTextureCube,
+																	  0);
 		Renderer::DispatchCompute(s_DebuggerData.IrradianceComputePipeline, irradianceMapSize / 32, irradianceMapSize / 32, 6);
 		s_DebuggerData.IrradianceTextureCube->RegenerateMipMaps();
 
 		s_DebuggerData.BRDFLUT = Texture2D::Create("assets/textures/environment/BRDF_LUT.tga",
-										   {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8, TextureWrap::Clamp});
+												   {TextureUsageFlagBits::ShaderRead, TextureFormat::RGBA8, TextureWrap::Clamp});
 	}
 
 	void SceneRenderer::Shutdown()
@@ -366,7 +373,7 @@ namespace Neon
 		{
 			cameraUBO.Model = dc.Transform;
 
-			if (Renderer::IsWireframeEnabled())
+			if (Renderer::IsWireframeEnabled() || dc.Wireframe)
 			{
 				SharedRef<Shader> meshShader = dc.Mesh->GetWireframeShader();
 				meshShader->SetUniformBuffer("CameraUBO", 0, &cameraUBO);
@@ -378,7 +385,7 @@ namespace Neon
 				meshShader->SetUniformBuffer("LightUBO", 0, &lightUBO);
 			}
 
-			Renderer::SubmitMesh(dc.Mesh, dc.Transform);
+			Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.Wireframe);
 		}
 
 		glm::mat4 viewRotation = sceneCamera.Camera.GetViewMatrix();
@@ -395,7 +402,8 @@ namespace Neon
 	void SceneRenderer::PostProcessingPass()
 	{
 		Renderer::BeginRenderPass(s_DebuggerData.PostProcessingPass);
-		s_DebuggerData.PostProcessingShader->SetTexture2D("u_Texture", 0, s_DebuggerData.GeoPass->GetTargetFramebuffer()->GetSampledImage(), 0);
+		s_DebuggerData.PostProcessingShader->SetTexture2D("u_Texture", 0,
+														  s_DebuggerData.GeoPass->GetTargetFramebuffer()->GetSampledImage(), 0);
 		Renderer::SubmitFullscreenQuad(s_DebuggerData.PostProcessingPipeline);
 		Renderer::EndRenderPass();
 	}

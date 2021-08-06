@@ -24,7 +24,8 @@ namespace Neon
 		void SetViewportSize(uint32 width, uint32 height);
 
 		SharedRef<Actor> CreateActor(UUID uuid = 0, const std::string& name = "");
-		SharedRef<Actor> CreateStaticMesh(const std::string& path, UUID uuid = 0, const std::string& name = "");
+		SharedRef<Actor> CreateStaticMesh(const std::string& path, UUID uuid = 0, const std::string& name = "",
+										  const glm::vec3& scale = glm::vec3(1.f));
 		SharedRef<Actor> CreateSkeletalMesh(const std::string& path, UUID uuid = 0, const std::string& name = "");
 		void DestroyActor(SharedRef<Actor> actor);
 

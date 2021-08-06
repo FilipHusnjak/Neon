@@ -2,6 +2,7 @@
 
 #include "Neon/Core/Application.h"
 #include "Neon/Physics/Physics.h"
+#include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Actor.h"
 #include "Neon/Scene/Components/PrimitiveComponent.h"
 
@@ -25,6 +26,19 @@ namespace Neon
 		if (m_PhysicsBody && m_PhysicsBody->GetHandle())
 		{
 			Physics::GetCurrentScene()->RemovePhysicsBody(m_PhysicsBody);
+		}
+	}
+
+	void PrimitiveComponent::TickComponent(float deltaSeconds)
+	{
+		ActorComponent::TickComponent(deltaSeconds);
+
+		if (SceneRenderer::GetSelectedActor() == m_Owner)
+		{
+			if (m_PhysicsBody)
+			{
+				m_PhysicsBody->RenderCollision();
+			}
 		}
 	}
 

@@ -14,6 +14,11 @@ namespace Neon
 		PhysicsPrimitive(const PhysicsBody& physicsBody);
 		virtual ~PhysicsPrimitive() = default;
 
+		const SharedRef<StaticMesh>& GetDebugMesh() const
+		{
+			return m_DebugMesh;
+		}
+
 	protected:
 		void* m_InternalShape = nullptr;
 		bool m_IsTrigger = false;
