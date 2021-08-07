@@ -41,15 +41,19 @@ namespace Neon
 		}
 	}
 
-	void Actor::SetTranslation(glm::vec3 translation)
+	void Actor::SetTransform(const Transform& transform)
+	{
+		m_ActorTransform = transform;
+	}
+	void Actor::SetTranslation(const glm::vec3& translation)
 	{
 		m_ActorTransform.Translation = translation;
 	}
-	void Actor::SetRotation(glm::vec3 rotation)
+	void Actor::SetRotation(const glm::quat& rotation)
 	{
 		m_ActorTransform.Rotation = rotation;
 	}
-	void Actor::SetScale(glm::vec3 scale)
+	void Actor::SetScale(const glm::vec3& scale)
 	{
 		m_ActorTransform.Scale = scale;
 	}

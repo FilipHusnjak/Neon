@@ -21,6 +21,6 @@ namespace Neon
 		virtual void Destroy() override;
 
 	private:
-		physx::PxJoint* m_Joint = nullptr;
+		physx::PxD6Joint* m_Joint = nullptr;
 	};
 } // namespace Neon

@@ -20,7 +20,7 @@ namespace Neon
 		virtual Transform GetBodyTransform() const override;
 
 		virtual glm::vec3 GetBodyTranslation() const override;
-		virtual glm::vec3 GetBodyRotation() const override;
+		virtual glm::quat GetBodyRotation() const override;
 
 		virtual void* GetHandle() const override
 		{

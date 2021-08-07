@@ -71,7 +71,7 @@ namespace Neon
 		{
 			return m_ActorTransform.Translation;
 		}
-		const glm::vec3& GetRotation() const
+		const glm::quat& GetRotation() const
 		{
 			return m_ActorTransform.Rotation;
 		}
@@ -88,7 +88,7 @@ namespace Neon
 		{
 			return m_ActorTransform.Translation;
 		}
-		glm::vec3& GetRotation()
+		glm::quat& GetRotation()
 		{
 			return m_ActorTransform.Rotation;
 		}
@@ -99,9 +99,10 @@ namespace Neon
 
 		void Tick(float deltaSeconds);
 
-		void SetTranslation(glm::vec3 translation);
-		void SetRotation(glm::vec3 rotation);
-		void SetScale(glm::vec3 scale);
+		void SetTransform(const Transform& transform);
+		void SetTranslation(const glm::vec3& translation);
+		void SetRotation(const glm::quat& rotation);
+		void SetScale(const glm::vec3& scale);
 
 	private:
 		Scene* m_Scene = nullptr;

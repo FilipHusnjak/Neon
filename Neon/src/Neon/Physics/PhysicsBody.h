@@ -48,7 +48,7 @@ namespace Neon
 		virtual Transform GetBodyTransform() const = 0;
 
 		virtual glm::vec3 GetBodyTranslation() const = 0;
-		virtual glm::vec3 GetBodyRotation() const = 0;
+		virtual glm::quat GetBodyRotation() const = 0;
 
 		const SharedRef<PhysicsMaterial>& GetMaterial() const
 		{

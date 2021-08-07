@@ -105,8 +105,8 @@ namespace Neon
 
 	physx::PxTransform PhysXUtils::ToPhysXTransform(const Transform& transform)
 	{
-		physx::PxQuat r = ToPhysXQuat(glm::quat(transform.Rotation));
-		physx::PxVec3 p = ToPhysXVector(transform.Translation);
+		physx::PxQuat r = ToPhysXQuat(transform.Rotation);
+		const physx::PxVec3& p = ToPhysXVector(transform.Translation);
 		return physx::PxTransform(p, r);
 	}
 

@@ -21,6 +21,8 @@ using byte = uint8;
 
 #define BIT(x) (1 << x)
 
+#define SMALL_NUMBER 1.e-8f
+
 #include "Assert.h"
 #include "Log.h"
 #include "SharedRef.h"

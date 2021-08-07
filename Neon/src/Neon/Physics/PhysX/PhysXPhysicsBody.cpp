@@ -61,7 +61,7 @@ namespace Neon
 		return transform.Translation;
 	}
 
-	glm::vec3 PhysXPhysicsBody::GetBodyRotation() const
+	glm::quat PhysXPhysicsBody::GetBodyRotation() const
 	{
 		Transform transform = PhysXUtils::FromPhysXTransform(m_RigidActor->getGlobalPose());
 		return transform.Rotation;

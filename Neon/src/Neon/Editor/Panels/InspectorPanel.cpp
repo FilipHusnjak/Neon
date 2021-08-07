@@ -113,7 +113,7 @@ namespace Neon
 
 			DrawVec3Control("Translation", selectedActor->GetTranslation());
 
-			glm::vec3 originalEulerAngles = glm::degrees(selectedActor->GetRotation());
+			glm::vec3 originalEulerAngles = glm::degrees(glm::eulerAngles(selectedActor->GetRotation()));
 			if (DrawVec3Control("Rotation", originalEulerAngles))
 			{
 				// Wrap euler angles between -180 and 180 degrees
