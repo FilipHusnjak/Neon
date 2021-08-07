@@ -23,9 +23,9 @@ namespace Neon
 
 	PrimitiveComponent::~PrimitiveComponent()
 	{
-		if (m_PhysicsBody && m_PhysicsBody->GetHandle())
+		if (m_RootPhysicsBody && m_RootPhysicsBody->GetHandle())
 		{
-			Physics::GetCurrentScene()->RemovePhysicsBody(m_PhysicsBody);
+			Physics::GetCurrentScene()->RemovePhysicsBody(m_RootPhysicsBody);
 		}
 	}
 
@@ -35,9 +35,9 @@ namespace Neon
 
 		if (SceneRenderer::GetSelectedActor() == m_Owner)
 		{
-			if (m_PhysicsBody)
+			if (m_RootPhysicsBody)
 			{
-				m_PhysicsBody->RenderCollision();
+				m_RootPhysicsBody->RenderCollision();
 			}
 		}
 	}
@@ -46,11 +46,11 @@ namespace Neon
 	{
 		NEO_CORE_ASSERT(m_Owner);
 
-		if (m_PhysicsBody && m_PhysicsBody->GetHandle())
+		if (m_RootPhysicsBody && m_RootPhysicsBody->GetHandle())
 		{
-			Physics::GetCurrentScene()->RemovePhysicsBody(m_PhysicsBody);
+			Physics::GetCurrentScene()->RemovePhysicsBody(m_RootPhysicsBody);
 		}
-		m_PhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+		m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
 	}
 
 	void PrimitiveComponent::RenderGui()

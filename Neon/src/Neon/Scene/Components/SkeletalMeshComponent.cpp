@@ -31,7 +31,29 @@ namespace Neon
 				Physics::GetCurrentScene()->RemovePhysicsBody(body);
 			}
 		}
-		m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+
+		if (m_SkeletalMesh)
+		{
+			if (m_RootPhysicsBody)
+			{
+				m_Owner->SetTranslation(m_RootPhysicsBody->GetBodyTranslation());
+				m_Owner->SetRotation(m_RootPhysicsBody->GetBodyRotation());
+			}
+
+			for (const auto& [boneName, physicsBody] : m_PhysicsBodyMap)
+			{
+				
+			}
+		}
+
+		if (boneName.empty())
+		{
+			m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+		}
+		else
+		{
+			m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+		}
 	}
 
 	void SkeletalMeshComponent::TickComponent(float deltaSeconds)

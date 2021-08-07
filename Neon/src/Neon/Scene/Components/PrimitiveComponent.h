@@ -21,7 +21,7 @@ namespace Neon
 
 		virtual SharedRef<PhysicsBody> GetPhysicsBody(const std::string& boneName = std::string()) const
 		{
-			return m_PhysicsBody;
+			return m_RootPhysicsBody;
 		}
 
 		virtual void LoadMesh(const std::string& filename) = 0;
@@ -41,7 +41,7 @@ namespace Neon
 		bool m_LockRotationY = false;
 		bool m_LockRotationZ = false;
 
-		SharedRef<PhysicsBody> m_PhysicsBody;
+		SharedRef<PhysicsBody> m_RootPhysicsBody;
 
 	private:
 		SharedRef<Texture2D> m_CheckerboardTex;

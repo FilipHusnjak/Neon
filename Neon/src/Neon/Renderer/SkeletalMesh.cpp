@@ -39,6 +39,30 @@ namespace Neon
 		return result;
 	}
 
+	static void BuildSkeleton(const aiNode* node, const aiMatrix4x4& parentTransform, const std::set<std::string>& boneNames,
+							  const int parentBoneIndex, std::vector<SkeletalMesh::BoneInfo>& skeleton)
+	{
+		const aiMatrix4x4 globalTransform = parentTransform * node->mTransformation; // P * B
+
+		int32 newBoneIndex = parentBoneIndex;
+
+		if (boneNames.find(node->mName.C_Str()) != boneNames.end())
+		{
+			newBoneIndex = static_cast<int32>(skeleton.size());
+
+			SkeletalMesh::BoneInfo& boneInfo = skeleton.emplace_back();
+			boneInfo.Name = node->mName.C_Str();
+			boneInfo.ParentBoneIndex = parentBoneIndex;
+			boneInfo.NodeTransform = Mat4FromAssimpMat4(globalTransform);
+		}
+
+		for (uint32 childIndex = 0; childIndex < node->mNumChildren; childIndex++)
+		{
+			const aiNode* childNode = node->mChildren[childIndex];
+			BuildSkeleton(childNode, globalTransform, boneNames, newBoneIndex, skeleton);
+		}
+	}
+
 	SkeletalMesh::SkeletalMesh(const std::string& filename)
 		: Mesh(filename)
 	{
@@ -46,6 +70,8 @@ namespace Neon
 
 		m_IsAnimated = m_Scene->mAnimations != nullptr;
 
+		std::set<std::string> boneNames;
+		// Get vertices and bone names
 		for (uint32 m = 0; m < m_Scene->mNumMeshes; m++)
 		{
 			aiMesh* mesh = m_Scene->mMeshes[m];
@@ -53,6 +79,12 @@ namespace Neon
 			NEO_CORE_ASSERT(mesh);
 			NEO_CORE_ASSERT(mesh->HasPositions(), "Meshes require positions.");
 			NEO_CORE_ASSERT(mesh->HasNormals(), "Meshes require normals.");
+
+			for (uint32 i = 0; i < mesh->mNumBones; i++)
+			{
+				aiBone* bone = mesh->mBones[i];
+				boneNames.insert(bone->mName.C_Str());
+			}
 
 			for (uint32 i = 0; i < mesh->mNumVertices; i++)
 			{
@@ -85,11 +117,18 @@ namespace Neon
 		shaderSpecification.ShaderVariableCounts["u_RoughnessTextures"] = m_Scene->mNumMaterials;
 		shaderSpecification.ShaderVariableCounts["u_MetalnessTextures"] = m_Scene->mNumMaterials;
 
-		// Bones
+		BuildSkeleton(m_Scene->mRootNode, aiMatrix4x4(), boneNames, -1, m_Skeleton);
+
+		for (uint32 i = 0; i < m_Skeleton.size(); i++)
+		{
+			m_BoneMapping[m_Skeleton[i].Name] = i;
+		}
+
+		// Assign bone weights to vertices
 		for (uint32 m = 0; m < m_Scene->mNumMeshes; m++)
 		{
 			aiMesh* mesh = m_Scene->mMeshes[m];
-			Submesh& submesh = m_Submeshes[m];
+			const Submesh& submesh = m_Submeshes[m];
 
 			for (uint32 i = 0; i < mesh->mNumBones; i++)
 			{
@@ -97,21 +136,11 @@ namespace Neon
 				std::string boneName(bone->mName.data);
 				uint32 boneIndex = 0;
 
-				if (m_BoneMapping.find(boneName) == m_BoneMapping.end())
-				{
-					// Allocate an index for a new bone
-					boneIndex = static_cast<uint32>(m_BoneInfo.size());
-					BoneInfo bi;
-					m_BoneInfo.push_back(bi);
-					m_BoneInfo[boneIndex].BoneOffset = Mat4FromAssimpMat4(bone->mOffsetMatrix);
-					m_BoneInfo[boneIndex].FinalTransformation = glm::mat4(1.f);
-					m_BoneMapping[boneName] = boneIndex;
-				}
-				else
-				{
-					NEO_MESH_LOG("Found existing bone in map");
-					boneIndex = m_BoneMapping[boneName];
-				}
+				NEO_CORE_ASSERT(m_BoneMapping.find(boneName) != m_BoneMapping.end());
+
+				boneIndex = m_BoneMapping[boneName];
+
+				m_Skeleton[boneIndex].BoneTransform = Mat4FromAssimpMat4(bone->mOffsetMatrix);
 
 				for (uint32 j = 0; j < bone->mNumWeights; j++)
 				{
@@ -134,17 +163,17 @@ namespace Neon
 		}
 
 		VertexBufferLayout vertexBufferLayout = elements;
-		m_VertexBuffer = VertexBuffer::Create(m_Vertices.data(), static_cast<uint32>(m_Vertices.size()) * sizeof(Vertex),
-											  vertexBufferLayout);
+		m_VertexBuffer =
+			VertexBuffer::Create(m_Vertices.data(), static_cast<uint32>(m_Vertices.size()) * sizeof(Vertex), vertexBufferLayout);
 
 		shaderSpecification.VBLayout = vertexBufferLayout;
-		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
+		shaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_Skeleton.size());
 
 		ShaderSpecification wireframeShaderSpecification;
 		wireframeShaderSpecification.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
 		wireframeShaderSpecification.ShaderPaths[ShaderType::Vertex] = "assets/shaders/WireframeAnim_Vert.glsl";
 		wireframeShaderSpecification.VBLayout = vertexBufferLayout;
-		wireframeShaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_BoneInfo.size());
+		wireframeShaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_Skeleton.size());
 
 		CreateShaderAndGraphicsPipeline(shaderSpecification, wireframeShaderSpecification);
 
@@ -166,19 +195,33 @@ namespace Neon
 				m_AnimationTime = fmod(m_AnimationTime, (float)m_Scene->mAnimations[0]->mDuration);
 			}
 
-			// TODO: We only need to recalculate bones if rendering has been requested at the current animation frame
 			ReadNodeHierarchy(m_AnimationTime, m_Scene->mRootNode, glm::mat4(1.0f));
 			UpdateBoneTransforms();
 		}
 	}
 
+	SkeletalMesh::BoneInfo& SkeletalMesh::GetBoneInfo(const std::string& boneName /*= std::string()*/)
+	{
+		NEO_CORE_ASSERT(!m_Skeleton.empty());
+
+		if (boneName.empty())
+		{
+			return m_Skeleton[0];
+		}
+
+		NEO_CORE_ASSERT(m_BoneMapping.find(boneName) != m_BoneMapping.end());
+
+		return m_Skeleton[m_BoneMapping[boneName]];
+	}
+
 	void SkeletalMesh::UpdateBoneTransforms()
 	{
 		static std::vector<glm::mat4> boneTransforms;
-		boneTransforms.resize(m_BoneInfo.size());
-		for (uint32 i = 0; i < m_BoneInfo.size(); i++)
+		boneTransforms.resize(m_Skeleton.size());
+		for (uint32 i = 0; i < m_Skeleton.size(); i++)
 		{
-			boneTransforms[i] = m_BoneInfo[i].FinalTransformation;
+			glm::mat4 finalTransform = m_InverseTransform * m_Skeleton[i].NodeTransform * m_Skeleton[i].BoneTransform;
+			boneTransforms[i] = finalTransform;
 		}
 		m_MeshShader->SetStorageBuffer("BonesUBO", boneTransforms.data());
 		m_WireframeMeshShader->SetStorageBuffer("BonesUBO", boneTransforms.data());
@@ -210,7 +253,7 @@ namespace Neon
 		if (m_BoneMapping.find(name) != m_BoneMapping.end())
 		{
 			uint32 BoneIndex = m_BoneMapping[name];
-			m_BoneInfo[BoneIndex].FinalTransformation = m_InverseTransform * transform * m_BoneInfo[BoneIndex].BoneOffset;
+			m_Skeleton[BoneIndex].NodeTransform = transform;
 		}
 
 		for (uint32 i = 0; i < pNode->mNumChildren; i++)

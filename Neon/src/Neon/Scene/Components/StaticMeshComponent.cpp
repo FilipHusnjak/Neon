@@ -23,10 +23,10 @@ namespace Neon
 	{
 		PrimitiveComponent::TickComponent(deltaSeconds);
 
-		if (m_PhysicsBody)
+		if (m_RootPhysicsBody)
 		{
-			m_Owner->SetTranslation(m_PhysicsBody->GetBodyTranslation());
-			m_Owner->SetRotation(m_PhysicsBody->GetBodyRotation());
+			m_Owner->SetTranslation(m_RootPhysicsBody->GetBodyTranslation());
+			m_Owner->SetRotation(m_RootPhysicsBody->GetBodyRotation());
 		}
 
 		if (m_StaticMesh)

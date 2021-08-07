@@ -42,8 +42,10 @@ namespace Neon
 
 		struct BoneInfo
 		{
-			glm::mat4 BoneOffset;
-			glm::mat4 FinalTransformation;
+			std::string Name;
+			int32 ParentBoneIndex = -1;
+			glm::mat4 BoneTransform;
+			glm::mat4 NodeTransform;
 		};
 
 		struct VertexBoneData
@@ -78,13 +80,14 @@ namespace Neon
 		virtual ~SkeletalMesh() = default;
 
 		void TickAnimation(float deltaSeconds);
-	
+
+		BoneInfo& GetBoneInfo(const std::string& boneName = std::string());
+
 	private:
-		std::vector<BoneInfo> m_BoneInfo;
+		std::vector<BoneInfo> m_Skeleton;
 		std::vector<Vertex> m_Vertices;
 
 		std::unordered_map<std::string, uint32> m_BoneMapping;
-		std::vector<glm::mat4> m_BoneTransforms;
 
 		// Animation
 		bool m_IsAnimated = false;
