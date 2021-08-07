@@ -15,20 +15,20 @@ namespace Neon
 		m_Material = material;
 	}
 
-	void PhysicsBody::RenderCollision()
+	void PhysicsBody::RenderCollision() const
 	{
 		glm::mat4 transformMat = GetBodyTransform().GetMatrix();
 		for (const auto& sphere : m_Spheres)
 		{
-			SceneRenderer::SubmitMesh(sphere->GetDebugMesh(), transformMat, true);
+			SceneRenderer::SubmitMesh(sphere->GetDebugMesh(), sphere->GetTransform().GetMatrix() * transformMat, true);
 		}
 		for (const auto& box : m_Boxes)
 		{
-			SceneRenderer::SubmitMesh(box->GetDebugMesh(), transformMat, true);
+			SceneRenderer::SubmitMesh(box->GetDebugMesh(), box->GetTransform().GetMatrix() * transformMat, true);
 		}
 		for (const auto& capsule : m_Capsules)
 		{
-			SceneRenderer::SubmitMesh(capsule->GetDebugMesh(), transformMat, true);
+			SceneRenderer::SubmitMesh(capsule->GetDebugMesh(), capsule->GetTransform().GetMatrix() * transformMat, true);
 		}
 	}
 

@@ -18,6 +18,8 @@ namespace Neon
 
 		virtual void LoadMesh(const std::string& filename) override;
 
+		virtual SharedRef<PhysicsBody> GetPhysicsBody(const std::string& boneName = std::string()) const override;
+
 		virtual SharedRef<Mesh> GetMesh() const override
 		{
 			return m_SkeletalMesh;

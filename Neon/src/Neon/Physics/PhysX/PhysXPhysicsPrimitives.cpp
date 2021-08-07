@@ -5,8 +5,9 @@
 
 namespace Neon
 {
-	PhysXSpherePhysicsPrimitive::PhysXSpherePhysicsPrimitive(const PhysicsBody& physicsBody, float radius)
-		: SpherePhysicsPrimitive(physicsBody, radius)
+	PhysXSpherePhysicsPrimitive::PhysXSpherePhysicsPrimitive(const PhysicsBody& physicsBody, float radius,
+															 const Transform& transform)
+		: SpherePhysicsPrimitive(physicsBody, radius, transform)
 	{
 		NEO_CORE_ASSERT(physicsBody.GetMaterial());
 
@@ -17,13 +18,12 @@ namespace Neon
 		m_InternalShape = shape;
 		shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
 		shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, false);
-
-		// TODO
-		//shape->setLocalPose(::ToPhysXTransform(offset + m_Component.Offset, glm::vec3(0.0f)));
+		shape->setLocalPose(PhysXUtils::ToPhysXTransform(transform));
 	}
 
-	PhysXBoxPhysicsPrimitive::PhysXBoxPhysicsPrimitive(const PhysicsBody& physicsBody, glm::vec3 size)
-		: BoxPhysicsPrimitive(physicsBody, size)
+	PhysXBoxPhysicsPrimitive::PhysXBoxPhysicsPrimitive(const PhysicsBody& physicsBody, glm::vec3 size,
+													   const Transform& transform)
+		: BoxPhysicsPrimitive(physicsBody, size, transform)
 	{
 		NEO_CORE_ASSERT(physicsBody.GetMaterial());
 
@@ -34,13 +34,12 @@ namespace Neon
 		m_InternalShape = shape;
 		shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
 		shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, false);
-
-		// TODO
-		//shape->setLocalPose(::ToPhysXTransform(offset + m_Component.Offset, glm::vec3(0.0f)));
+		shape->setLocalPose(PhysXUtils::ToPhysXTransform(transform));
 	}
 
-	PhysXCapsulePhysicsPrimitive::PhysXCapsulePhysicsPrimitive(const PhysicsBody& physicsBody, float radius, float height)
-		: CapsulePhysicsPrimitive(physicsBody, radius, height)
+	PhysXCapsulePhysicsPrimitive::PhysXCapsulePhysicsPrimitive(const PhysicsBody& physicsBody, float radius, float height,
+															   const Transform& transform)
+		: CapsulePhysicsPrimitive(physicsBody, radius, height, transform)
 	{
 		NEO_CORE_ASSERT(physicsBody.GetMaterial());
 
@@ -51,9 +50,7 @@ namespace Neon
 		m_InternalShape = shape;
 		shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
 		shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, false);
-
-		// TODO
-		//shape->setLocalPose(::ToPhysXTransform(offset + m_Component.Offset, glm::vec3(0.0f)));
+		shape->setLocalPose(PhysXUtils::ToPhysXTransform(transform));
 	}
 
 } // namespace Neon

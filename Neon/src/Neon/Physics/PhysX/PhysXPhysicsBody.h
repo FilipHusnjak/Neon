@@ -13,9 +13,9 @@ namespace Neon
 
 		virtual void Destroy() override;
 
-		virtual void AddSpherePrimitive(float radius = 1.f) override;
-		virtual void AddBoxPrimitive(glm::vec3 size = glm::vec3(1.f)) override;
-		virtual void AddCapsulePrimitive(float radius, float height) override;
+		virtual void AddSpherePrimitive(float radius = 1.f, const Transform& transform = Transform()) override;
+		virtual void AddBoxPrimitive(glm::vec3 size = glm::vec3(1.f), const Transform& transform = Transform()) override;
+		virtual void AddCapsulePrimitive(float radius, float height, const Transform& transform = Transform()) override;
 
 		virtual Transform GetBodyTransform() const override;
 

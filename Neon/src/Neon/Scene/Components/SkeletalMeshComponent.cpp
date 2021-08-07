@@ -6,6 +6,8 @@
 #include "Neon/Scene/Actor.h"
 #include "Neon/Scene/Components/SkeletalMeshComponent.h"
 
+#include <glm/gtx/matrix_decompose.hpp>
+
 namespace Neon
 {
 	SkeletalMeshComponent::SkeletalMeshComponent(Actor* owner, const SharedRef<SkeletalMesh>& skeletalMesh)
@@ -32,27 +34,28 @@ namespace Neon
 			}
 		}
 
-		if (m_SkeletalMesh)
-		{
-			if (m_RootPhysicsBody)
-			{
-				m_Owner->SetTranslation(m_RootPhysicsBody->GetBodyTranslation());
-				m_Owner->SetRotation(m_RootPhysicsBody->GetBodyRotation());
-			}
-
-			for (const auto& [boneName, physicsBody] : m_PhysicsBodyMap)
-			{
-				
-			}
-		}
-
 		if (boneName.empty())
 		{
 			m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
 		}
 		else
 		{
-			m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+			const SkeletalMesh::BoneInfo& boneInfo = m_SkeletalMesh->GetBoneInfo(boneName);
+			Transform transform;
+			glm::vec3 scale;
+			glm::quat rotation;
+			glm::vec3 translation;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(boneInfo.NodeTransform, scale, rotation, translation, skew, perspective);
+			transform.Translation = translation;
+			transform.Rotation = rotation;
+			m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, transform * m_Owner->GetTransform());
+
+			if (m_RootPhysicsBody)
+			{
+				PhysicsConstraint::Create(m_RootPhysicsBody, m_PhysicsBodyMap[boneName]);
+			}
 		}
 	}
 
@@ -63,12 +66,38 @@ namespace Neon
 		if (m_SkeletalMesh)
 		{
 			m_SkeletalMesh->TickAnimation(deltaSeconds);
-		}
 
-		if (m_SkeletalMesh)
-		{
+			if (m_RootPhysicsBody)
+			{
+				m_Owner->SetTranslation(m_RootPhysicsBody->GetBodyTranslation());
+				m_Owner->SetRotation(m_RootPhysicsBody->GetBodyRotation());
+			}
+
+			for (const auto& [boneName, physicsBody] : m_PhysicsBodyMap)
+			{
+				Transform localTransform = physicsBody->GetBodyTransform() * m_Owner->GetTransform().Inverse();
+				SkeletalMesh::BoneInfo& boneInfo = m_SkeletalMesh->GetBoneInfo(boneName);
+				boneInfo.NodeTransform = localTransform.GetMatrix();
+
+				if (SceneRenderer::GetSelectedActor() == m_Owner)
+				{
+					physicsBody->RenderCollision();
+				}
+			}
+
 			SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
 		}
+	}
+
+	SharedRef<PhysicsBody> SkeletalMeshComponent::GetPhysicsBody(const std::string& boneName) const
+	{
+		if (boneName.empty())
+		{
+			return m_RootPhysicsBody;
+		}
+		
+		NEO_CORE_ASSERT(m_PhysicsBodyMap.find(boneName) != m_PhysicsBodyMap.end());
+		return m_PhysicsBodyMap.at(boneName);
 	}
 
 	void SkeletalMeshComponent::LoadMesh(const std::string& filename)

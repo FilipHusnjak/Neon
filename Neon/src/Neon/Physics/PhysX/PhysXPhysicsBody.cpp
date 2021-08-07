@@ -34,19 +34,19 @@ namespace Neon
 		m_RigidActor = nullptr;
 	}
 
-	void PhysXPhysicsBody::AddSpherePrimitive(float radius /*= 1.f*/)
+	void PhysXPhysicsBody::AddSpherePrimitive(float radius /*= 1.f*/, const Transform& transform)
 	{
-		m_Spheres.emplace_back(CreateUnique<PhysXSpherePhysicsPrimitive>(*this, radius));
+		m_Spheres.emplace_back(CreateUnique<PhysXSpherePhysicsPrimitive>(*this, radius, transform));
 	}
 
-	void PhysXPhysicsBody::AddBoxPrimitive(glm::vec3 size)
+	void PhysXPhysicsBody::AddBoxPrimitive(glm::vec3 size, const Transform& transform)
 	{
-		m_Boxes.emplace_back(CreateUnique<PhysXBoxPhysicsPrimitive>(*this, size));
+		m_Boxes.emplace_back(CreateUnique<PhysXBoxPhysicsPrimitive>(*this, size, transform));
 	}
 
-	void PhysXPhysicsBody::AddCapsulePrimitive(float radius, float height)
+	void PhysXPhysicsBody::AddCapsulePrimitive(float radius, float height, const Transform& transform)
 	{
-		m_Capsules.emplace_back(CreateUnique<PhysXCapsulePhysicsPrimitive>(*this, radius, height));
+		m_Capsules.emplace_back(CreateUnique<PhysXCapsulePhysicsPrimitive>(*this, radius, height, transform));
 	}
 
 	Transform PhysXPhysicsBody::GetBodyTransform() const

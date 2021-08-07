@@ -52,8 +52,8 @@ namespace Neon
 		std::vector<StaticMesh::Vertex> vertices;
 		std::vector<Index> indices;
 
-		constexpr float latitudeBands = 30;
-		constexpr float longitudeBands = 30;
+		constexpr float latitudeBands = 10.f;
+		constexpr float longitudeBands = 10.f;
 
 		for (float latitude = 0.f; latitude <= latitudeBands; latitude++)
 		{
@@ -81,8 +81,8 @@ namespace Neon
 				const uint32 first = (latitude * ((uint32)longitudeBands + 1)) + longitude;
 				const uint32 second = first + (uint32)longitudeBands + 1;
 
-				indices.push_back({first, second, first + 1});
-				indices.push_back({second, second + 1, first + 1});
+				indices.push_back({first, first + 1, second});
+				indices.push_back({second, first + 1, second + 1});
 			}
 		}
 

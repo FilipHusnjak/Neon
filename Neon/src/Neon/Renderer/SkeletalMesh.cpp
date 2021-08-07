@@ -176,8 +176,6 @@ namespace Neon
 		wireframeShaderSpecification.ShaderVariableCounts["BonesUBO"] = static_cast<uint32>(m_Skeleton.size());
 
 		CreateShaderAndGraphicsPipeline(shaderSpecification, wireframeShaderSpecification);
-
-		UpdateBoneTransforms();
 	}
 
 	void SkeletalMesh::TickAnimation(float deltaSeconds)
@@ -196,8 +194,9 @@ namespace Neon
 			}
 
 			ReadNodeHierarchy(m_AnimationTime, m_Scene->mRootNode, glm::mat4(1.0f));
-			UpdateBoneTransforms();
 		}
+
+		UpdateBoneTransforms();
 	}
 
 	SkeletalMesh::BoneInfo& SkeletalMesh::GetBoneInfo(const std::string& boneName /*= std::string()*/)
