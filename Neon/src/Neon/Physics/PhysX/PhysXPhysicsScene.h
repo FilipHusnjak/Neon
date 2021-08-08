@@ -20,7 +20,7 @@ namespace Neon
 																  const SharedRef<PhysicsBody>& body1) override;
 		virtual void RemovePhysicsConstraint(SharedRef<PhysicsConstraint>& physicsConstraint);
 
-		virtual SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform) override;
+		virtual SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform, const SharedRef<PhysicsMaterial>& material) override;
 		virtual void RemovePhysicsBody(SharedRef<PhysicsBody>& physicsBody) override;
 
 	private:

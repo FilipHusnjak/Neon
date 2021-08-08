@@ -64,13 +64,14 @@ namespace Neon
 		}
 	}
 
-	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	SharedRef<PhysicsBody> PhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform,
+														const SharedRef<PhysicsMaterial>& material)
 	{
 		switch (Physics::GetCurrentEngine())
 		{
 			case PhysicsEngine::PhysX:
 			{
-				return m_PhysicsBodies.emplace_back(SharedRef<PhysXPhysicsBody>::Create(physicsBodyType, transform));
+				return m_PhysicsBodies.emplace_back(SharedRef<PhysXPhysicsBody>::Create(physicsBodyType, transform, material));
 			}
 			default:
 			{

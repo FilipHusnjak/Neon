@@ -7,14 +7,15 @@
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
 #include <Neon/Editor/Panels/SceneRendererPanel.h>
 #include <Neon/Physics/Physics.h>
+#include <Neon/Physics/PhysicsMaterial.h>
 #include <Neon/Renderer/MeshFactory.h>
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Renderer/SceneRenderer.h>
 #include <Neon/Scene/Actor.h>
 #include <Neon/Scene/Components/LightComponent.h>
 #include <Neon/Scene/Components/OceanComponent.h>
-#include <Neon/Scene/Components/StaticMeshComponent.h>
 #include <Neon/Scene/Components/SkeletalMeshComponent.h>
+#include <Neon/Scene/Components/StaticMeshComponent.h>
 
 #include <imgui/imgui.h>
 
@@ -35,7 +36,7 @@ namespace Neon
 
 		SharedRef<PhysicsBody> body0;
 		SharedRef<PhysicsBody> body1;
-	/*	{
+		/*	{
 			auto& cube = m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube1", glm::vec3(1.f, 10.f, 1.f));
 			cube->SetTranslation(glm::vec3(5.f, 45.f, 0.f));
 			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
@@ -66,25 +67,33 @@ namespace Neon
 		}
 		*/
 		{
-			auto& car =
-				m_EditorScene->CreateSkeletalMesh("assets/models/zero/carSK.fbx", 0, "Car");
+			SharedRef<PhysicsMaterial> matBody = PhysicsMaterial::CreateMaterial(10.f, 8.f, 0.1f, 800.f);
+			SharedRef<PhysicsMaterial> matTire = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.3f, 300.f);
+
+			auto& car = m_EditorScene->CreateSkeletalMesh("assets/models/zero/carSK.fbx", 0, "Car");
 			car->SetTranslation(glm::vec3(0.f, 10.f, 0.f));
 			auto& carSkeletalMeshComp = car->GetRootComponent<SkeletalMeshComponent>();
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "", matBody);
 			Transform bodyTransform;
 			bodyTransform.Translation = glm::vec3(0.f, 0.7f, 0.07f);
 			carSkeletalMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 0.5, 1.f), bodyTransform);
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rl");
+			NEO_CORE_INFO("Mass body {0}", carSkeletalMeshComp->GetPhysicsBody()->GetMass());
+
+			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rl", matTire);
 			carSkeletalMeshComp->GetPhysicsBody("wheel_rl")->AddSpherePrimitive(0.37f);
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rr");
+			NEO_CORE_INFO("Mass wheel {0}", carSkeletalMeshComp->GetPhysicsBody("wheel_rl")->GetMass());
+
+			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rr", matTire);
 			carSkeletalMeshComp->GetPhysicsBody("wheel_rr")->AddSpherePrimitive(0.37f);
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fl");
+
+			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fl", matTire);
 			carSkeletalMeshComp->GetPhysicsBody("wheel_fl")->AddSpherePrimitive(0.37f);
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr");
+
+			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr", matTire);
 			carSkeletalMeshComp->GetPhysicsBody("wheel_fr")->AddSpherePrimitive(0.37f);
 		}
 
-		{
+		/*	{
 			auto& sphere =
 				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(0.f, 0.3f, 0.f));
@@ -92,7 +101,7 @@ namespace Neon
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
 		}
-
+		*/
 		{
 			auto& plane =
 				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Plane", glm::vec3(30.f, 1.f, 30.f));

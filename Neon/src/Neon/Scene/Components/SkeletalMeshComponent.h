@@ -12,7 +12,8 @@ namespace Neon
 		SkeletalMeshComponent(const SkeletalMeshComponent& other) = default;
 		virtual ~SkeletalMeshComponent();
 
-		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string()) override;
+		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string(),
+									   const SharedRef<PhysicsMaterial>& material = nullptr) override;
 
 		virtual void TickComponent(float deltaSeconds) override;
 

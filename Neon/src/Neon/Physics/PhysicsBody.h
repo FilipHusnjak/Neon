@@ -30,20 +30,25 @@ namespace Neon
 	class PhysicsBody : public RefCounted
 	{
 	public:
-		PhysicsBody(PhysicsBodyType bodyType, const Transform& transform = Transform());
+		PhysicsBody(PhysicsBodyType bodyType, const Transform& transform, const SharedRef<PhysicsMaterial>& material);
 		virtual ~PhysicsBody() = default;
 
 		virtual void Destroy() = 0;
 
 		virtual void* GetHandle() const = 0;
 
-		void SetMaterial(const SharedRef<PhysicsMaterial>& material);
+		virtual float GetMass() const = 0;
+		virtual void SetMass(float mass) = 0;
+
+		virtual void SetMaterial(const SharedRef<PhysicsMaterial>& material);
 
 		void RenderCollision() const;
 
 		virtual void AddSpherePrimitive(float radius = 1.f, const Transform& transform = Transform()) = 0;
 		virtual void AddBoxPrimitive(glm::vec3 size = glm::vec3(1.f), const Transform& transform = Transform()) = 0;
 		virtual void AddCapsulePrimitive(float radius, float height, const Transform& transform = Transform()) = 0;
+
+		virtual void AddForce(const glm::vec3& force) = 0;
 
 		virtual Transform GetBodyTransform() const = 0;
 

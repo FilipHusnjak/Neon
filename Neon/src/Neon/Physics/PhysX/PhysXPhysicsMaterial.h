@@ -9,7 +9,7 @@ namespace Neon
 	class PhysXPhysicsMaterial : public PhysicsMaterial
 	{
 	public:
-		PhysXPhysicsMaterial(float staticFriction, float dynamicFriction, float restitution);
+		PhysXPhysicsMaterial(float staticFriction, float dynamicFriction, float restitution, float density);
 
 		virtual void* GetHandle() const override
 		{

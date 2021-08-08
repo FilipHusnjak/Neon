@@ -83,9 +83,10 @@ namespace Neon
 		PhysicsScene::RemovePhysicsConstraint(physicsConstraint);
 	}
 
-	SharedRef<PhysicsBody> PhysXPhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform)
+	SharedRef<PhysicsBody> PhysXPhysicsScene::AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform,
+															 const SharedRef<PhysicsMaterial>& material)
 	{
-		SharedRef<PhysicsBody> physicsBody = PhysicsScene::AddPhysicsBody(physicsBodyType, transform);
+		SharedRef<PhysicsBody> physicsBody = PhysicsScene::AddPhysicsBody(physicsBodyType, transform, material);
 
 		NEO_CORE_ASSERT(physicsBody);
 		NEO_CORE_ASSERT(physicsBody->GetHandle());

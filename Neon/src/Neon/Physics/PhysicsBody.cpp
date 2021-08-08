@@ -5,9 +5,14 @@
 
 namespace Neon
 {
-	PhysicsBody::PhysicsBody(PhysicsBodyType bodyType, const Transform& transform)
+	PhysicsBody::PhysicsBody(PhysicsBodyType bodyType, const Transform& transform, const SharedRef<PhysicsMaterial>& material)
 		: m_BodyType(bodyType)
+		, m_Material(material)
 	{
+		if (!m_Material)
+		{
+			m_Material = PhysicsMaterial::CreateMaterial();
+		}
 	}
 
 	void PhysicsBody::SetMaterial(const SharedRef<PhysicsMaterial>& material)

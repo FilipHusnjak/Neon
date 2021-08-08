@@ -20,7 +20,8 @@ namespace Neon
 																  const SharedRef<PhysicsBody>& body1);
 		virtual void RemovePhysicsConstraint(SharedRef<PhysicsConstraint>& physicsConstraint);
 
-		virtual SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform);
+		virtual SharedRef<PhysicsBody> AddPhysicsBody(PhysicsBodyType physicsBodyType, const Transform& transform,
+													  const SharedRef<PhysicsMaterial>& material);
 		virtual void RemovePhysicsBody(SharedRef<PhysicsBody>& physicsBody);
 
 		virtual void Destroy();

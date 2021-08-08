@@ -17,12 +17,15 @@ namespace Neon
 
 		virtual void TickComponent(float deltaSeconds) override;
 
-		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string());
+		virtual void CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName = std::string(),
+									   const SharedRef<PhysicsMaterial>& material = nullptr);
 
 		virtual SharedRef<PhysicsBody> GetPhysicsBody(const std::string& boneName = std::string()) const
 		{
 			return m_RootPhysicsBody;
 		}
+
+		virtual void AddForce(const glm::vec3& force, const std::string& boneName = std::string());
 
 		virtual void LoadMesh(const std::string& filename) = 0;
 

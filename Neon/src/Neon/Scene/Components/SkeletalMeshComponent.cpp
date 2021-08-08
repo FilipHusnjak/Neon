@@ -21,7 +21,8 @@ namespace Neon
 		RendererContext::Get()->SafeDeleteResource(StaleResourceWrapper::Create(m_SkeletalMesh));
 	}
 
-	void SkeletalMeshComponent::CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName /*= std::string()*/)
+	void SkeletalMeshComponent::CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName /*= std::string()*/,
+												  const SharedRef<PhysicsMaterial>& material)
 	{
 		NEO_CORE_ASSERT(m_Owner);
 
@@ -36,7 +37,7 @@ namespace Neon
 
 		if (boneName.empty())
 		{
-			m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+			m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform(), material);
 		}
 		else
 		{
@@ -50,11 +51,17 @@ namespace Neon
 			glm::decompose(boneInfo.NodeTransform, scale, rotation, translation, skew, perspective);
 			transform.Translation = translation;
 			transform.Rotation = rotation;
-			m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, transform * m_Owner->GetTransform());
+			m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, transform * m_Owner->GetTransform(), material);
 
 			if (m_RootPhysicsBody)
 			{
-				PhysicsConstraint::Create(m_RootPhysicsBody, m_PhysicsBodyMap[boneName]);
+				auto constraint = PhysicsConstraint::Create(m_PhysicsBodyMap[boneName], m_RootPhysicsBody);
+				constraint->SetMotion(MotionAxis::TranslationZ, Motion::Limited);
+				constraint->SetMotion(MotionAxis::RotationY, Motion::Free);
+				constraint->SetLinearLimit(0.08f);
+				constraint->SetDrive(DriveAxis::TranslationZ, 500000.f, 10.f, 500000.f);
+				constraint->SetDrivePosition(Transform());
+				constraint->SetDriveVelocity(glm::vec3(), glm::vec3());
 			}
 		}
 	}

@@ -42,7 +42,7 @@ namespace Neon
 		}
 	}
 
-	void PrimitiveComponent::CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName /*= std::string()*/)
+	void PrimitiveComponent::CreatePhysicsBody(PhysicsBodyType bodyType, const std::string& boneName /*= std::string()*/, const SharedRef<PhysicsMaterial>& material)
 	{
 		NEO_CORE_ASSERT(m_Owner);
 
@@ -50,7 +50,12 @@ namespace Neon
 		{
 			Physics::GetCurrentScene()->RemovePhysicsBody(m_RootPhysicsBody);
 		}
-		m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform());
+		m_RootPhysicsBody = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform(), material);
+	}
+
+	void PrimitiveComponent::AddForce(const glm::vec3& force, const std::string& boneName /*= std::string()*/)
+	{
+		m_RootPhysicsBody->AddForce(force);
 	}
 
 	void PrimitiveComponent::RenderGui()
