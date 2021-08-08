@@ -26,6 +26,7 @@ namespace Neon
 		}
 
 		virtual void AddForce(const glm::vec3& force, const std::string& boneName = std::string());
+		virtual void AddForceLocal(const glm::vec3& force, const std::string& boneName = std::string());
 
 		virtual void LoadMesh(const std::string& filename) = 0;
 

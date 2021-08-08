@@ -60,6 +60,11 @@ namespace Neon
 		return glm::translate(glm::mat4(1.f), Translation) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.f), glm::abs(Scale));
 	}
 
+	glm::vec3 Transform::TransformVector(const glm::vec3& v) const
+	{
+		return glm::rotate(Rotation, v);
+	}
+
 	Transform Transform::operator*(const Transform& other) const
 	{
 		Transform result;

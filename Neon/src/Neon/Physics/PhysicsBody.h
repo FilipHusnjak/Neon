@@ -49,6 +49,7 @@ namespace Neon
 		virtual void AddCapsulePrimitive(float radius, float height, const Transform& transform = Transform()) = 0;
 
 		virtual void AddForce(const glm::vec3& force) = 0;
+		virtual void AddForceLocal(const glm::vec3& force);
 
 		virtual Transform GetBodyTransform() const = 0;
 

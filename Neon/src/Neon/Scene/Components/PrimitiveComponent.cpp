@@ -55,7 +55,16 @@ namespace Neon
 
 	void PrimitiveComponent::AddForce(const glm::vec3& force, const std::string& boneName /*= std::string()*/)
 	{
+		NEO_CORE_ASSERT(m_RootPhysicsBody);
+
 		m_RootPhysicsBody->AddForce(force);
+	}
+
+	void PrimitiveComponent::AddForceLocal(const glm::vec3& force, const std::string& boneName /*= std::string()*/)
+	{
+		NEO_CORE_ASSERT(m_RootPhysicsBody);
+
+		m_RootPhysicsBody->AddForceLocal(force);
 	}
 
 	void PrimitiveComponent::RenderGui()

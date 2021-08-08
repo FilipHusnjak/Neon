@@ -18,6 +18,8 @@ namespace Neon
 
 		glm::mat4 GetMatrix() const;
 
+		glm::vec3 TransformVector(const glm::vec3& v) const;
+
 		Transform operator*(const Transform& other) const;
 	};
 } // namespace Neon

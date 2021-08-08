@@ -34,15 +34,12 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		SharedRef<PhysicsBody> body0;
-		SharedRef<PhysicsBody> body1;
 		/*	{
 			auto& cube = m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube1", glm::vec3(1.f, 10.f, 1.f));
 			cube->SetTranslation(glm::vec3(5.f, 45.f, 0.f));
 			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
-			body0 = cubeStaticMeshComp->GetPhysicsBody();
 		}
 
 		{
@@ -52,10 +49,7 @@ namespace Neon
 			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
 			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
 			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
-			body1 = cubeStaticMeshComp->GetPhysicsBody();
 		}
-
-		Physics::GetCurrentScene()->AddPhysicsConstraint(body0, body1);
 	
 		{
 			auto& sphere =
@@ -72,6 +66,7 @@ namespace Neon
 
 			auto& car = m_EditorScene->CreateSkeletalMesh("assets/models/zero/carSK.fbx", 0, "Car");
 			car->SetTranslation(glm::vec3(0.f, 10.f, 0.f));
+			car->SetRotation(glm::vec3(0.f, 30.f, 0.f));
 			auto& carSkeletalMeshComp = car->GetRootComponent<SkeletalMeshComponent>();
 			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "", matBody);
 			Transform bodyTransform;
@@ -103,11 +98,13 @@ namespace Neon
 		}
 		*/
 		{
+			SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
+
 			auto& plane =
-				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Plane", glm::vec3(30.f, 1.f, 30.f));
+				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Plane", glm::vec3(3000.f, 1.f, 3000.f));
 			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();
-			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static);
-			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(30.f, 1.f, 30.f));
+			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
+			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(3000.f, 1.f, 3000.f));
 		}
 
 		{

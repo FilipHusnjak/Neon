@@ -37,4 +37,9 @@ namespace Neon
 		}
 	}
 
+	void PhysicsBody::AddForceLocal(const glm::vec3& force)
+	{
+		AddForce(GetBodyTransform().TransformVector(force));
+	}
+
 } // namespace Neon
