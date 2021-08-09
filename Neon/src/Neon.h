@@ -7,11 +7,7 @@
 
 #include "Neon/Core/Input.h"
 
-#include "Neon/ImGui/ImGuiLayer.h"
-
-#include "Neon/Scene/Components.h"
 #include "Neon/Scene/Actor.h"
 #include "Neon/Scene/Scene.h"
 
-#include "Neon/Renderer/PerspectiveCameraController.h"
 #include "Neon/Renderer/Renderer.h"
