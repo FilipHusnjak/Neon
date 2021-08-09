@@ -56,10 +56,10 @@ namespace Neon
 			if (m_RootPhysicsBody)
 			{
 				auto constraint = PhysicsConstraint::Create(m_PhysicsBodyMap[boneName], m_RootPhysicsBody);
-				constraint->SetMotion(MotionAxis::TranslationZ, Motion::Limited);
 				constraint->SetMotion(MotionAxis::RotationY, Motion::Free);
+				constraint->SetMotion(MotionAxis::TranslationZ, Motion::Limited);
+				constraint->SetDrive(DriveAxis::TranslationZ, 1000000.f, 0.1f, 1000000.f);
 				constraint->SetLinearLimit(0.08f);
-				constraint->SetDrive(DriveAxis::TranslationZ, 100000000.f, 0.01f, 100000000.f);
 				constraint->SetDrivePosition(Transform());
 				constraint->SetDriveVelocity(glm::vec3(), glm::vec3());
 			}
@@ -95,7 +95,7 @@ namespace Neon
 			SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
 		}
 
-		AddForceLocal(100.f * glm::vec3(0.f, 0.f, 1.f));
+		AddForceLocal(1000.f * glm::vec3(0.f, 0.f, 1.f));
 	}
 
 	SharedRef<PhysicsBody> SkeletalMeshComponent::GetPhysicsBody(const std::string& boneName) const
