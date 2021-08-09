@@ -65,8 +65,7 @@ namespace Neon
 			SharedRef<PhysicsMaterial> matTire = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.3f, 300.f);
 
 			auto& car = m_EditorScene->CreateSkeletalMesh("assets/models/zero/carSK.fbx", 0, "Car");
-			car->SetTranslation(glm::vec3(0.f, 10.f, 0.f));
-			car->SetRotation(glm::vec3(0.f, 30.f, 0.f));
+			car->SetTranslation(glm::vec3(0.f, 40.f, 0.f));
 			auto& carSkeletalMeshComp = car->GetRootComponent<SkeletalMeshComponent>();
 			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "", matBody);
 			Transform bodyTransform;
@@ -87,19 +86,26 @@ namespace Neon
 			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr", matTire);
 			carSkeletalMeshComp->GetPhysicsBody("wheel_fr")->AddSpherePrimitive(0.37f);
 		}
-
-		/*	{
+		SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
+		{
 			auto& sphere =
 				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
-			sphere->SetTranslation(glm::vec3(0.f, 0.3f, 0.f));
+			sphere->SetTranslation(glm::vec3(-0.3f, 0.2f, 10.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
-			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
+			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
 		}
-		*/
-		{
-			SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
 
+		{
+			auto& sphere =
+				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
+			sphere->SetTranslation(glm::vec3(-0.3f, 0.1f, 11.f));
+			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
+			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
+			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
+		}
+		
+		{
 			auto& plane =
 				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Plane", glm::vec3(3000.f, 1.f, 3000.f));
 			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();

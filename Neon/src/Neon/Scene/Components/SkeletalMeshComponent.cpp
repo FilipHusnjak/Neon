@@ -58,9 +58,11 @@ namespace Neon
 				auto constraint = PhysicsConstraint::Create(m_PhysicsBodyMap[boneName], m_RootPhysicsBody);
 				constraint->SetMotion(MotionAxis::RotationY, Motion::Free);
 				constraint->SetMotion(MotionAxis::TranslationZ, Motion::Limited);
-				constraint->SetDrive(DriveAxis::TranslationZ, 1000000.f, 0.1f, 1000000.f);
-				constraint->SetLinearLimit(0.08f);
-				constraint->SetDrivePosition(Transform());
+				constraint->SetDrive(DriveAxis::TranslationZ, 300000.f, 100.f, 300000.f);
+				constraint->SetLinearLimit(0.07f);
+				Transform driveTransform;
+				driveTransform.Translation = glm::vec3(0.f, 0.f, 0.f);
+				constraint->SetDrivePosition(driveTransform);
 				constraint->SetDriveVelocity(glm::vec3(), glm::vec3());
 			}
 		}

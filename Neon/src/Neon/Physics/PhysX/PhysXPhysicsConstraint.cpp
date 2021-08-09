@@ -79,6 +79,9 @@ namespace Neon
 			static_cast<physx::PxRigidActor*>(body0->GetHandle()), PhysXUtils::ToPhysXTransform(Transform()));
 
 		NEO_CORE_ASSERT(m_Joint);
+
+		m_Joint->setProjectionLinearTolerance(0.001f);
+		m_Joint->setProjectionAngularTolerance(1.f);
 	}
 
 	void PhysXPhysicsConstraint::Destroy()
