@@ -248,12 +248,12 @@ project "NeonEditor"
 
 		links
 		{
-			"Neon/vendor/assimp/bin/Debug/assimp-vc141-mtd.lib"
+			"Neon/vendor/assimp/lib/Debug/assimp-vc141-mtd.lib"
 		}
 
 		postbuildcommands 
 		{
-			'{COPY} "../Neon/vendor/assimp/bin/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Neon/vendor/assimp/lib/Debug/assimp-vc141-mtd.dll" "%{cfg.targetdir}"',
 			'{COPY} "../Neon/vendor/PhysX/lib/Debug/PhysX_64.dll" "%{cfg.targetdir}"',
 			'{COPY} "../Neon/vendor/PhysX/lib/Debug/PhysXFoundation_64.dll" "%{cfg.targetdir}"',
 			'{COPY} "../Neon/vendor/PhysX/lib/Debug/PhysXCooking_64.dll" "%{cfg.targetdir}"',
@@ -266,12 +266,12 @@ project "NeonEditor"
 
 		links
 		{
-			"Neon/vendor/assimp/bin/Release/assimp-vc141-mt.lib"
+			"Neon/vendor/assimp/lib/Release/assimp-vc141-mt.lib"
 		}
 
 		postbuildcommands 
 		{
-			'{COPY} "../Neon/vendor/assimp/bin/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
+			'{COPY} "../Neon/vendor/assimp/lib/Release/assimp-vc141-mt.dll" "%{cfg.targetdir}"',
 			'{COPY} "../Neon/vendor/PhysX/lib/Release/PhysX_64.dll" "%{cfg.targetdir}"',
 			'{COPY} "../Neon/vendor/PhysX/lib/Release/PhysXFoundation_64.dll" "%{cfg.targetdir}"',
 			'{COPY} "../Neon/vendor/PhysX/lib/Release/PhysXCooking_64.dll" "%{cfg.targetdir}"',

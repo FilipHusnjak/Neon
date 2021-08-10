@@ -60,7 +60,7 @@ namespace Neon
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
 		}
 		*/
-		{
+		/*{
 			SharedRef<PhysicsMaterial> matBody = PhysicsMaterial::CreateMaterial(10.f, 8.f, 0.1f, 800.f);
 			SharedRef<PhysicsMaterial> matTire = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.3f, 300.f);
 
@@ -85,7 +85,7 @@ namespace Neon
 
 			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr", matTire);
 			carSkeletalMeshComp->GetPhysicsBody("wheel_fr")->AddSpherePrimitive(0.37f);
-		}
+		}*/
 		SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
 		{
 			auto& sphere =
