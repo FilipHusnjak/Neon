@@ -31,12 +31,9 @@ namespace Neon
 
 	void EditorCamera::OnUpdate(float deltaSeconds)
 	{
+		glm::vec2 delta = Input::GetMouseDelta();
 		if (Input::IsKeyPressed(GLFW_KEY_LEFT_ALT))
 		{
-			const glm::vec2 mouse{Input::GetMouseX(), Input::GetMouseY()};
-			glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
-			m_InitialMousePosition = mouse;
-
 			if (Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
 			{
 				MousePan(delta);
@@ -50,7 +47,6 @@ namespace Neon
 				MouseZoom(delta.y);
 			}
 		}
-
 		UpdateCameraView();
 	}
 

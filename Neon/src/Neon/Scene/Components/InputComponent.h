@@ -4,8 +4,8 @@
 
 namespace Neon
 {
-	typedef int (*ActionDelegate)();
-	typedef int (*AxisDelegate)(int);
+	using ActionDelegate = int ();
+	using AxisDelegate = int (int);
 
 	enum class KeyEventType
 	{
@@ -26,13 +26,13 @@ namespace Neon
 		InputComponent(Actor* owner);
 		virtual ~InputComponent() = default;
 
-		void ProcessInput(const std::vector<KeyBinding>& keyBindings);
+		void ProcessInput();
 
-		void TickComponent();
+		void Input(KeyBinding keyBinding);
 
 	private:
 		std::vector<KeyBinding> m_CachedInputs;
-		std::map<KeyBinding, ActionDelegate> m_KeyDelegateMap;
-		std::map<int32, AxisDelegate> m_AxisDelegateMap;
+		//std::map<KeyBinding, ActionDelegate*> m_ActionDelegateMap;
+		std::map<int32, AxisDelegate*> m_AxisDelegateMap;
 	};
 } // namespace Neon

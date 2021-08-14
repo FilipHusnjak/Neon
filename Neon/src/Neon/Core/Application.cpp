@@ -5,6 +5,7 @@
 #include "Neon/Renderer/Renderer.h"
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Physics/Physics.h"
+#include "Neon/Core/Input.h"
 
 #include <imgui/imgui.h>
 
@@ -130,6 +131,8 @@ namespace Neon
 			float deltaSeconds = std::chrono::duration<float, std::chrono::seconds::period>(timeStep).count();
 
 			m_Window->ProcessEvents();
+
+			Input::CalculateMouseDelta();
 
 			if (!m_Minimized)
 			{
