@@ -134,6 +134,8 @@ namespace Neon
 
 			Input::CalculateMouseDelta();
 
+			Physics::TickPhysics(deltaSeconds);
+
 			if (!m_Minimized)
 			{
 				m_Window->GetRenderContext()->BeginFrame();

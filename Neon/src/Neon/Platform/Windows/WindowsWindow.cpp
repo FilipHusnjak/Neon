@@ -66,7 +66,7 @@ namespace Neon
 
 			switch (action)
 			{
-				case GLFW_PRESS || GLFW_REPEAT:
+				case GLFW_PRESS:
 				{
 					KeyPressedEvent event(key);
 					data.EventCallback(event);
@@ -75,6 +75,12 @@ namespace Neon
 				case GLFW_RELEASE:
 				{
 					KeyReleasedEvent event(key);
+					data.EventCallback(event);
+					break;
+				}
+				case GLFW_REPEAT:
+				{
+					KeyRepeatEvent event(key);
 					data.EventCallback(event);
 					break;
 				}

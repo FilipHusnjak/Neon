@@ -1,10 +1,31 @@
 #pragma once
 
+#include "Neon/Core/Event/Event.h"
+
 #include <vector>
 #include <glm/glm.hpp>
 
 namespace Neon
 {
+	enum class KeyEventType
+	{
+		Pressed,
+		Released,
+		Repeat,
+		Typed
+	};
+
+	struct KeyBinding
+	{
+		int32 KeyCode;
+		KeyEventType EventType;
+
+		bool operator==(const KeyBinding& other) const
+		{
+			return KeyCode == other.KeyCode && EventType == other.EventType;
+		}
+	};
+
 	class Input
 	{
 	public:
@@ -14,7 +35,7 @@ namespace Neon
 
 		static bool IsMouseButtonPressed(int button);
 
-		static std::pair<float, float> GetMousePosition();
+		static glm::vec2 GetMousePosition();
 
 		static float GetMouseX();
 

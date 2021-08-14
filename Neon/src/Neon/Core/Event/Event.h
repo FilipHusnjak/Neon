@@ -18,6 +18,7 @@ enum class EventType
 	KeyPressed,
 	KeyReleased,
 	KeyTyped,
+	KeyRepeat,
 	MouseButtonPressed,
 	MouseButtonReleased,
 	MouseMoved,

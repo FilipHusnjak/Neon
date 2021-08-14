@@ -2,6 +2,7 @@
 
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Actor.h"
+#include "Neon/Scene/Actors/Pawn.h"
 #include "Neon/Scene/Components/LightComponent.h"
 #include "Neon/Scene/Components/OceanComponent.h"
 #include "Neon/Scene/Components/SkeletalMeshComponent.h"
@@ -44,39 +45,10 @@ namespace Neon
 		}
 	}
 
-	void Scene::OnEvent(Event& e)
-	{
-	}
-
 	void Scene::SetViewportSize(uint32 width, uint32 height)
 	{
 		m_ViewportWidth = width;
 		m_ViewportHeight = height;
-	}
-
-	SharedRef<Actor> Scene::CreateActor(UUID uuid, const std::string& name /*= ""*/)
-	{
-		return m_Actors.emplace_back(SharedRef<Actor>::Create(this, name, uuid));
-	}
-
-	SharedRef<Actor> Scene::CreateStaticMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/, const glm::vec3& scale)
-	{
-		auto actor = CreateActor(uuid, name);
-
-		SharedRef<StaticMesh> staticMesh = SharedRef<StaticMesh>::Create(path, scale);
-		actor->AddRootComponent<StaticMeshComponent>(actor.Ptr(), staticMesh);
-
-		return actor;
-	}
-
-	SharedRef<Actor> Scene::CreateSkeletalMesh(const std::string& path, UUID uuid, const std::string& name /*= ""*/)
-	{
-		auto actor = CreateActor(uuid, name);
-
-		SharedRef<SkeletalMesh> skeletalMesh = SharedRef<SkeletalMesh>::Create(path);
-		actor->AddRootComponent<SkeletalMeshComponent>(actor.Ptr(), skeletalMesh);
-
-		return actor;
 	}
 
 	void Scene::DestroyActor(SharedRef<Actor> actor)
@@ -91,6 +63,11 @@ namespace Neon
 			{
 				++it;
 			}
+		}
+
+		if (actor.Ptr() == m_PossesedPawn)
+		{
+			m_PossesedPawn = nullptr;
 		}
 	}
 

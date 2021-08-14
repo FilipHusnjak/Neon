@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Neon/Core/Event/Event.h>
+#include <Neon/Core/Input.h>
 #include <Neon/Core/Layer.h>
 #include <Neon/Editor/Panels/Panel.h>
 #include <Neon/Scene/Scene.h>
@@ -35,5 +36,7 @@ namespace Neon
 		int m_FrameCount = 0;
 
 		glm::vec4 clearColor{1.f, 1.f, 1.f, 1.f};
+
+		std::vector<KeyBinding> m_CachedInput;
 	};
 } // namespace Neon

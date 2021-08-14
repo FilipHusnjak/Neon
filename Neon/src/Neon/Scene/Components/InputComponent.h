@@ -1,24 +1,26 @@
 #pragma once
 
+#include "Neon/Core/Input.h"
 #include "Neon/Scene/Components/ActorComponent.h"
+
+namespace std
+{
+	template<>
+	struct hash<Neon::KeyBinding>
+	{
+		size_t operator()(const Neon::KeyBinding& k) const
+		{
+			size_t h1 = hash<size_t>()(k.KeyCode);
+			size_t h2 = hash<size_t>()(static_cast<size_t>(k.EventType));
+			return h1 ^ (h2 << 1);
+		}
+	};
+} // namespace std
 
 namespace Neon
 {
-	using ActionDelegate = int ();
-	using AxisDelegate = int (int);
-
-	enum class KeyEventType
-	{
-		Pressed,
-		Released,
-		Repeat
-	};
-
-	struct KeyBinding
-	{
-		int32 KeyCode;
-		KeyEventType EventType;
-	};
+	using ActionDelegate = std::function<void(void)>;
+	using AxisDelegate = std::function<void(float)>;
 
 	class InputComponent : public ActorComponent
 	{
@@ -26,13 +28,12 @@ namespace Neon
 		InputComponent(Actor* owner);
 		virtual ~InputComponent() = default;
 
-		void ProcessInput();
+		void ProcessInput(const std::vector<KeyBinding>& input);
 
-		void Input(KeyBinding keyBinding);
+		void BindAction(KeyBinding keyBinding, ActionDelegate actionDelegate);
 
 	private:
-		std::vector<KeyBinding> m_CachedInputs;
-		//std::map<KeyBinding, ActionDelegate*> m_ActionDelegateMap;
-		std::map<int32, AxisDelegate*> m_AxisDelegateMap;
+		std::unordered_map<KeyBinding, ActionDelegate> m_ActionDelegateMap;
+		std::unordered_map<int32, AxisDelegate> m_AxisDelegateMap;
 	};
 } // namespace Neon

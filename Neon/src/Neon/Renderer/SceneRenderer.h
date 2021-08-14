@@ -26,7 +26,13 @@ namespace Neon
 		static void SetSelectedActor(SharedRef<Actor> actor);
 		static SharedRef<Actor> GetSelectedActor();
 
-		static SharedRef<Actor> CreateActor(UUID uuid, const std::string& name = "Actor");
+		template<typename T, typename... Args>
+		static SharedRef<Actor> CreateActor(UUID uuid, const std::string& name, Args&&... args)
+		{
+			NEO_CORE_ASSERT(s_Data.ActiveScene);
+			return s_Data.ActiveScene->CreateActor<T>(uuid, name, args...);
+		}
+		
 		static void DestroyActor(SharedRef<Actor> actor);
 
 		static void SetViewportSize(uint32 width, uint32 height);
@@ -57,5 +63,59 @@ namespace Neon
 		static void FlushDrawList();
 		static void GeometryPass();
 		static void PostProcessingPass();
+
+	private:
+		struct SceneRendererData
+		{
+			SharedRef<Scene> ActiveScene = nullptr;
+			SharedRef<Actor> SelectedActor = {};
+
+			std::vector<Light> Lights;
+
+			struct SceneInfo
+			{
+				SceneRendererCamera SceneCamera;
+				std::string EnvironmentPath;
+			} SceneData;
+
+			SharedRef<RenderPass> GeoPass;
+			SharedRef<RenderPass> PostProcessingPass;
+
+			SharedRef<Shader> PostProcessingShader;
+			SharedRef<GraphicsPipeline> PostProcessingPipeline;
+
+			SharedRef<TextureCube> EnvUnfilteredTextureCube;
+			SharedRef<TextureCube> EnvFilteredTextureCube;
+			SharedRef<TextureCube> IrradianceTextureCube;
+
+			glm::vec2 FocusPoint = {0.5f, 0.5f};
+
+			struct MeshDrawCommand
+			{
+				SharedRef<Mesh> Mesh;
+				glm::mat4 Transform;
+				bool Wireframe;
+			};
+
+			std::vector<MeshDrawCommand> MeshDrawList;
+
+			Material SkyboxMaterial;
+			SharedRef<GraphicsPipeline> SkyboxGraphicsPipeline;
+
+			SharedRef<Shader> EnvUnfilteredComputeShader;
+			SharedRef<ComputePipeline> EnvUnfilteredComputePipeline;
+
+			SharedRef<Shader> EnvFilteredComputeShader;
+			SharedRef<ComputePipeline> EnvFilteredComputePipeline;
+
+			SharedRef<Shader> IrradianceComputeShader;
+			SharedRef<ComputePipeline> IrradianceComputePipeline;
+
+			SharedRef<Texture2D> BRDFLUT;
+
+			float CurrentTime = 0;
+		};
+
+		static SceneRendererData s_Data;
 	};
 } // namespace Neon

@@ -9,25 +9,23 @@ namespace Neon
 	{
 	}
 
-	void InputComponent::ProcessInput()
+	void InputComponent::ProcessInput(const std::vector<KeyBinding>& input)
 	{
-		for (const auto& keyBinding : m_CachedInputs)
+		for (const auto& keyBinding : input)
 		{
-		/*	if (m_ActionDelegateMap.find(keyBinding) != m_ActionDelegateMap.end())
+			if (m_ActionDelegateMap.find(keyBinding) != m_ActionDelegateMap.end())
 			{
 				if (m_ActionDelegateMap[keyBinding] != nullptr)
 				{
 					m_ActionDelegateMap[keyBinding]();
 				}
-			}*/
+			}
 		}
-
-		m_CachedInputs.clear();
 	}
 
-	void InputComponent::Input(KeyBinding keyBinding)
+	void InputComponent::BindAction(KeyBinding keyBinding, ActionDelegate actionDelegate)
 	{
-		m_CachedInputs.push_back(keyBinding);
+		m_ActionDelegateMap[keyBinding] = actionDelegate;
 	}
 
 } // namespace Neon

@@ -9,7 +9,7 @@ namespace Neon
 
 	void Input::CalculateMouseDelta()
 	{
-		const glm::vec2 mouse{GetMouseX(), GetMouseY()};
+		const glm::vec2 mouse = GetMousePosition();
 		s_MouseDelta = (mouse - s_LastMousePosition) * 0.003f;
 		s_LastMousePosition = mouse;
 	}

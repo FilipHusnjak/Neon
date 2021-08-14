@@ -2,6 +2,7 @@
 
 #include "EditorLayer.h"
 
+#include <Neon/Core/Event/KeyEvent.h>
 #include <Neon/Editor/Panels/ContentBrowserPanel.h>
 #include <Neon/Editor/Panels/InspectorPanel.h>
 #include <Neon/Editor/Panels/SceneHierarchyPanel.h>
@@ -16,6 +17,7 @@
 #include <Neon/Scene/Components/OceanComponent.h>
 #include <Neon/Scene/Components/SkeletalMeshComponent.h>
 #include <Neon/Scene/Components/StaticMeshComponent.h>
+#include <Neon/Scene/Actors/Car.h>
 
 #include <imgui/imgui.h>
 
@@ -60,36 +62,16 @@ namespace Neon
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
 		}
 		*/
-		/*{
-			SharedRef<PhysicsMaterial> matBody = PhysicsMaterial::CreateMaterial(10.f, 8.f, 0.1f, 800.f);
-			SharedRef<PhysicsMaterial> matTire = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.3f, 300.f);
 
-			auto& car = m_EditorScene->CreateSkeletalMesh("assets/models/zero/carSK.fbx", 0, "Car");
-			car->SetTranslation(glm::vec3(0.f, 40.f, 0.f));
-			auto& carSkeletalMeshComp = car->GetRootComponent<SkeletalMeshComponent>();
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "", matBody);
-			Transform bodyTransform;
-			bodyTransform.Translation = glm::vec3(0.f, 0.7f, 0.07f);
-			carSkeletalMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 0.5, 1.f), bodyTransform);
-			NEO_CORE_INFO("Mass body {0}", carSkeletalMeshComp->GetPhysicsBody()->GetMass());
+		{
+			auto& car = m_EditorScene->CreateActor<Car>(0, "Car");
+			m_EditorScene->PossesPawn(car.Ptr());
+		}
 
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rl", matTire);
-			carSkeletalMeshComp->GetPhysicsBody("wheel_rl")->AddSpherePrimitive(0.37f);
-			NEO_CORE_INFO("Mass wheel {0}", carSkeletalMeshComp->GetPhysicsBody("wheel_rl")->GetMass());
-
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rr", matTire);
-			carSkeletalMeshComp->GetPhysicsBody("wheel_rr")->AddSpherePrimitive(0.37f);
-
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fl", matTire);
-			carSkeletalMeshComp->GetPhysicsBody("wheel_fl")->AddSpherePrimitive(0.37f);
-
-			carSkeletalMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr", matTire);
-			carSkeletalMeshComp->GetPhysicsBody("wheel_fr")->AddSpherePrimitive(0.37f);
-		}*/
 		SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
 		{
 			auto& sphere =
-				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
+				m_EditorScene->CreateStaticMesh<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(-0.3f, 0.2f, 10.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
@@ -97,17 +79,17 @@ namespace Neon
 		}
 
 		{
-			auto& sphere =
-				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
+			auto& sphere = m_EditorScene->CreateStaticMesh<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere",
+																  glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(-0.3f, 0.1f, 11.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
 			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
 		}
-		
+
 		{
-			auto& plane =
-				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Plane", glm::vec3(3000.f, 1.f, 3000.f));
+			auto& plane = m_EditorScene->CreateStaticMesh<Actor>("assets/models/primitives/Cube.fbx", 0, "Plane",
+																 glm::vec3(3000.f, 1.f, 3000.f));
 			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();
 			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
 			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(3000.f, 1.f, 3000.f));
@@ -121,7 +103,7 @@ namespace Neon
 		}
 
 		{
-			auto& light = m_EditorScene->CreateActor(4, "DirectionalLight");
+			auto& light = m_EditorScene->CreateActor<Actor>(4, "DirectionalLight");
 			light->AddComponent<LightComponent>(light.Ptr(), glm::normalize(glm::vec4{1.f, 0.3f, 1.f, 0.f}));
 		}
 
@@ -151,13 +133,21 @@ namespace Neon
 			m_Times.pop();
 		}
 
-		m_EditorCamera.OnUpdate(deltaSeconds);
-
-		Physics::TickPhysics(deltaSeconds);
+		Pawn* possesedPawn = m_EditorScene->GetPossesedPawn();
+		if (possesedPawn)
+		{
+			possesedPawn->ProcessInput(m_CachedInput);
+		}
+		else
+		{
+			m_EditorCamera.OnUpdate(deltaSeconds);
+		}
 
 		SceneRenderer::BeginScene({m_EditorCamera, 0.1f, 1000.0f, 45.0f});
 		m_EditorScene->TickScene(deltaSeconds);
 		SceneRenderer::EndScene();
+
+		m_CachedInput.clear();
 	}
 
 	void EditorLayer::OnRenderGui()
@@ -224,5 +214,11 @@ namespace Neon
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_EditorCamera.OnEvent(e);
+
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) {
+			m_CachedInput.push_back({e.GetKeyCode(), KeyEventType::Pressed});
+			return true;
+		});
 	}
 } // namespace Neon

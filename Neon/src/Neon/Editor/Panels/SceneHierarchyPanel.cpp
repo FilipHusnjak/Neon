@@ -87,23 +87,23 @@ namespace Neon
 			{
 				if (ImGui::MenuItem("Actor"))
 				{
-					auto newActor = SceneRenderer::CreateActor(0, "Actor");
+					auto newActor = SceneRenderer::CreateActor<Actor>(0, "Actor");
 					SceneRenderer::SetSelectedActor(newActor);
 				}
 				if (ImGui::MenuItem("Static Mesh Actor"))
 				{
-					auto newActor = SceneRenderer::CreateActor(0, "Static Mesh Actor");
+					auto newActor = SceneRenderer::CreateActor<Actor>(0, "Static Mesh Actor");
 					newActor->AddComponent<StaticMeshComponent>(newActor.Ptr());
 				}
 				if (ImGui::MenuItem("Skeletal Mesh Actor"))
 				{
-					auto newActor = SceneRenderer::CreateActor(0, "Skeletal Mesh Actor");
+					auto newActor = SceneRenderer::CreateActor<Actor>(0, "Skeletal Mesh Actor");
 					newActor->AddComponent<SkeletalMeshComponent>(newActor.Ptr());
 				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Directional Light Actor"))
 				{
-					auto newActor = SceneRenderer::CreateActor(0, "Directional Light Actor");
+					auto newActor = SceneRenderer::CreateActor<Actor>(0, "Directional Light Actor");
 					newActor->AddComponent<LightComponent>(newActor.Ptr());
 				}
 				ImGui::EndMenu();

@@ -43,6 +43,16 @@ public:
 
 	EVENT_CLASS_TYPE(KeyReleased)
 };
+class KeyRepeatEvent : public KeyEvent
+{
+public:
+	explicit KeyRepeatEvent(int keycode)
+		: KeyEvent(keycode)
+	{
+	}
+
+	EVENT_CLASS_TYPE(KeyRepeat)
+};
 class KeyTypedEvent : public KeyEvent
 {
 public:

@@ -7,58 +7,7 @@
 
 namespace Neon
 {
-	struct SceneRendererData
-	{
-		SharedRef<Scene> ActiveScene = nullptr;
-		SharedRef<Actor> SelectedActor = {};
-
-		std::vector<Light> Lights;
-
-		struct SceneInfo
-		{
-			SceneRendererCamera SceneCamera;
-			std::string EnvironmentPath;
-		} SceneData;
-
-		SharedRef<RenderPass> GeoPass;
-		SharedRef<RenderPass> PostProcessingPass;
-
-		SharedRef<Shader> PostProcessingShader;
-		SharedRef<GraphicsPipeline> PostProcessingPipeline;
-
-		SharedRef<TextureCube> EnvUnfilteredTextureCube;
-		SharedRef<TextureCube> EnvFilteredTextureCube;
-		SharedRef<TextureCube> IrradianceTextureCube;
-
-		glm::vec2 FocusPoint = {0.5f, 0.5f};
-
-		struct MeshDrawCommand
-		{
-			SharedRef<Mesh> Mesh;
-			glm::mat4 Transform;
-			bool Wireframe;
-		};
-
-		std::vector<MeshDrawCommand> MeshDrawList;
-
-		Material SkyboxMaterial;
-		SharedRef<GraphicsPipeline> SkyboxGraphicsPipeline;
-
-		SharedRef<Shader> EnvUnfilteredComputeShader;
-		SharedRef<ComputePipeline> EnvUnfilteredComputePipeline;
-
-		SharedRef<Shader> EnvFilteredComputeShader;
-		SharedRef<ComputePipeline> EnvFilteredComputePipeline;
-
-		SharedRef<Shader> IrradianceComputeShader;
-		SharedRef<ComputePipeline> IrradianceComputePipeline;
-
-		SharedRef<Texture2D> BRDFLUT;
-
-		float CurrentTime = 0;
-	};
-
-	static SceneRendererData s_Data;
+	SceneRenderer::SceneRendererData SceneRenderer::s_Data = {};
 
 	void SceneRenderer::Init()
 	{
@@ -176,13 +125,6 @@ namespace Neon
 	SharedRef<Actor> SceneRenderer::GetSelectedActor()
 	{
 		return s_Data.SelectedActor;
-	}
-
-	SharedRef<Actor> SceneRenderer::CreateActor(UUID uuid, const std::string& name /*= "Actor"*/)
-	{
-		NEO_CORE_ASSERT(s_Data.ActiveScene);
-
-		return s_Data.ActiveScene->CreateActor(uuid, name);
 	}
 
 	void SceneRenderer::DestroyActor(SharedRef<Actor> actor)

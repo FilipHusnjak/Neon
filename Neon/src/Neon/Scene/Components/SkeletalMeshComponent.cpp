@@ -96,8 +96,6 @@ namespace Neon
 
 			SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
 		}
-
-		AddForceLocal(1000.f * glm::vec3(0.f, 0.f, 1.f));
 	}
 
 	SharedRef<PhysicsBody> SkeletalMeshComponent::GetPhysicsBody(const std::string& boneName) const

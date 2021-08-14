@@ -9,12 +9,16 @@ namespace Neon
 	class Actor : public RefCounted
 	{
 	public:
-		Actor() = default;
 		Actor(Scene* scene, const std::string& tag, UUID id, Transform transform = Transform());
 		Actor(const Actor& other) = delete;
 		Actor(const Actor&& other) = delete;
 		Actor& operator=(const Actor& other) = delete;
 		Actor& operator=(const Actor&& other) = delete;
+		virtual ~Actor() = default;
+
+		virtual void Initialize()
+		{
+		}
 
 		template<typename T, typename... Args>
 		SharedRef<T> AddRootComponent(Args&&... args)
@@ -97,7 +101,7 @@ namespace Neon
 			return m_ActorTransform.Scale;
 		}
 
-		void Tick(float deltaSeconds);
+		virtual void Tick(float deltaSeconds);
 
 		void SetTransform(const Transform& transform);
 		void SetTranslation(const glm::vec3& translation);
