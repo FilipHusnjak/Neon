@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Neon/Renderer/Camera.h"
 #include "Neon/Renderer/Mesh.h"
 #include "Neon/Scene/Actor.h"
-#include "Neon/Scene/Components/CameraComponent.h"
 #include "Neon/Scene/Components/LightComponent.h"
 
 namespace Neon
@@ -29,7 +29,7 @@ namespace Neon
 
 		static void SetViewportSize(uint32 width, uint32 height);
 
-		static void BeginScene(const SharedRef<CameraComponent>& cameraComp);
+		static void BeginScene(Camera* camera);
 		static void EndScene();
 
 		static void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform = glm::mat4(1.0f), bool wireframe = false);
@@ -66,7 +66,7 @@ namespace Neon
 
 			struct SceneInfo
 			{
-				SharedRef<CameraComponent> SceneCamera;
+				Camera* SceneCamera;
 				std::string EnvironmentPath;
 			} SceneData;
 

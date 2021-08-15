@@ -17,7 +17,7 @@ namespace Neon
 
 		virtual void OnDetach() = 0;
 
-		virtual void OnUpdate(float deltaSeconds) = 0;
+		virtual void Tick(float deltaSeconds) = 0;
 
 		virtual void OnRenderGui() = 0;
 

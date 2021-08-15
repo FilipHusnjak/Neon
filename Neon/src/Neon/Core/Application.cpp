@@ -144,7 +144,7 @@ namespace Neon
 
 				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnUpdate(deltaSeconds);
+					layer->Tick(deltaSeconds);
 				}
 
 				m_GuiContext->Begin();

@@ -13,8 +13,25 @@ namespace Neon
 		EditorCamera();
 
 		void Focus();
-		void OnUpdate(float deltaSeconds);
+		void Tick(float deltaSeconds);
 		void OnEvent(Event& e);
+
+		virtual void SetViewportSize(uint32 width, uint32 height) override
+		{
+			m_ViewportWidth = width;
+			m_ViewportHeight = height;
+		}
+
+		virtual void SetFov(float fov) override
+		{
+			m_Fov = fov;
+		}
+
+		virtual glm::vec3 GetPosition() const override;
+		virtual glm::quat GetRotation() const override;
+		virtual Transform GetTransform() const override;
+
+		virtual glm::mat4 GetProjectionMatrix() const;
 
 		float GetDistance() const
 		{
@@ -25,17 +42,9 @@ namespace Neon
 			m_Distance = distance;
 		}
 
-		void SetViewportSize(uint32 width, uint32 height)
-		{
-			m_ViewportWidth = width;
-			m_ViewportHeight = height;
-		}
-
-		glm::vec3 GetUpDirection();
-		glm::vec3 GetRightDirection();
-		glm::vec3 GetForwardDirection();
-
-		glm::quat GetOrientation() const;
+		glm::vec3 GetUpDirection() const;
+		glm::vec3 GetRightDirection() const;
+		glm::vec3 GetForwardDirection() const;
 
 		float GetPitch() const
 		{
@@ -47,15 +56,11 @@ namespace Neon
 		}
 
 	private:
-		void UpdateCameraView();
-
 		bool OnMouseScroll(MouseScrolledEvent& e);
 
 		void MousePan(const glm::vec2& delta);
 		void MouseRotate(const glm::vec2& delta);
 		void MouseZoom(float delta);
-
-		glm::vec3 CalculatePosition();
 
 		std::pair<float, float> PanSpeed() const;
 		float RotationSpeed() const;
@@ -64,15 +69,13 @@ namespace Neon
 	private:
 		glm::vec3 m_FocalPoint;
 
-		glm::vec2 m_InitialMousePosition;
-		glm::vec3 m_InitialFocalPoint;
-		glm::vec3 m_InitialRotation;
-
 		float m_Distance;
 		float m_Pitch;
 		float m_Yaw;
 
 		uint32 m_ViewportWidth = 1920;
 		uint32 m_ViewportHeight = 1080;
+
+		float m_Fov = 45.f;
 	};
 } // namespace Neon

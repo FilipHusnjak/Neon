@@ -1,11 +1,13 @@
 #include "neopch.h"
 
-#include "Camera.h"
+#include "Neon/Renderer/Camera.h"
 
 namespace Neon
 {
-	Camera::Camera(const glm::mat4& projectionMatrix)
-		: m_ProjectionMatrix(projectionMatrix)
+	glm::mat4 Camera::GetViewMatrix() const
 	{
+		Transform transform = GetTransform();
+		return glm::inverse(glm::translate(glm::mat4(1.0f), transform.Translation) * glm::toMat4(transform.Rotation));
 	}
+
 } // namespace Neon

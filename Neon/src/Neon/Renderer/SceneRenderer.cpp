@@ -139,11 +139,11 @@ namespace Neon
 		// TODO: Implement
 	}
 
-	void SceneRenderer::BeginScene(const SharedRef<CameraComponent>& cameraComp)
+	void SceneRenderer::BeginScene(Camera* camera)
 	{
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "Scene not initialized!");
 
-		s_Data.SceneData.SceneCamera = cameraComp;
+		s_Data.SceneData.SceneCamera = camera;
 	}
 
 	void SceneRenderer::EndScene()

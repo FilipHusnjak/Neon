@@ -5,6 +5,7 @@
 #include <Neon/Core/Layer.h>
 #include <Neon/Editor/Panels/Panel.h>
 #include <Neon/Scene/Scene.h>
+#include <Neon/Renderer/Texture.h>
 
 #include <glm/glm.hpp>
 
@@ -20,7 +21,7 @@ namespace Neon
 		void OnAttach() override;
 		void OnDetach() override;
 
-		void OnUpdate(float deltaSeconds) override;
+		void Tick(float deltaSeconds) override;
 		void OnRenderGui() override;
 		void OnEvent(Event& e) override;
 
@@ -28,6 +29,13 @@ namespace Neon
 		SharedRef<Scene> m_EditorScene;
 
 		EditorCamera m_EditorCamera;
+
+		enum class SceneState
+		{
+			Edit = 0,
+			Play = 1
+		};
+		SceneState m_SceneState = SceneState::Edit;
 
 		std::vector<SharedRef<Panel>> m_Panels;
 
@@ -38,5 +46,7 @@ namespace Neon
 		glm::vec4 clearColor{1.f, 1.f, 1.f, 1.f};
 
 		std::vector<KeyBinding> m_CachedInput;
+
+		SharedRef<Texture2D> m_PlayButtonTex, m_StopButtonTex, m_PauseButtonTex, m_SimulateButtonTex;
 	};
 } // namespace Neon

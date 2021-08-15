@@ -13,13 +13,15 @@
 #include <Neon/Renderer/Renderer.h>
 #include <Neon/Renderer/SceneRenderer.h>
 #include <Neon/Scene/Actor.h>
+#include <Neon/Scene/Actors/Car.h>
 #include <Neon/Scene/Components/LightComponent.h>
 #include <Neon/Scene/Components/OceanComponent.h>
 #include <Neon/Scene/Components/SkeletalMeshComponent.h>
 #include <Neon/Scene/Components/StaticMeshComponent.h>
-#include <Neon/Scene/Actors/Car.h>
+#include <Neon/Scene/Components/CameraComponent.h>
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/type_ptr.hpp>
@@ -31,6 +33,7 @@
 namespace Neon
 {
 	static SharedRef<CameraComponent> s_CameraComp;
+	static Camera* s_ActiveCamera = nullptr;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
@@ -48,8 +51,8 @@ namespace Neon
 
 		SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
 		{
-			auto& sphere =
-				m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
+			auto& sphere = m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere",
+																	   glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(-0.3f, 0.2f, 10.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
@@ -58,7 +61,7 @@ namespace Neon
 
 		{
 			auto& sphere = m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere",
-																  glm::vec3(1.f, 1.f, 1.f));
+																	   glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(-0.3f, 0.1f, 11.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
@@ -67,7 +70,7 @@ namespace Neon
 
 		{
 			auto& plane = m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Cube.fbx", 0, "Plane",
-																 glm::vec3(3000.f, 1.f, 3000.f));
+																	  glm::vec3(3000.f, 1.f, 3000.f));
 			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();
 			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
 			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(3000.f, 1.f, 3000.f));
@@ -93,14 +96,27 @@ namespace Neon
 
 	void EditorLayer::OnAttach()
 	{
+		m_PlayButtonTex = Texture2D::Create("assets/editor/PlayButton.png", {TextureUsageFlagBits::ShaderRead});
+		m_StopButtonTex = Texture2D::Create("assets/editor/StopButton.png", {TextureUsageFlagBits::ShaderRead});
+
+		s_ActiveCamera = &m_EditorCamera;
 	}
 
 	void EditorLayer::OnDetach()
 	{
 	}
 
-	void EditorLayer::OnUpdate(float deltaSeconds)
+	void EditorLayer::Tick(float deltaSeconds)
 	{
+		if (m_SceneState == SceneState::Edit)
+		{
+			s_ActiveCamera = &m_EditorCamera;
+		}
+		else
+		{
+			s_ActiveCamera = s_CameraComp.Ptr();
+		}
+
 		m_Times.push(deltaSeconds * 1000.f);
 		m_TimePassed += deltaSeconds * 1000.f;
 		m_FrameCount++;
@@ -112,16 +128,10 @@ namespace Neon
 		}
 
 		Pawn* possesedPawn = m_EditorScene->GetPossesedPawn();
-		if (possesedPawn)
-		{
-			possesedPawn->ProcessInput(m_CachedInput);
-		}
-		else
-		{
-			m_EditorCamera.OnUpdate(deltaSeconds);
-		}
+		possesedPawn->ProcessInput(m_CachedInput);
+		m_EditorCamera.Tick(deltaSeconds);
 
-		SceneRenderer::BeginScene(s_CameraComp);
+		SceneRenderer::BeginScene(s_ActiveCamera);
 		m_EditorScene->TickScene(deltaSeconds);
 		SceneRenderer::EndScene();
 
@@ -155,6 +165,8 @@ namespace Neon
 
 		ImGui::PopStyleVar(2);
 
+		auto& colors = ImGui::GetStyle().Colors;
+
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -163,7 +175,7 @@ namespace Neon
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+			ImGui::DockSpace(dockspace_id, ImVec2(0.f, 0.f), dockspace_flags);
 		}
 
 		style.WindowMinSize.x = minWinSizeX;
@@ -173,13 +185,43 @@ namespace Neon
 			panel->Render();
 		}
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.305f, 0.31f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.1505f, 0.151f, 0.5f));
+
+		ImGui::Begin("##tool_bar", nullptr,
+					 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		{
+			float size = ImGui::GetWindowHeight() - 4.f;
+			ImGui::SameLine((ImGui::GetWindowContentRegionMax().x / 2.f) -
+							(1.5f * (ImGui::GetFontSize() + ImGui::GetStyle().ItemSpacing.x)) - (size / 2.f));
+			SharedRef<Texture2D> buttonTex = m_SceneState == SceneState::Play ? m_StopButtonTex : m_PlayButtonTex;
+			if (ImGui::ImageButton(buttonTex->GetRendererId(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0,
+								   ImVec4(0, 0, 0, 0), ImVec4(1, 1, 1, 1)))
+			{
+				if (m_SceneState == SceneState::Edit)
+				{
+					m_SceneState = SceneState::Play;
+				}
+				else
+				{
+					m_SceneState = SceneState::Edit;
+				}
+			}
+		}
+
+		ImGui::PopStyleColor(3);
+		ImGui::PopStyleVar(2);
+
+		ImGui::End();
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");
 		auto viewportSize = ImGui::GetContentRegionAvail();
 
-		m_EditorCamera.SetProjectionMatrix(
-			glm::perspectiveFov(glm::radians(45.0f), viewportSize.x, viewportSize.y, 0.1f, 10000.0f));
-		m_EditorCamera.SetViewportSize((uint32)viewportSize.x, (uint32)viewportSize.y);
+		s_ActiveCamera->SetViewportSize((uint32)viewportSize.x, (uint32)viewportSize.y);
 
 		ImGui::Image(Renderer::GetFinalImageId(), viewportSize);
 

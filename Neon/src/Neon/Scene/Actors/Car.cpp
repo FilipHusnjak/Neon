@@ -54,7 +54,7 @@ namespace Neon
 
 		if (m_MeshComponent)
 		{
-			m_MeshComponent->AddForceLocal(m_Force);
+			//m_MeshComponent->AddForceLocal(m_Force);
 		}
 	}
 
