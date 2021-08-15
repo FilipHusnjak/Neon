@@ -30,48 +30,26 @@
 
 namespace Neon
 {
+	static SharedRef<CameraComponent> s_CameraComp;
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		/*	{
-			auto& cube = m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube1", glm::vec3(1.f, 10.f, 1.f));
-			cube->SetTranslation(glm::vec3(5.f, 45.f, 0.f));
-			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
-			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
-		}
-
-		{
-			auto& cube =
-				m_EditorScene->CreateStaticMesh("assets/models/primitives/Cube.fbx", 0, "Cube2", glm::vec3(1.f, 10.f, 1.f));
-			cube->SetTranslation(glm::vec3(0.f, 40.f, 0.f));
-			auto& cubeStaticMeshComp = cube->GetRootComponent<StaticMeshComponent>();
-			cubeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			cubeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 10.f, 1.f));
-		}
-	
-		{
-			auto& sphere =
-				m_EditorScene->CreateStaticMesh("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
-			sphere->SetTranslation(glm::vec3(0.5f, 10.f, 0.f));
-			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
-			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Dynamic);
-			sphereStaticMeshComp->GetPhysicsBody()->AddSpherePrimitive(1.f);
-		}
-		*/
-
 		{
 			auto& car = m_EditorScene->CreateActor<Car>(0, "Car");
+			s_CameraComp = car->AddComponent<CameraComponent>(car.Ptr());
+			s_CameraComp->SetPositionOffset(glm::vec3(0.f, 1.5f, -6.f));
+			s_CameraComp->SetRotationOffset(glm::quat(glm::vec3(-0.1f, 3.14f, 0.f)));
 			m_EditorScene->PossesPawn(car.Ptr());
 		}
 
 		SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
 		{
 			auto& sphere =
-				m_EditorScene->CreateStaticMesh<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
+				m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere", glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(-0.3f, 0.2f, 10.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
 			sphereStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
@@ -79,7 +57,7 @@ namespace Neon
 		}
 
 		{
-			auto& sphere = m_EditorScene->CreateStaticMesh<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere",
+			auto& sphere = m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere",
 																  glm::vec3(1.f, 1.f, 1.f));
 			sphere->SetTranslation(glm::vec3(-0.3f, 0.1f, 11.f));
 			auto& sphereStaticMeshComp = sphere->GetRootComponent<StaticMeshComponent>();
@@ -88,7 +66,7 @@ namespace Neon
 		}
 
 		{
-			auto& plane = m_EditorScene->CreateStaticMesh<Actor>("assets/models/primitives/Cube.fbx", 0, "Plane",
+			auto& plane = m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Cube.fbx", 0, "Plane",
 																 glm::vec3(3000.f, 1.f, 3000.f));
 			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();
 			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
@@ -143,7 +121,7 @@ namespace Neon
 			m_EditorCamera.OnUpdate(deltaSeconds);
 		}
 
-		SceneRenderer::BeginScene({m_EditorCamera, 0.1f, 1000.0f, 45.0f});
+		SceneRenderer::BeginScene(s_CameraComp);
 		m_EditorScene->TickScene(deltaSeconds);
 		SceneRenderer::EndScene();
 

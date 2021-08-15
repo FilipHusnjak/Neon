@@ -15,7 +15,10 @@ namespace Neon
 		virtual void Tick(float deltaSeconds) override;
 
 	private:
-		SharedRef<SkeletalMeshComponent> meshComponent;
+		void SetupWheel(const std::string& boneName);
+
+	private:
+		SharedRef<SkeletalMeshComponent> m_MeshComponent;
 
 		glm::vec3 m_Force = glm::vec3(0.f, 0.f, 1000.f);
 	};

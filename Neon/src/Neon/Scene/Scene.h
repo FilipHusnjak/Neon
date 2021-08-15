@@ -33,7 +33,7 @@ namespace Neon
 		}
 
 		template<typename T, typename... Args>
-		SharedRef<T> CreateStaticMesh(const std::string& path, UUID uuid, const std::string& name, const glm::vec3& scale,
+		SharedRef<T> CreateStaticMeshActor(const std::string& path, UUID uuid, const std::string& name, const glm::vec3& scale,
 										  Args&&... args)
 		{
 			auto actor = CreateActor<T>(uuid, name, args...);
@@ -45,7 +45,7 @@ namespace Neon
 		}
 
 		template<typename T, typename... Args>
-		SharedRef<T> CreateSkeletalMesh(const std::string& path, UUID uuid, const std::string& name, Args&&... args)
+		SharedRef<T> CreateSkeletalMeshActor(const std::string& path, UUID uuid, const std::string& name, Args&&... args)
 		{
 			auto actor = CreateActor<T>(uuid, name, args...);
 

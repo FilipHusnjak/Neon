@@ -51,20 +51,8 @@ namespace Neon
 			glm::decompose(boneInfo.NodeTransform, scale, rotation, translation, skew, perspective);
 			transform.Translation = translation;
 			transform.Rotation = rotation;
-			m_PhysicsBodyMap[boneName] = Physics::GetCurrentScene()->AddPhysicsBody(bodyType, transform * m_Owner->GetTransform(), material);
-
-			if (m_RootPhysicsBody)
-			{
-				auto constraint = PhysicsConstraint::Create(m_PhysicsBodyMap[boneName], m_RootPhysicsBody);
-				constraint->SetMotion(MotionAxis::RotationY, Motion::Free);
-				constraint->SetMotion(MotionAxis::TranslationZ, Motion::Limited);
-				constraint->SetDrive(DriveAxis::TranslationZ, 300000.f, 100.f, 300000.f);
-				constraint->SetLinearLimit(0.07f);
-				Transform driveTransform;
-				driveTransform.Translation = glm::vec3(0.f, 0.f, 0.f);
-				constraint->SetDrivePosition(driveTransform);
-				constraint->SetDriveVelocity(glm::vec3(), glm::vec3());
-			}
+			m_PhysicsBodyMap[boneName] =
+				Physics::GetCurrentScene()->AddPhysicsBody(bodyType, m_Owner->GetTransform() * transform, material);
 		}
 	}
 
@@ -76,15 +64,9 @@ namespace Neon
 		{
 			m_SkeletalMesh->TickAnimation(deltaSeconds);
 
-			if (m_RootPhysicsBody)
-			{
-				m_Owner->SetTranslation(m_RootPhysicsBody->GetBodyTranslation());
-				m_Owner->SetRotation(m_RootPhysicsBody->GetBodyRotation());
-			}
-
 			for (const auto& [boneName, physicsBody] : m_PhysicsBodyMap)
 			{
-				Transform localTransform = physicsBody->GetBodyTransform() * m_Owner->GetTransform().Inverse();
+				Transform localTransform = m_Owner->GetTransform().Inverse() * physicsBody->GetBodyTransform();
 				SkeletalMesh::BoneInfo& boneInfo = m_SkeletalMesh->GetBoneInfo(boneName);
 				boneInfo.NodeTransform = localTransform.GetMatrix();
 
@@ -93,8 +75,6 @@ namespace Neon
 					physicsBody->RenderCollision();
 				}
 			}
-
-			SceneRenderer::SubmitMesh(m_SkeletalMesh, m_Owner->GetTransform().GetMatrix());
 		}
 	}
 

@@ -75,7 +75,7 @@ namespace Neon
 	{
 		m_Joint = physx::PxD6JointCreate(
 			*static_cast<physx::PxPhysics*>(Physics::GetPhysicsSDK()), static_cast<physx::PxRigidActor*>(body1->GetHandle()),
-			PhysXUtils::ToPhysXTransform(body0->GetBodyTransform() * body1->GetBodyTransform().Inverse()),
+			PhysXUtils::ToPhysXTransform(body1->GetBodyTransform().Inverse() * body0->GetBodyTransform()),
 			static_cast<physx::PxRigidActor*>(body0->GetHandle()), PhysXUtils::ToPhysXTransform(Transform()));
 
 		NEO_CORE_ASSERT(m_Joint);

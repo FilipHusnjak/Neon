@@ -139,16 +139,17 @@ namespace Neon
 		// TODO: Implement
 	}
 
-	void SceneRenderer::BeginScene(const SceneRendererCamera& camera)
+	void SceneRenderer::BeginScene(const SharedRef<CameraComponent>& cameraComp)
 	{
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "Scene not initialized!");
 
-		s_Data.SceneData.SceneCamera = camera;
+		s_Data.SceneData.SceneCamera = cameraComp;
 	}
 
 	void SceneRenderer::EndScene()
 	{
 		NEO_CORE_ASSERT(s_Data.ActiveScene, "");
+		NEO_CORE_ASSERT(s_Data.SceneData.SceneCamera);
 
 		FlushDrawList();
 	}
@@ -307,8 +308,8 @@ namespace Neon
 			glm::mat4 ViewProjection = glm::mat4(1.f);
 			glm::vec4 CameraPosition = glm::vec4();
 		} cameraUBO;
-		cameraUBO.ViewProjection = sceneCamera.Camera.GetViewProjection();
-		cameraUBO.CameraPosition = glm::vec4(sceneCamera.Camera.GetPosition(), 1.f);
+		cameraUBO.ViewProjection = sceneCamera->GetViewProjectionMatrix();
+		cameraUBO.CameraPosition = glm::vec4(sceneCamera->GetPosition(), 1.f);
 
 		// Render meshes
 		for (auto& dc : s_Data.MeshDrawList)
@@ -330,11 +331,11 @@ namespace Neon
 			Renderer::SubmitMesh(dc.Mesh, dc.Transform, dc.Wireframe);
 		}
 
-		glm::mat4 viewRotation = sceneCamera.Camera.GetViewMatrix();
+		glm::mat4 viewRotation = sceneCamera->GetViewMatrix();
 		viewRotation[3][0] = 0;
 		viewRotation[3][1] = 0;
 		viewRotation[3][2] = 0;
-		glm::mat4 inverseVP = glm::inverse(sceneCamera.Camera.GetProjectionMatrix() * viewRotation);
+		glm::mat4 inverseVP = glm::inverse(sceneCamera->GetProjectionMatrix() * viewRotation);
 		s_Data.SkyboxMaterial.GetShader()->SetUniformBuffer("CameraUBO", 0, &inverseVP);
 		Renderer::SubmitFullscreenQuad(s_Data.SkyboxGraphicsPipeline);
 

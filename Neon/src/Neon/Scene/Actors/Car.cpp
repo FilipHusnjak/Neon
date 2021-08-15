@@ -1,6 +1,7 @@
 #include "neopch.h"
 
-#include "Car.h"
+#include "Neon/Physics/PhysicsConstraint.h"
+#include "Neon/Scene/Actors/Car.h"
 
 #include <GLFW/glfw3.h>
 
@@ -10,31 +11,34 @@ namespace Neon
 		: Pawn(scene, tag, id, transform)
 	{
 		SetTranslation(glm::vec3(0.f, 40.f, 0.f));
+		SetRotation(glm::quat(glm::vec3(0.f, 2.f, 0.f)));
 
 		SharedRef<PhysicsMaterial> matBody = PhysicsMaterial::CreateMaterial(10.f, 8.f, 0.1f, 800.f);
 		SharedRef<PhysicsMaterial> matTire = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.3f, 300.f);
 
-		meshComponent =
+		m_MeshComponent =
 			AddRootComponent<SkeletalMeshComponent>(this, SharedRef<SkeletalMesh>::Create("assets/models/zero/carSK.fbx"));
 
-		meshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "", matBody);
+		m_MeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "", matBody);
 		Transform bodyTransform;
 		bodyTransform.Translation = glm::vec3(0.f, 0.7f, 0.07f);
-		meshComponent->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 0.5, 1.f), bodyTransform);
-		NEO_CORE_INFO("Mass body {0}", meshComponent->GetPhysicsBody()->GetMass());
+		m_MeshComponent->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(1.f, 0.5, 1.f), bodyTransform);
 
-		meshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rl", matTire);
-		meshComponent->GetPhysicsBody("wheel_rl")->AddSpherePrimitive(0.37f);
-		NEO_CORE_INFO("Mass wheel {0}", meshComponent->GetPhysicsBody("wheel_rl")->GetMass());
+		m_MeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rl", matTire);
+		m_MeshComponent->GetPhysicsBody("wheel_rl")->AddSpherePrimitive(0.37f);
+		SetupWheel("wheel_rl");
 
-		meshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rr", matTire);
-		meshComponent->GetPhysicsBody("wheel_rr")->AddSpherePrimitive(0.37f);
+		m_MeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_rr", matTire);
+		m_MeshComponent->GetPhysicsBody("wheel_rr")->AddSpherePrimitive(0.37f);
+		SetupWheel("wheel_rr");
 
-		meshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fl", matTire);
-		meshComponent->GetPhysicsBody("wheel_fl")->AddSpherePrimitive(0.37f);
+		m_MeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fl", matTire);
+		m_MeshComponent->GetPhysicsBody("wheel_fl")->AddSpherePrimitive(0.37f);
+		SetupWheel("wheel_fl");
 
-		meshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr", matTire);
-		meshComponent->GetPhysicsBody("wheel_fr")->AddSpherePrimitive(0.37f);
+		m_MeshComponent->CreatePhysicsBody(PhysicsBodyType::Dynamic, "wheel_fr", matTire);
+		m_MeshComponent->GetPhysicsBody("wheel_fr")->AddSpherePrimitive(0.37f);
+		SetupWheel("wheel_fr");
 	}
 
 	void Car::SetupInputComponent(SharedRef<InputComponent> m_InputComponent)
@@ -48,10 +52,23 @@ namespace Neon
 	{
 		Pawn::Tick(deltaSeconds);
 
-		if (meshComponent)
+		if (m_MeshComponent)
 		{
-			meshComponent->AddForceLocal(m_Force);
+			m_MeshComponent->AddForceLocal(m_Force);
 		}
+	}
+
+	void Car::SetupWheel(const std::string& boneName)
+	{
+		auto constraint = PhysicsConstraint::Create(m_MeshComponent->GetPhysicsBody(boneName), m_MeshComponent->GetPhysicsBody());
+		constraint->SetMotion(MotionAxis::RotationY, Motion::Free);
+		constraint->SetMotion(MotionAxis::TranslationZ, Motion::Limited);
+		constraint->SetDrive(DriveAxis::TranslationZ, 300000.f, 100.f, 300000.f);
+		constraint->SetLinearLimit(0.07f);
+		Transform driveTransform;
+		driveTransform.Translation = glm::vec3(0.f, 0.f, 0.f);
+		constraint->SetDrivePosition(driveTransform);
+		constraint->SetDriveVelocity(glm::vec3(), glm::vec3());
 	}
 
 } // namespace Neon

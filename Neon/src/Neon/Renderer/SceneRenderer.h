@@ -1,20 +1,12 @@
 #pragma once
 
-#include "Neon/Renderer/Camera.h"
 #include "Neon/Renderer/Mesh.h"
 #include "Neon/Scene/Actor.h"
+#include "Neon/Scene/Components/CameraComponent.h"
 #include "Neon/Scene/Components/LightComponent.h"
 
 namespace Neon
 {
-	struct SceneRendererCamera
-	{
-		Neon::Camera Camera;
-		float Near;
-		float Far;
-		float FOV;
-	};
-
 	class SceneRenderer
 	{
 	public:
@@ -32,12 +24,12 @@ namespace Neon
 			NEO_CORE_ASSERT(s_Data.ActiveScene);
 			return s_Data.ActiveScene->CreateActor<T>(uuid, name, args...);
 		}
-		
+
 		static void DestroyActor(SharedRef<Actor> actor);
 
 		static void SetViewportSize(uint32 width, uint32 height);
 
-		static void BeginScene(const SceneRendererCamera& camera);
+		static void BeginScene(const SharedRef<CameraComponent>& cameraComp);
 		static void EndScene();
 
 		static void SubmitMesh(const SharedRef<Mesh>& mesh, const glm::mat4& transform = glm::mat4(1.0f), bool wireframe = false);
@@ -74,7 +66,7 @@ namespace Neon
 
 			struct SceneInfo
 			{
-				SceneRendererCamera SceneCamera;
+				SharedRef<CameraComponent> SceneCamera;
 				std::string EnvironmentPath;
 			} SceneData;
 

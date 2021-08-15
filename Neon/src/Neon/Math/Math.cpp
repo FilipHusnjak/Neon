@@ -68,9 +68,9 @@ namespace Neon
 	Transform Transform::operator*(const Transform& other) const
 	{
 		Transform result;
-		result.Rotation = other.Rotation * Rotation;
+		result.Rotation = Rotation * other.Rotation;
 		result.Scale = Scale * other.Scale;
-		result.Translation = other.Rotation * (other.Scale * Translation) + other.Translation;
+		result.Translation = Rotation * (Scale * other.Translation) + Translation;
 		return result;
 	}
 

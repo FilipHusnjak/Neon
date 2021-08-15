@@ -33,12 +33,23 @@ namespace Neon
 	{
 		ActorComponent::TickComponent(deltaSeconds);
 
+		if (m_RootPhysicsBody)
+		{
+			m_Owner->SetTranslation(m_RootPhysicsBody->GetBodyTranslation());
+			m_Owner->SetRotation(m_RootPhysicsBody->GetBodyRotation());
+		}
+
 		if (SceneRenderer::GetSelectedActor() == m_Owner)
 		{
 			if (m_RootPhysicsBody)
 			{
 				m_RootPhysicsBody->RenderCollision();
 			}
+		}
+
+		if (GetMesh())
+		{
+			SceneRenderer::SubmitMesh(GetMesh(), m_Owner->GetTransform().GetMatrix());
 		}
 	}
 
