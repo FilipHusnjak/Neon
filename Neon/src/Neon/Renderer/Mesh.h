@@ -50,11 +50,9 @@ namespace Neon
 	class Mesh : public RefCounted
 	{
 	public:
-		//static SharedRef<Mesh> GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
-		//										GraphicsPipelineSpecification& pipelineSpec);
-
 		Mesh(const std::string& name, const std::vector<Index>& indices);
 		Mesh(const std::string& filename);
+		Mesh(ShaderSpecification& shaderSpec, GraphicsPipelineSpecification& pipelineSpec);
 		virtual ~Mesh() = default;
 
 		const SharedRef<GraphicsPipeline>& GetGraphicsPipeline() const
@@ -129,5 +127,7 @@ namespace Neon
 		std::vector<Material> m_Materials;
 
 		std::string m_FilePath = std::string();
+
+		friend class MeshFactory;
 	};
 } // namespace Neon

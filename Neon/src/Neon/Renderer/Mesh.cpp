@@ -44,59 +44,6 @@ namespace Neon
 											  aiProcess_OptimizeMeshes | // Batch draws where possible
 											  aiProcess_ValidateDataStructure; // Validation
 
-	/*SharedRef<Mesh> Mesh::GenerateGridMesh(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
-										   GraphicsPipelineSpecification& pipelineSpec)
-	{
-		SharedRef<Mesh> mesh = SharedRef<Mesh>(new Mesh(shaderSpec, pipelineSpec));
-
-		std::vector<glm::vec2> vertices;
-		std::vector<uint32> indices;
-
-		float dx = 1.f / countW;
-		float dy = 1.f / countH;
-
-		uint32 countX = 0;
-		for (float x = 0.f; countX < countW; x += dx, countX++)
-		{
-			uint32 countY = 0;
-			for (float y = 0.f; countY < countH; y += dy, countY++)
-			{
-				vertices.emplace_back(x, y);
-			}
-		}
-
-		uint32 index = 0;
-		countX = 0;
-		for (float x = 0.f; countX < countW - 1; x += dx, countX++)
-		{
-			uint32 countY = 0;
-			for (float y = 0.f; countY < countH - 1; y += dy, countY++)
-			{
-				indices.push_back(index);
-				indices.push_back(index + 1);
-				indices.push_back(index + countW);
-
-				indices.push_back(index + 1);
-				indices.push_back(index + countW + 1);
-				indices.push_back(index + countW);
-
-				index++;
-			}
-
-			index++;
-		}
-
-		mesh->m_VertexBuffer = VertexBuffer::Create(vertices.data(), static_cast<uint32>(vertices.size()) * sizeof(vertices[0]),
-													mesh->GetShader()->GetVertexBufferLayout());
-
-		mesh->m_IndexBuffer = IndexBuffer::Create(indices.data(), static_cast<uint32>(indices.size()) * sizeof(uint32));
-
-		Submesh& submesh = mesh->m_Submeshes.emplace_back();
-		submesh.IndexCount = static_cast<uint32>(indices.size());
-
-		return mesh;
-	}*/
-
 	static glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix)
 	{
 		glm::mat4 result;
@@ -188,6 +135,16 @@ namespace Neon
 		TraverseNodes(m_Scene->mRootNode);
 
 		m_IndexBuffer = IndexBuffer::Create(m_Indices.data(), static_cast<uint32>(m_Indices.size()) * sizeof(Index));
+	}
+
+	Mesh::Mesh(ShaderSpecification& shaderSpec, GraphicsPipelineSpecification& pipelineSpec)
+	{
+		m_MeshShader = Shader::Create(shaderSpec);
+		shaderSpec.ShaderPaths[ShaderType::Fragment] = "assets/shaders/Wireframe_Frag.glsl";
+		m_WireframeMeshShader = Shader::Create(shaderSpec);
+		m_MeshGraphicsPipeline = GraphicsPipeline::Create(m_MeshShader, pipelineSpec);
+		pipelineSpec.Mode = PolygonMode::Line;
+		m_WireframeMeshGraphicsPipeline = GraphicsPipeline::Create(m_WireframeMeshShader, pipelineSpec);
 	}
 
 	void Mesh::TraverseNodes(aiNode* node, const glm::mat4& parentTransform /*= glm::mat4(1.0f)*/, uint32 level /*= 0*/)

@@ -17,7 +17,7 @@ namespace Neon
 		: Mesh(name, indices)
 	{
 		m_Vertices = vertices;
-		
+
 		SetupBuffers();
 	}
 
@@ -57,6 +57,11 @@ namespace Neon
 		}
 
 		SetupBuffers();
+	}
+
+	StaticMesh::StaticMesh(ShaderSpecification& shaderSpec, GraphicsPipelineSpecification& pipelineSpec)
+		: Mesh(shaderSpec, pipelineSpec)
+	{
 	}
 
 	void StaticMesh::SetupBuffers()

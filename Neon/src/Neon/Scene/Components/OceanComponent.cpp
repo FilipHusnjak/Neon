@@ -4,6 +4,7 @@
 #include "Neon/Renderer/RendererContext.h"
 #include "Neon/Renderer/SceneRenderer.h"
 #include "Neon/Scene/Components/OceanComponent.h"
+#include "Neon/Renderer/MeshFactory.h"
 
 namespace Neon
 {
@@ -253,7 +254,7 @@ namespace Neon
 		oceanPipelineSpecification.Pass = SceneRenderer::GetGeoPass();
 		oceanPipelineSpecification.Mode = PolygonMode::Fill;
 
-		//m_Mesh = Mesh::GenerateGridMesh(1000, 1000, oceanShaderSpecification, oceanPipelineSpecification);
+		m_Mesh = MeshFactory::CreateGrid(1000, 1000, oceanShaderSpecification, oceanPipelineSpecification);
 
 		SharedRef<Shader> oceanShader = m_Mesh->GetShader();
 		oceanShader->SetUniformBuffer("PropertiesUBO", 0, &L);
@@ -313,6 +314,11 @@ namespace Neon
 		Renderer::DispatchCompute(m_DisplacementPipeline, m_N / 32, m_N / 32, 1);
 
 		Renderer::DispatchCompute(m_JacobianPipeline, m_N / 32, m_N / 32, 1);
+
+		if (m_Mesh)
+		{
+			SceneRenderer::SubmitMesh(m_Mesh, m_Owner->GetTransform().GetMatrix());
+		}
 	}
 
 } // namespace Neon

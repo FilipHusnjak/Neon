@@ -7,6 +7,59 @@
 
 namespace Neon
 {
+	SharedRef<StaticMesh> MeshFactory::CreateGrid(uint32 countW, uint32 countH, ShaderSpecification& shaderSpec,
+												  GraphicsPipelineSpecification& pipelineSpec)
+	{
+		SharedRef<StaticMesh> mesh = SharedRef<StaticMesh>::Create(shaderSpec, pipelineSpec);
+
+		std::vector<glm::vec2> vertices;
+		std::vector<uint32> indices;
+
+		float dx = 1.f / countW;
+		float dy = 1.f / countH;
+
+		uint32 countX = 0;
+		for (float x = 0.f; countX < countW; x += dx, countX++)
+		{
+			uint32 countY = 0;
+			for (float y = 0.f; countY < countH; y += dy, countY++)
+			{
+				vertices.emplace_back(x, y);
+			}
+		}
+
+		uint32 index = 0;
+		countX = 0;
+		for (float x = 0.f; countX < countW - 1; x += dx, countX++)
+		{
+			uint32 countY = 0;
+			for (float y = 0.f; countY < countH - 1; y += dy, countY++)
+			{
+				indices.push_back(index);
+				indices.push_back(index + 1);
+				indices.push_back(index + countW);
+
+				indices.push_back(index + 1);
+				indices.push_back(index + countW + 1);
+				indices.push_back(index + countW);
+
+				index++;
+			}
+
+			index++;
+		}
+
+		mesh->m_VertexBuffer = VertexBuffer::Create(vertices.data(), static_cast<uint32>(vertices.size()) * sizeof(vertices[0]),
+													mesh->GetShader()->GetVertexBufferLayout());
+
+		mesh->m_IndexBuffer = IndexBuffer::Create(indices.data(), static_cast<uint32>(indices.size()) * sizeof(uint32));
+
+		Submesh& submesh = mesh->m_Submeshes.emplace_back();
+		submesh.IndexCount = static_cast<uint32>(indices.size());
+
+		return mesh;
+	}
+
 	SharedRef<StaticMesh> MeshFactory::CreateBox(const glm::vec3& size)
 	{
 		std::vector<StaticMesh::Vertex> vertices;
