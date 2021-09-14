@@ -5,16 +5,11 @@ Continuing from https://github.com/fhusnjak/Neon
 Personal project for practicing Vulkan, C++, Physics and graphics programming principles.
 
 ## Current features:
-### Phong lighting<br/>
+### PBR lighting<br/>
+![PBR](resources/pbr.png)<br/>
 
-### Skeletal animation<br/>
-![Skeletal Animation Demo](resources/skeletalAnimation.gif)<br/>
+### Ocean simulation using FFT<br/>
+![FFT](resources/ocean.gif)<br/>
 
-### Terrain generation from heightmaps<br/>
-![Terrain Generation](resources/terrainGeneration.png)<br/>
-
-### Multitexturing<br/>
-![Multitexturing](resources/multiTexturing.png)<br/>
-
-### Water<br/>
-![Water](resources/water.gif)<br/>
+### Integrated PhysX physics engine, added custom support for adding physics bodies to different parts of skeletal meshes<br/>
+![Physics](resources/car_physics.gif)<br/>
