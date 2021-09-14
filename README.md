@@ -4,7 +4,7 @@ Continuing from https://github.com/fhusnjak/Neon
 
 Personal project for practicing Vulkan, C++, physics and graphics programming principles.
 
-## Current features:
+## Main features:
 ### Physically based rendering<br/>
 <img src="resources/pbr.png" width="600">
 
