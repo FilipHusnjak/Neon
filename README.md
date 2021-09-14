@@ -2,7 +2,7 @@
 Continuing from https://github.com/fhusnjak/Neon
 ## C++ Vulkan engine
 
-Personal project for practicing Vulkan and graphics programming principles.
+Personal project for practicing Vulkan, C++, Physics and graphics programming principles.
 
 ## Current features:
 ### Phong lighting<br/>
