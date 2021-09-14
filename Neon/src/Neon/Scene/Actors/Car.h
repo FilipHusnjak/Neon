@@ -20,6 +20,6 @@ namespace Neon
 	private:
 		SharedRef<SkeletalMeshComponent> m_MeshComponent;
 
-		glm::vec3 m_Force = glm::vec3(0.f, 0.f, 1000.f);
+		glm::vec3 m_Force = glm::vec3(0.f, 0.f, 5000.f);
 	};
 } // namespace Neon

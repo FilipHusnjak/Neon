@@ -41,15 +41,15 @@ namespace Neon
 		m_EditorScene = SharedRef<Scene>::Create();
 		m_EditorScene->Init();
 
-		/*{
+		{
 			auto& car = m_EditorScene->CreateActor<Car>(0, "Car");
 			s_CameraComp = car->AddComponent<CameraComponent>(car.Ptr());
 			s_CameraComp->SetPositionOffset(glm::vec3(0.f, 1.5f, -6.f));
 			s_CameraComp->SetRotationOffset(glm::quat(glm::vec3(-0.1f, 3.14f, 0.f)));
 			m_EditorScene->PossesPawn(car.Ptr());
-		}*/
+		}
 		
-		/*SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
+		SharedRef<PhysicsMaterial> matPlane = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.1f, 300.f);
 		{
 			auto& sphere = m_EditorScene->CreateStaticMeshActor<Actor>("assets/models/primitives/Sphere.fbx", 0, "Sphere",
 																	   glm::vec3(1.f, 1.f, 1.f));
@@ -74,11 +74,11 @@ namespace Neon
 			auto& planeStaticMeshComp = plane->GetRootComponent<StaticMeshComponent>();
 			planeStaticMeshComp->CreatePhysicsBody(PhysicsBodyType::Static, "", matPlane);
 			planeStaticMeshComp->GetPhysicsBody()->AddBoxPrimitive(glm::vec3(3000.f, 1.f, 3000.f));
-		}*/
+		}
 
 		{
-			auto& ocean = m_EditorScene->CreateActor<Actor>(0, "Car");
-			ocean->AddComponent<OceanComponent>(ocean.Ptr(), 512);
+			//auto& ocean = m_EditorScene->CreateActor<Actor>(0, "Car");
+			//ocean->AddComponent<OceanComponent>(ocean.Ptr(), 512);
 		}
 
 		{

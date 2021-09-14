@@ -10,8 +10,8 @@ namespace Neon
 	Car::Car(Scene* scene, const std::string& tag, UUID id, Transform transform /*= Transform()*/)
 		: Pawn(scene, tag, id, transform)
 	{
-		SetTranslation(glm::vec3(0.f, 40.f, 0.f));
-		SetRotation(glm::quat(glm::vec3(0.f, 2.f, 0.f)));
+		SetTranslation(glm::vec3(0.f, 40.f, -1.f));
+		SetRotation(glm::quat(glm::vec3(0.f, 0.f, 0.f)));
 
 		SharedRef<PhysicsMaterial> matBody = PhysicsMaterial::CreateMaterial(10.f, 8.f, 0.1f, 800.f);
 		SharedRef<PhysicsMaterial> matTire = PhysicsMaterial::CreateMaterial(5.f, 3.f, 0.3f, 300.f);
@@ -54,7 +54,7 @@ namespace Neon
 
 		if (m_MeshComponent)
 		{
-			//m_MeshComponent->AddForceLocal(m_Force);
+			m_MeshComponent->AddForceLocal(m_Force);
 		}
 	}
 
